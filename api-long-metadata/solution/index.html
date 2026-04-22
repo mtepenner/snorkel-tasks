@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Long Document Metadata Extractor</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { font-size: 1.5em; color: #333; }
+        input[type="file"] { margin: 20px 0; }
+        button { background-color: #0056b3; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+        button:hover { background-color: #004494; }
+        pre { background-color: #eef; padding: 15px; border-radius: 4px; overflow-x: auto; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload PDF for Extraction</h1>
+        <p>This tool chunks documents over 50k tokens to extract deep metadata.</p>
+        <input type="file" id="pdfInput" accept="application/pdf">
+        <br>
+        <button onclick="uploadPdf()">Extract Metadata</button>
+        
+        <div id="resultContainer" style="display: none;">
+            <h3>Extraction Results:</h3>
+            <pre id="output"></pre>
+        </div>
+    </div>
+
+    <script>
+        async function uploadPdf() {
+            const fileInput = document.getElementById('pdfInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Please select a valid PDF document first.");
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append("file", file);
+            
+            document.getElementById('output').innerText = "Processing chunks...";
+            document.getElementById('resultContainer').style.display = "block";
+
+            try {
+                // Pointing to the FastAPI backend running on port 8000
+                const response = await fetch("http://localhost:8000/extract", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                const data = await response.json();
+                document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+            } catch (error) {
+                document.getElementById('output').innerText = "Error: " + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
