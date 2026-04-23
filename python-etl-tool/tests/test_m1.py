@@ -4,15 +4,22 @@ import json
 import time
 import requests
 import subprocess
+import glob
 from pathlib import Path
 
 class TestMilestone1:
     @classmethod
     def setup_class(cls):
         os.makedirs("/app/workspace/data/input", exist_ok=True)
+        
+        # CLEANUP: Remove any old CSVs from previous runs so they don't pollute the test!
+        for old_file in glob.glob("/app/workspace/data/input/*.csv"):
+            os.remove(old_file)
+            
         # Setup dummy CSV with multiple columns to test preservation
         with open("/app/workspace/data/input/test.csv", "w") as f:
             f.write("col1,col2,col3\nval1,val2,val3\n")
+            
         cls.proc = subprocess.Popen(["python3", "/app/workspace/src/app.py"])
         
         for _ in range(20):
