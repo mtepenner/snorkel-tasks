@@ -7,15 +7,20 @@ ROOT_DIR := ~/snorkel-tasks
 # Usage: make test_oracle TASK=task-name
 TASK_PATH := $(ROOT_DIR)/$(TASK)
 
-.PHONY: test_oracle test_ci upload pre_submit
+.PHONY: test_oracle test_ci upload pre_submit git_pull
 
-# 1. Test the Oracle solution
-test_oracle:
+# Helper: Pull latest changes
+git_pull:
+	@echo "Pulling latest changes from origin..."
+	@git pull origin $(BRANCH)
+
+# 1. Test the Oracle solution (Automatically pulls first)
+test_oracle: git_pull
 	@echo "Verifying Oracle solution for $(TASK)..."
 	stb run --agent oracle --path $(TASK_PATH)
 
-# 2. Run programmatic CI/LLMaJ checks
-test_ci:
+# 2. Run programmatic CI/LLMaJ checks (Automatically pulls first)
+test_ci: git_pull
 	@echo "Running programmatic CI and LLMaJ checks for $(TASK)..."
 	stb run -a terminus-2 -m openai/@openai-tbench/gpt-5 -p $(TASK_PATH)
 
