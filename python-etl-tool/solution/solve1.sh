@@ -67,7 +67,10 @@ def get_logs():
 
 @app.route('/download', methods=['GET'])
 def download():
-    return send_file(OUTPUT_FILE) if os.path.exists(OUTPUT_FILE) else "Not found", 404
+    if os.path.exists(OUTPUT_FILE):
+        return send_file(OUTPUT_FILE)
+    else:
+        return "Not found", 404
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
