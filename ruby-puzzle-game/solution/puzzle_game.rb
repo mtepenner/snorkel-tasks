@@ -1,52 +1,72 @@
 require 'json'
 
-def main
-  puts "Welcome to the Logic Grid Puzzle!"
-  
-  begin
-    file = File.read("/app/puzzles.json")
-    puzzles = JSON.parse(file)
-  rescue Errno::ENOENT
-    puts "Error: puzzles.json not found."
-    exit(1)
+class LogicGame
+  def initialize(config_path)
+    @config_path = config_path
+    @score = 100
   end
 
-  puzzle = puzzles[0]
-  puts "Loaded: #{puzzle['title']}"
-  
-  score = 100
-  
-  # Dynamically determine the question and answer from JSON
-  pastries = puzzle['items']['Pastries']
-  target_item = pastries.last
-  target_person = puzzle['solution'].key(target_item)
-  
-  loop do
-    print "Action (hint/solve/quit): "
-    STDOUT.flush 
+  def run
+    puts "Welcome to the Logic Grid Puzzle!"
     
-    cmd = gets&.strip&.downcase
-    break if cmd == "quit" || cmd.nil?
+    begin
+      file = File.read(@config_path)
+      puzzles = JSON.parse(file)
+    rescue Errno::ENOENT
+      puts "Error: puzzles.json not found."
+      return
+    end
+
+    # Load the first puzzle
+    puzzle = puzzles.first
+    puts "Loaded: #{puzzle['title']}"
     
-    if cmd == "hint"
-      puts "Hint: #{puzzle['clues'][0]}"
-      score -= 10
-    elsif cmd == "solve"
-      print "Who bought the #{target_item}? "
-      STDOUT.flush
+    # Dynamically determine the question and answer from the JSON
+    target_item = puzzle['items']['Pastries'].last
+    correct_person = puzzle['solution'].key(target_item)
+    
+    loop do
+      print "Action (hint/solve/quit): "
+      STDOUT.flush 
       
-      ans = gets&.strip
-      if ans&.downcase == target_person.downcase
-        puts "Correct!"
+      input = gets
+      break if input.nil? # Handle EOF cleanly
+      
+      command = input.strip.downcase
+      
+      case command
+      when "hint"
+        @score -= 10
+        puts "Hint: #{puzzle['clues'].first}"
+        
+      when "solve"
+        print "Who bought the #{target_item}? "
+        STDOUT.flush
+        
+        answer = gets&.strip
+        if answer&.downcase == correct_person.downcase
+          puts "Correct!"
+          break
+        else
+          puts "Incorrect!"
+          @score -= 20
+        end
+        
+      when "quit"
         break
+        
       else
-        puts "Incorrect!"
-        score -= 20
+        # Silently ignore unrecognised input; the loop will naturally re-prompt
       end
     end
-  end
 
-  puts "Game Over! Score: #{score}"
+    # This handles printing the score on both a 'solve' win and a 'quit'
+    puts "Game Over! Score: #{@score}"
+  end
 end
 
-main if __FILE__ == $PROGRAM_NAME
+# Instantiate and run at the very bottom, keeping the global namespace clean
+if __FILE__ == $PROGRAM_NAME
+  app = LogicGame.new("/app/puzzles.json")
+  app.run
+end
