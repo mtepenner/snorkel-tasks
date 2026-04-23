@@ -1,5 +1,5 @@
-# Detect the correct remote target branch (main vs master) to prevent GitHub PRs
-TARGET_BRANCH := $(shell git branch -r | grep -q "origin/main" && echo "main" || echo "master")
+# Detect the correct remote target branch using native git (No grep needed)
+TARGET_BRANCH := $(shell git show-ref --verify --quiet refs/remotes/origin/main && echo main || echo master)
 
 # Automatically detect the OS and set the correct root directory
 ifeq ($(OS),Windows_NT)
