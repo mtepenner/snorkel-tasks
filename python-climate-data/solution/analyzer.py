@@ -35,7 +35,7 @@ def milestone_3(trends):
         dot.edge(region, f"{temp:.2f}")
     
     # Render (outputs to climate_graph.png)
-    dot.render('/app/workspace/output/climate_graph', format='png', cleanup=True)
+    dot.render('/app/workspace/output/climate_graph', format='png', cleanup=False)
 
 if __name__ == "__main__":
     df = milestone_1()
