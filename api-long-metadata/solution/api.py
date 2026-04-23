@@ -27,7 +27,7 @@ async def extract_metadata(file: UploadFile = File(...)):
     # 1. Extract standard metadata
     meta = reader.metadata
     author = meta.author if meta and meta.author else "Unknown Author"
-    title = meta.title if meta and meta.title else "Untitled Document"
+    title = meta.title if meta and meta.title else "Untitled"
     
     # 2. Extract and chunk text for >50k token handling
     full_text = ""
