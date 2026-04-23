@@ -37,7 +37,7 @@ endif
 	@echo "Running programmatic CI and LLMaJ checks for $(TASK)..."
 	stb run -a terminus-2 -m openai/@openai-tbench/gpt-5 -p $(TASK_PATH)
 
-# 3. make upload
+# make upload
 upload:
 	@echo "Detected target branch: $(TARGET_BRANCH)"
 	@git add $(TASK_PATH)
@@ -45,11 +45,11 @@ upload:
 	@git push origin $(BRANCH):$(TARGET_BRANCH) || \
 	(echo "Failed to push to $(TARGET_BRANCH), attempting fallback to master..." && git push origin $(BRANCH):master)
 
-# 4. make pre_submit TASK=task-name
+# make pre_submit TASK=task-name
 pre_submit: test_oracle test_ci
 	@echo "All tests passed for $(TASK_PATH). Ready to upload."
 
-# 5: make zip TASK=task-name
+# make zip TASK=task-name
 # This creates a task.zip file inside the task directory containing only the contents
 zip:
 ifndef TASK
