@@ -5,7 +5,6 @@ import time
 import requests
 import subprocess
 import shutil
-import glob
 from pathlib import Path
 
 class TestMilestone1:
