@@ -1,5 +1,5 @@
-# Detect the correct remote target branch using native git (No grep needed)
-TARGET_BRANCH := $(shell git show-ref --verify --quiet refs/remotes/origin/main && echo main || echo master)
+# Detect the correct remote target branch using native git and strip any PowerShell ghost spaces
+TARGET_BRANCH := $(strip $(shell git show-ref --verify --quiet refs/remotes/origin/main && echo main || echo master))
 
 # Automatically detect the OS and set the correct root directory
 ifeq ($(OS),Windows_NT)
@@ -40,11 +40,13 @@ endif
 	@echo "Running programmatic CI and LLMaJ checks for $(TASK)..."
 	stb harbor run -a terminus-2 -m openai/@openai-tbench/gpt-5 -p "$(TASK_PATH)"
 
-# 3. Automated git upload (Direct to target branch)
+# 3. Automated git upload (Direct to target branch with built-in sync)
 upload:
 	@echo "Detected remote default branch: $(TARGET_BRANCH)"
 	@git add "$(TASK_PATH)"
 	@git commit -m $(COMMIT_MSG) || true
+	@echo "Pulling any recent manual GitHub merges..."
+	@git pull --rebase origin $(TARGET_BRANCH)
 	@echo "Pushing directly to origin/$(TARGET_BRANCH) to bypass manual merge..."
 	@git push origin HEAD:$(TARGET_BRANCH)
 
