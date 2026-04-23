@@ -56,5 +56,5 @@ ifndef TASK
 	$(error TASK is not set. Please specify a task folder, e.g., make zip TASK=name-of-task)
 endif
 	@echo "Zipping contents of $(TASK_PATH) into $(TASK_PATH)/task.zip..."
-	@cd $(TASK_PATH) && zip -r task.zip . -x "*.git*" -x "$(TASK).zip"
-	@echo "Success: $(TASK_PATH)/task.zip created."
+	@cd $(TASK_PATH) && zip -r $(TASK).zip . -x "*.git*" -x "$(TASK).zip"
+	@echo "Success: $(TASK_PATH)/$(TASK).zip created."
