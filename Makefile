@@ -51,7 +51,7 @@ upload:
 
 # 4. Helper to run everything before committing
 pre_submit: test_oracle test_ci
-	@echo "All tests passed for $(TASK_PATH). Ready to upload."
+	stb harbor view jobs
 
 # 5. Zip a task
 zip:
