@@ -12,16 +12,23 @@ class TestMilestone1:
     def setup_class(cls):
         os.makedirs("/app/workspace/data/input", exist_ok=True)
         
-        # CLEANUP: Remove any old CSVs from previous runs so they don't pollute the test!
+        # CLEANUP 1: Remove any old CSVs
         for old_file in glob.glob("/app/workspace/data/input/*.csv"):
             os.remove(old_file)
             
+        # CLEANUP 2: Nuke the old database, json, and logs so we start 100% fresh!
+        for filename in ["etl.db", "output.json", "etl.log"]:
+            old_file = Path(f"/app/workspace/data/{filename}")
+            if old_file.exists():
+                old_file.unlink()
+                
         # Setup dummy CSV with multiple columns to test preservation
         with open("/app/workspace/data/input/test.csv", "w") as f:
             f.write("col1,col2,col3\nval1,val2,val3\n")
             
         cls.proc = subprocess.Popen(["python3", "/app/workspace/src/app.py"])
         
+        # Robust polling instead of a fixed sleep
         for _ in range(20):
             try:
                 requests.get("http://127.0.0.1:5000/logs", timeout=1)
