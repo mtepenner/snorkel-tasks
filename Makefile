@@ -1,5 +1,4 @@
 # Default branch target, falls back to master if main is unavailable
-BRANCH := $(shell git branch --show-current)
 TARGET_BRANCH := $(shell git show-ref --verify --quiet refs/heads/main && echo "main" || echo "master")
 
 # Automatically detect the OS and set the correct root directory
@@ -12,18 +11,18 @@ endif
 # Use wildcard to detect if a specific task was provided
 ifdef TASK
   TASK_PATH := $(ROOT_DIR)/$(TASK)
-  COMMIT_MSG := Automated update for task: $(TASK)
+  COMMIT_MSG := "Automated update for task: $(TASK)"
 else
   TASK_PATH := $(ROOT_DIR)
-  COMMIT_MSG := Automated bulk update for all tasks
+  COMMIT_MSG := "Automated bulk update for all tasks"
 endif
 
 .PHONY: test_oracle test_ci upload pre_submit git_pull zip
 
-# Helper: Pull latest changes
+# Helper: Pull latest changes and rebase to prevent messy GitHub merges
 git_pull:
-	@echo "Pulling latest changes from origin..."
-	@git pull origin $(BRANCH)
+	@echo "Syncing with remote $(TARGET_BRANCH) to avoid merge conflicts..."
+	@git pull --rebase origin $(TARGET_BRANCH)
 
 # 1. Test the Oracle solution
 test_oracle: git_pull
@@ -41,17 +40,17 @@ endif
 	@echo "Running programmatic CI and LLMaJ checks for $(TASK)..."
 	stb harbor run -a terminus-2 -m openai/@openai-tbench/gpt-5 -p "$(TASK_PATH)"
 
-# 3. Automated git upload (Bulk or Specific)
+# 3. Automated git upload (Direct to target branch)
 upload:
 	@echo "Detected target branch: $(TARGET_BRANCH)"
 	@git add "$(TASK_PATH)"
-	@git commit -m "$(COMMIT_MSG)"
-	@git push origin $(BRANCH):$(TARGET_BRANCH) || \
-	(echo "Failed to push to $(TARGET_BRANCH), attempting fallback to master..." && git push origin $(BRANCH):master)
+	@git commit -m $(COMMIT_MSG)
+	@echo "Pushing directly to $(TARGET_BRANCH)..."
+	@git push origin HEAD:$(TARGET_BRANCH)
 
 # 4. Helper to run everything before committing
 pre_submit: test_oracle test_ci
-	stb harbor view jobs
+	@echo "All tests passed for $(TASK_PATH). Ready to upload."
 
 # 5. Zip a task
 zip:
