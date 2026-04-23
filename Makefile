@@ -1,5 +1,5 @@
-# Default branch target, falls back to master if main is unavailable
-TARGET_BRANCH := $(shell git show-ref --verify --quiet refs/heads/main && echo "main" || echo "master")
+# Detect the correct remote target branch (main vs master) to prevent GitHub PRs
+TARGET_BRANCH := $(shell git branch -r | grep -q "origin/main" && echo "main" || echo "master")
 
 # Automatically detect the OS and set the correct root directory
 ifeq ($(OS),Windows_NT)
@@ -42,10 +42,10 @@ endif
 
 # 3. Automated git upload (Direct to target branch)
 upload:
-	@echo "Detected target branch: $(TARGET_BRANCH)"
+	@echo "Detected remote default branch: $(TARGET_BRANCH)"
 	@git add "$(TASK_PATH)"
-	@git commit -m $(COMMIT_MSG)
-	@echo "Pushing directly to $(TARGET_BRANCH)..."
+	@git commit -m $(COMMIT_MSG) || true
+	@echo "Pushing directly to origin/$(TARGET_BRANCH) to bypass manual merge..."
 	@git push origin HEAD:$(TARGET_BRANCH)
 
 # 4. Helper to run everything before committing
