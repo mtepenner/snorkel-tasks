@@ -48,3 +48,13 @@ upload:
 # 4. Helper to run everything before committing
 pre_submit: test_oracle test_ci
 	@echo "All tests passed for $(TASK_PATH). Ready to upload."
+
+# 5: make zip TASK=task-name
+# This creates a task.zip file inside the task directory containing only the contents
+zip:
+ifndef TASK
+	$(error TASK is not set. Please specify a task folder, e.g., make zip TASK=name-of-task)
+endif
+	@echo "Zipping contents of $(TASK_PATH) into $(TASK_PATH)/task.zip..."
+	@cd $(TASK_PATH) && zip -r task.zip . -x "*.git*" -x "task.zip"
+	@echo "Success: $(TASK_PATH)/task.zip created."
