@@ -16,10 +16,10 @@ fi
 # Run tests using pinned dependencies and the correct harness mount path
 uvx \
   -p 3.13 \
-  -with pytest==8.4.1 \
-  -with pytest-json-ctrf==0.3.5 \
-  -with requests==2.32.3 \
-  -with fpdf2==2.8.3 \
+  --with pytest==8.4.1 \
+  --with pytest-json-ctrf==0.3.5 \
+  --with requests==2.32.3 \
+  --with fpdf2==2.8.3 \
   pytest --ctrf /logs/verifier/ctrf.json /tests/test_outputs.py -rA
 
 # Produce reward file (REQUIRED)
