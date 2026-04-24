@@ -5,7 +5,6 @@ def test_milestone_3_anti_cheat_and_edges():
     script_path = '/app/workspace/src/analyzer.py'
     png_path = '/app/workspace/output/climate_graph.png'
     dot_path = '/app/workspace/output/climate_graph'
-    csv_path = '/app/workspace/data/climate.csv'
 
     # Ensure clean state
     if os.path.exists(png_path):
