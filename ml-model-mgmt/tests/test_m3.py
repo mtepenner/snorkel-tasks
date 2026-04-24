@@ -9,19 +9,23 @@ def test_m3_inference_endpoint(client):
 
 def test_m3_frontend_fetch_logic():
     """1 pt: write some fetch logic in frontend to hit the /predict endpoint."""
-    js_logic_found = False
+    js_or_html_path = '/app/workspace/src/templates/index.html'
     
-    # Check index.html for embedded JS
-    if os.path.exists('/app/workspace/src/templates/index.html'):
-        with open('/app/workspace/src/templates/index.html', 'r') as f:
-            if '/api/v1/predict' in f.read():
-                js_logic_found = True
+    if not os.path.exists(js_or_html_path):
+        pytest.fail("HTML missing")
+        
+    with open(js_or_html_path, 'r') as f:
+        content = f.read()
+        
+    # STRENGTHENED: Verify actual fetch/XHR call exists, not just string literal
+    assert 'fetch(' in content or 'XMLHttpRequest' in content, "No fetch/XHR call found"
+    assert '/api/v1/predict' in content, "Fetch does not target /predict endpoint"
     
-    # Check external JS if it exists
-    js_path = '/app/workspace/src/static/js/app.js'
-    if os.path.exists(js_path):
-        with open(js_path, 'r') as f:
-            if '/api/v1/predict' in f.read():
-                js_logic_found = True
-
-    assert js_logic_found, "Fetch logic for /predict not found in frontend files"
+    # STRENGTHENED: Verify no-reload
+    assert 'e.preventdefault' in content.lower() or 'return false' in content.lower() or 'event.preventdefault' in content.lower(), "Missing preventDefault to stop page reload"
+    
+    # STRENGTHENED: Verify loading spinner
+    assert 'spinner' in content.lower() or 'loading' in content.lower(), "Missing loading state/spinner"
+    
+    # STRENGTHENED: Verify error handling
+    assert '.catch(' in content or 'catch ' in content or 'onerror' in content.lower(), "Missing error handling for failed API call"
