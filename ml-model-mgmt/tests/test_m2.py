@@ -1,18 +1,29 @@
 import os
+from bs4 import BeautifulSoup
 
 def test_m2_ui_files_exist():
     """1 pt: drop the main html into /app/workspace/src/templates/index.html."""
     assert os.path.exists('/app/workspace/src/templates/index.html'), "index.html missing"
 
 def test_m2_ui_content():
-    """1 pt: build a basic dashboard layout with config form and chart area."""
+    """1 pt: build a basic dashboard layout with config form and chart area using functional HTML parsing."""
     with open('/app/workspace/src/templates/index.html', 'r') as f:
-        content = f.read().lower()
+        soup = BeautifulSoup(f.read(), 'html.parser')
         
-    # STRENGTHENED assertions
-    assert 'sidebar' in content or 'nav' in content, "Missing sidebar/nav element"
-    assert 'data' in content and 'model' in content and 'inference' in content, "Sidebar must have data prep, model config, inference links"
-    assert '<select' in content, "Missing model selection dropdown"
-    assert 'range' in content or 'slider' in content, "Missing hyperparameter sliders"
-    assert '<canvas' in content or '<svg' in content or 'chart' in content, "Missing chart element"
-    assert 'viewport' in content, "Missing responsive viewport meta tag"
+    nav = soup.find(['nav', 'aside', 'div'], id=lambda x: x in ['sidebar', 'nav'] if x else False) or soup.find(['nav', 'aside'])
+    assert nav is not None, "Missing sidebar/nav element"
+    
+    nav_text = nav.get_text().lower()
+    assert 'data' in nav_text and 'model' in nav_text and 'inference' in nav_text, "Sidebar must have data prep, model config, inference links"
+    
+    select = soup.find('select')
+    assert select is not None and len(select.find_all('option')) >= 2, "Missing model selection dropdown with >=2 options"
+    
+    slider = soup.find('input', {'type': 'range'})
+    assert slider is not None, "Missing hyperparameter sliders"
+    
+    chart = soup.find(['canvas', 'svg']) or soup.find(id=lambda x: x and 'chart' in x.lower())
+    assert chart is not None, "Missing chart element"
+    
+    viewport = soup.find('meta', attrs={'name': 'viewport'})
+    assert viewport is not None, "Missing responsive viewport meta tag"
