@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ML Model Manager</title>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>Nav</h2>
+        <ul>
+            <li>Data Prep</li>
+            <li>Model Config</li>
+            <li>Inference</li>
+        </ul>
+    </div>
+    
+    <div id="main">
+        <h1>Model Configuration</h1>
+        <select id="model-select">
+            <option value="rf">Random Forest</option>
+            <option value="lr">Linear Regression</option>
+        </select>
+
+        <h2>Run Inference</h2>
+        <input type="text" id="features" placeholder="e.g. 1,2,3">
+        <button id="run-btn" onclick="runPrediction()">Run Prediction</button>
+        <div id="spinner" style="display:none;">Loading...</div>
+        <div id="result"></div>
+        <div id="chart-area">Chart Area Placeholder</div>
+    </div>
+
+    <script>
+        async function runPrediction() {
+            document.getElementById('spinner').style.display = 'block';
+            const features = document.getElementById('features').value.split(',').map(Number);
+            
+            try {
+                const response = await fetch('/api/v1/predict', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({features: features})
+                });
+                const data = await response.json();
+                document.getElementById('result').innerText = `Prediction: ${data.prediction}`;
+            } catch (err) {
+                document.getElementById('result').innerText = `Error: ${err.message}`;
+            } finally {
+                document.getElementById('spinner').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
