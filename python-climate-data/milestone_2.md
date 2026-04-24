@@ -1,3 +1,1 @@
-Calculates the correct average temperature for every region, 4
-Writes the flat dict to /app/workspace/data/trends.json, 3
-Uses hardcoded averages instead of computing from data, -2
+the second output is /app/workspace/data/trends.json.  the structure here is literally just a flat dictionary. region text goes in as keys  and the float averages act as the values.
