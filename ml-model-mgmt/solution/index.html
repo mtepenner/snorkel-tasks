@@ -2,17 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ML Model Manager</title>
 </head>
 <body>
-    <div id="sidebar">
-        <h2>Nav</h2>
+    <nav class="sidebar">
+        <h2>Navigation</h2>
         <ul>
-            <li>Data Prep</li>
-            <li>Model Config</li>
-            <li>Inference</li>
+            <li id="nav-data">Data Prep</li>
+            <li id="nav-model">Model Config</li>
+            <li id="nav-inference">Inference</li>
         </ul>
-    </div>
+    </nav>
     
     <div id="main">
         <h1>Model Configuration</h1>
@@ -20,18 +21,25 @@
             <option value="rf">Random Forest</option>
             <option value="lr">Linear Regression</option>
         </select>
+        
+        <label for="slider">Hyperparameter:</label>
+        <input type="range" id="slider" min="1" max="100">
 
         <h2>Run Inference</h2>
-        <input type="text" id="features" placeholder="e.g. 1,2,3">
-        <button id="run-btn" onclick="runPrediction()">Run Prediction</button>
+        <form onsubmit="runPrediction(event)">
+            <input type="text" id="features" placeholder="e.g. 1,2,3">
+            <button type="submit" id="run-btn">Run Prediction</button>
+        </form>
         <div id="spinner" style="display:none;">Loading...</div>
         <div id="result"></div>
-        <div id="chart-area">Chart Area Placeholder</div>
+        <div id="chart-area"><canvas id="myChart"></canvas></div>
     </div>
 
     <script>
-        async function runPrediction() {
+        async function runPrediction(e) {
+            e.preventDefault(); 
             document.getElementById('spinner').style.display = 'block';
+            document.getElementById('result').innerText = "";
             const features = document.getElementById('features').value.split(',').map(Number);
             
             try {
