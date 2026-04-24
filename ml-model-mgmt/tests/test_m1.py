@@ -1,4 +1,3 @@
-import pytest
 import numpy as np
 
 def test_m1_upload_endpoint_exists(client):
