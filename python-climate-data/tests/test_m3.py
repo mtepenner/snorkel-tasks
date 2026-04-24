@@ -7,7 +7,6 @@ def test_milestone_3_anti_cheat_and_edges():
     png_path = '/app/workspace/output/climate_graph.png'
     dot_path = '/app/workspace/output/climate_graph'
     csv_path = '/app/workspace/data/climate.csv'
-    meta_path = '/app/workspace/data/metadata.json'
 
     with open(csv_path, 'r') as f:
         csv_content = f.read()
@@ -31,4 +30,4 @@ def test_milestone_3_anti_cheat_and_edges():
 
     assert 'North America' in dot_src, "Graph missing North America node."
     assert '15.0' in dot_src or '15.00' in dot_src, "Graph missing North America mean (must be filtered)."
-    assert 'Asia' in dot_src, "Graph missing dynamically injected Asia node."
+    assert '30.0' in dot_src or '30.00' in dot_src, "Graph missing dynamically injected node logic."
