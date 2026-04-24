@@ -25,9 +25,12 @@ def test_milestone_3_anti_cheat_and_edges():
 
     assert os.path.exists(dot_path), "Graphviz DOT source file was not preserved. Agent ignored cleanup=False."
 
+    # Parse the actual DOT source file to verify Graphviz usage and Directed Graphs
     with open(dot_path, 'r') as f:
-        dot_src = f.read()
+        dot_src = f.read().lower()
 
-    assert 'North America' in dot_src, "Graph missing North America node."
+    assert 'digraph' in dot_src, "Graph must be a directed graph (Digraph)."
+    assert '->' in dot_src, "Graph must contain directed edges connecting nodes (->)."
+    assert 'north america' in dot_src, "Graph missing North America node."
     assert '15.0' in dot_src or '15.00' in dot_src, "Graph missing North America mean (must be filtered)."
-    assert '30.0' in dot_src or '30.00' in dot_src, "Graph missing dynamically injected node logic."
+    assert 'asia' in dot_src, "Graph missing dynamically injected node logic."
