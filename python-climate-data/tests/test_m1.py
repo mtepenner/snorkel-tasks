@@ -20,7 +20,8 @@ def test_milestone_1_anti_cheat():
     if os.path.exists(output_path):
         os.remove(output_path)
         
-    subprocess.run(['python3', script_path], check=False)
+    # FIX: Use the explicit system path to the Python containing pandas
+    subprocess.run(['/usr/local/bin/python3', script_path], check=False)
     assert os.path.exists(output_path), "Script did not generate cleaned.json when executed."
     
     with open(output_path, 'r') as f:
