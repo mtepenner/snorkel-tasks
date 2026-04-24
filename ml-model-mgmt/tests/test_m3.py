@@ -1,4 +1,5 @@
 import os
+import pytest
 
 def test_m3_inference_endpoint(client):
     """1 pt: add a dummy prediction route POST /api/v1/predict."""
