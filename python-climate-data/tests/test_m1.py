@@ -3,7 +3,7 @@ import json
 import subprocess
 
 def test_milestone_1_anti_cheat():
-    """Verify cleaned.json is dynamically regenerated with correct schema and filters."""
+    """Verify cleaned.json is dynamically regenerated with correct schema, types, and filters."""
     script_path = '/app/workspace/src/analyzer.py'
     output_path = '/app/workspace/data/cleaned.json'
     csv_path = '/app/workspace/data/climate.csv'
@@ -38,6 +38,11 @@ def test_milestone_1_anti_cheat():
     assert {"North America", "Europe", "Asia"}.issubset(regions), "Region mapping failed for dynamic data."
 
     for rec in data:
-        assert "temperature" in rec, "temperature field missing from record."
-        assert "year" in rec, "year field missing from record."
+        assert "region" in rec, "region field missing."
+        assert "temperature" in rec, "temperature field missing."
+        assert "year" in rec, "year field missing."
+        
+        assert isinstance(rec["region"], str), "region must be a string"
+        assert isinstance(rec["year"], int), "year must be an integer"
+        assert isinstance(rec["temperature"], float), "temperature must be a float"
         assert rec.get("year", 2021) >= 2021, "Failed to filter out records before 2021!"
