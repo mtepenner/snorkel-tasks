@@ -3,34 +3,37 @@ import json
 import subprocess
 
 def test_milestone_2_anti_cheat():
-    """Verify trends.json dynamically calculates the correct mean temperature for all regions."""
+    """Verify trends.json dynamically calculates the correct mean temperature for filtered data."""
     script_path = '/app/workspace/src/analyzer.py'
     output_path = '/app/workspace/data/trends.json'
-    
-    # Anti-cheat: Inject new dynamic data to prevent hardcoding
-    with open('/app/workspace/data/climate.csv', 'a') as f:
-        f.write('3,2020,30.0\n')
-    
-    with open('/app/workspace/data/metadata.json', 'r') as f:
+    csv_path = '/app/workspace/data/climate.csv'
+    meta_path = '/app/workspace/data/metadata.json'
+
+    with open(csv_path, 'r') as f:
+        csv_content = f.read()
+    if '3,2021,30.0' not in csv_content:
+        with open(csv_path, 'a') as f:
+            f.write('3,2021,30.0\n')
+
+    with open(meta_path, 'r') as f:
         meta = json.load(f)
-    meta["3"] = "Asia"
-    with open('/app/workspace/data/metadata.json', 'w') as f:
-        json.dump(meta, f)
-        
+    if "3" not in meta:
+        meta["3"] = "Asia"
+        with open(meta_path, 'w') as f:
+            json.dump(meta, f)
+
     if os.path.exists(output_path):
         os.remove(output_path)
-        
+
     subprocess.run(['/usr/local/bin/python3', script_path], check=False)
     assert os.path.exists(output_path), "Script did not generate trends.json when executed."
-    
+
     with open(output_path, 'r') as f:
         data = json.load(f)
-        
-    assert isinstance(data, dict), "Output should be a key-value dictionary."
-    assert "North America" in data, "Missing North America key."
-    assert "Europe" in data, "Missing Europe key."
+
     assert "Asia" in data, "Script does not process CSV dynamically (missing Asia key)."
     
-    assert abs(data["North America"] - 14.75) < 1e-9, "Incorrect average for North America."
-    assert abs(data["Europe"] - 22.3) < 1e-9, "Incorrect average for Europe."
+    # 2020 Data is excluded. New expected means:
+    assert abs(data["North America"] - 15.0) < 1e-9, "Incorrect average for North America. Did you filter out pre-2021 data?"
+    assert abs(data["Europe"] - 22.5) < 1e-9, "Incorrect average for Europe."
     assert abs(data["Asia"] - 30.0) < 1e-9, "Incorrect dynamic average for Asia."
