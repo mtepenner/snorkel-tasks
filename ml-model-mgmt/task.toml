@@ -1,0 +1,42 @@
+# Task configuration schema version
+version = "2.0"
+
+# Task metadata (author, difficulty, categorization)
+[metadata]
+author_name = "mtepenner"
+author_email = "mtepenner@gmail.com"
+difficulty = "unknown"
+category = "software-engineering"
+subcategories = ["ui_building", "api_integration"]
+# The number of milestones in the task
+number_of_milestones = 3
+# Size of the codebase: minimal -> 0-20 files, small -> 20+ files, large -> 200+ files
+codebase_size = "minimal"
+# Coding languages used in the oracle solution or required by the agent
+languages = ["python", "javascript", "html"]
+# Must be exactly 3-6 tags
+tags = ["python", "flask", "machine-learning", "web-development"]
+# Estimated time to complete (minutes)
+expert_time_estimate_min = 60
+junior_time_estimate_min = 120
+
+# Verifier: runs the test script to check task completion
+[verifier]
+timeout_sec = 300.0
+cpus = 1
+memory_mb = 2048
+storage_mb = 1024
+
+# Agent: limits how long the agent can run when attempting the task
+[agent]
+timeout_sec = 1800.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 2048
+
+# Sandbox environment limits
+[environment]
+build_timeout_sec = 600.0
+cpus = 2
+memory_mb = 4096
+storage_mb = 10240
