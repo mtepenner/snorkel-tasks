@@ -39,4 +39,5 @@ def test_milestone_1_anti_cheat():
 
     for rec in data:
         assert "temperature" in rec, "temperature field missing from record."
+        assert "year" in rec, "year field missing from record."
         assert rec.get("year", 2021) >= 2021, "Failed to filter out records before 2021!"
