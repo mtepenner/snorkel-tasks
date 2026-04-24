@@ -7,7 +7,6 @@ def test_milestone_1_anti_cheat():
     script_path = '/app/workspace/src/analyzer.py'
     output_path = '/app/workspace/data/cleaned.json'
     csv_path = '/app/workspace/data/climate.csv'
-    meta_path = '/app/workspace/data/metadata.json'
 
     with open(csv_path, 'r') as f:
         csv_content = f.read()
