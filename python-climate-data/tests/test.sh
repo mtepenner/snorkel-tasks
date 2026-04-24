@@ -1,25 +1,21 @@
 #!/bin/bash
-export PATH="$HOME/.local/bin:$PATH"
+# Install test dependencies
+apt-get update -q && apt-get install -y -q curl
+curl -LsSf https://astral.sh/uv/0.7.13/install.sh | sh
+source $HOME/.local/bin/env
+uv venv .tbench-testing
+source .tbench-testing/bin/activate
+uv pip install pytest==8.4.1
 
-# Ensure the logs directory exists
+# Prepare logs
 mkdir -p /logs/verifier
 
-MILESTONE=$1
+# Run tests
+uv run pytest /tests/test_m1.py -rA && \
+uv run pytest /tests/test_m2.py -rA && \
+uv run pytest /tests/test_m3.py -rA
 
-if [ "$MILESTONE" == "1" ]; then
-    pytest /root/tasks/tbench-task/tests/test_m1.py -rA > /dev/null 2>&1
-elif [ "$MILESTONE" == "2" ]; then
-    pytest /root/tasks/tbench-task/tests/test_m2.py -rA > /dev/null 2>&1
-elif [ "$MILESTONE" == "3" ]; then
-    pytest /root/tasks/tbench-task/tests/test_m3.py -rA > /dev/null 2>&1
-else
-    # Run all sequentially if no specific milestone is provided
-    pytest /root/tasks/tbench-task/tests/test_m1.py -rA && \
-    pytest /root/tasks/tbench-task/tests/test_m2.py -rA && \
-    pytest /root/tasks/tbench-task/tests/test_m3.py -rA > /dev/null 2>&1
-fi
-
-# Strict Terminus binary reward assignment
+# Binary reward assignment (MUST be exactly 0 or 1)
 if [ $? -eq 0 ]; then
   echo 1 > /logs/verifier/reward.txt
 else
