@@ -9,34 +9,40 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 processed_df = None
 
-# MILESTONE 2: Web GUI
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# MILESTONE 1: Preprocessing Upload
 @app.route('/api/v1/data/upload', methods=['POST'])
 def upload_data():
     global processed_df
     try:
+        # Handle CSV or JSON
         if request.is_json:
             df = pd.DataFrame(request.json)
+        elif request.content_type == 'text/csv':
+            from io import StringIO
+            df = pd.read_csv(StringIO(request.get_data(as_text=True)))
         else:
             return jsonify({"error": "Unsupported format"}), 400
         
-        # Basic preprocessing (Fill NA and Scale)
+        # Preprocessing
         df.fillna(df.mean(numeric_only=True), inplace=True)
         scaler = StandardScaler()
         numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns
         if len(numeric_cols) > 0:
             df[numeric_cols] = scaler.fit_transform(df[numeric_cols])
             
+        # One-hot encoding for categorical
+        cat_cols = df.select_dtypes(include=['object']).columns
+        if len(cat_cols) > 0:
+            df = pd.get_dummies(df, columns=cat_cols)
+            
         processed_df = df
         return jsonify({"message": "Data processed successfully", "rows": len(df)}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# MILESTONE 1: Fetch Processed Data
 @app.route('/api/v1/data/processed', methods=['GET'])
 def get_processed_data():
     global processed_df
@@ -44,13 +50,11 @@ def get_processed_data():
         return jsonify(processed_df.to_dict(orient='records')), 200
     return jsonify({"error": "No data processed yet"}), 404
 
-# MILESTONE 3: Model Inference
 @app.route('/api/v1/predict', methods=['POST'])
 def predict():
     try:
         data = request.json
         features = data.get('features', [])
-        # Dummy prediction logic (sum of features)
         prediction = sum(features) if features else 0
         return jsonify({"prediction": prediction, "status": "success"}), 200
     except Exception as e:
