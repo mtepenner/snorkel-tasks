@@ -1,46 +1,45 @@
+import os
+import re
 import pytest
-import numpy as np
 
-def test_m1_upload_endpoint_exists(client):
-    """1 pt: wire up a POST /api/v1/data/upload endpoint to swallow csv or json payloads."""
-    assert client is not None, "API not implemented"
-    response = client.post('/api/v1/data/upload', json=[{"A": 1, "B": None}, {"A": 2, "B": 4}])
-    assert response.status_code == 200, "JSON Upload endpoint failed"
-    
-    csv_data = "A,B\n1,\n2,4\n"
-    response_csv = client.post('/api/v1/data/upload', data=csv_data, content_type='text/csv')
-    assert response_csv.status_code == 200, "CSV Upload endpoint failed"
-    processed = client.get('/api/v1/data/processed').get_json()
-    assert len(processed) == 2
-
-def test_m1_preprocessing_and_retrieval(client):
-    """1 pt: handle missing values/scaling/encoding and GET /api/v1/data/processed spits out cleaned dataset."""
+def test_m3_inference_endpoint(client):
+    """1 pt: add a dummy prediction route POST /api/v1/predict."""
     assert client is not None
-    client.post('/api/v1/data/upload', json=[{"A": 10}, {"A": None}, {"A": 30}])
-    response = client.get('/api/v1/data/processed')
+    response = client.post('/api/v1/predict', json={"features": [1, 2, 3]})
     assert response.status_code == 200
-    
-    data = response.get_json()
-    assert isinstance(data, list) and len(data) == 3, "Processed data malformed"
-    
-    vals = [row["A"] for row in data]
-    assert None not in vals, "Missing values not handled"
-    
-    # STRENGTHENED SCALING ASSERTION
-    # Standard scaling ensures mean ≈ 0 and std ≈ 1
-    # Bypassing the permissive "or" check to enforce both imputation and scaling.
-    mean_val = np.mean(vals)
-    std_val = np.std(vals)
-    assert abs(mean_val) < 0.01, f"Standard scaling not applied: mean is {mean_val} (expected 0)"
-    assert abs(std_val - 1.0) < 0.2, f"Standard scaling not applied: std is {std_val} (expected 1)"
+    assert "prediction" in response.get_json(), "Response missing 'prediction' key"
 
-    client.post('/api/v1/data/upload', json=[{"color": "red"}, {"color": "blue"}])
-    resp2 = client.get('/api/v1/data/processed')
-    cols = resp2.get_json()[0].keys()
-    assert "color_red" in cols or "color_blue" in cols, "One-hot encoding failed"
+def test_m3_frontend_fetch_logic():
+    """1 pt: write some fetch logic in frontend to hit the /predict endpoint."""
+    js_or_html_path = '/app/workspace/src/templates/index.html'
+    js_path = '/app/workspace/src/static/js/app.js'
+    
+    content = ""
+    if os.path.exists(js_or_html_path):
+        with open(js_or_html_path, 'r') as f:
+            content += f.read()
+    if os.path.exists(js_path):
+        with open(js_path, 'r') as f:
+            content += f.read()
+            
+    assert content, "Frontend files missing"
+    
+    # Strip HTML and JS comments
+    content = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
+    content = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
+    content = re.sub(r'//.*', '', content)
+    
+    content_lower = content.lower()
+    
+    # STRENGTHENED: Must be inside an event listener!
+    listener_pattern = re.compile(r'(addEventListener\s*\(\s*['"](?:click|submit)['"]|onsubmit\s*=|onclick\s*=).*?(?:fetch|XMLHttpRequest)', re.IGNORECASE | re.DOTALL)
+    assert listener_pattern.search(content), "Fetch logic must be triggered by a genuine event listener (click/submit), not floating standalone"
 
-def test_m1_error_handling(client):
-    """1 pt: throws a 400 for bad input."""
-    assert client is not None
-    response = client.post('/api/v1/data/upload', data="this is garbage text")
-    assert response.status_code in [400, 415], "Did not handle bad input gracefully. Expected 4xx, not 5xx."
+    assert 'fetch(' in content or 'xmlhttprequest' in content_lower, "No fetch/XHR call found"
+    assert '/api/v1/predict' in content, "Fetch does not target /predict endpoint"
+    assert 'e.preventdefault' in content_lower or 'event.preventdefault' in content_lower or 'return false' in content_lower, "Missing preventDefault"
+    assert 'spinner' in content_lower or 'loading' in content_lower or 'display: block' in content_lower or 'display:block' in content_lower, "Missing loading state"
+    assert '.catch(' in content or 'catch ' in content or 'onerror' in content_lower, "Missing error handling"
+    
+    dom_update = any(kw in content_lower for kw in ['innerhtml', 'textcontent', 'appendchild', 'innertext', '.text(', '.html('])
+    assert dom_update, "No DOM/chart update logic found after fetch"
