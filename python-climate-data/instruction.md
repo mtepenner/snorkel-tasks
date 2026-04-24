@@ -1,7 +1,5 @@
-can someone write a script at /app/workspace/src/analyzer.py for the climate logs? the files are at /app/workspace/data/climate.csv and /app/workspace/data/metadata.json
+working on some global warming research and we need a python script at /app/workspace/src/analyzer.py to process raw tempurature records and output regional trends. the goal is just to parse the files calculate the avrages and generate a graphviz directed graph showing the regions pointing directly to their means. btw we only care about recent data so completely drop any records from before the year 2021.
 
-just merge the regions to the temps but toss out anything older than 2021 since its messing up our charts. save the filtered list of dicts to /app/workspace/data/cleaned.json and make sure region is a string and temperature is a float.
+grab the data from /app/workspace/data/climate.csv and /app/workspace/data/metadata.json. merge the region names in and save the filtered 2021 and newer output to /app/workspace/data/cleaned.json. it needs to be a list of dictionaries where each record has the mapped region string and temperature float. then get the mean temp by region and drop a flat dict into /app/workspace/data/trends.json with region strings as keys and mean floats as values.
 
-after that get the average temp per region and drop it in /app/workspace/data/trends.json as a flat dict. region name is the key, mean temp is the value.
-
-for the visual use the python graphviz lib to make a directed graph. have the regions point straight to their averages. export the png to /app/workspace/output/climate_graph.png but turn cleanup to False. i need to check the raw dot file so dont let it auto delete.
+build the graphviz visual and save the png to /app/workspace/output/climate_graph.png. make sure to leave the raw dot source file sitting on the disk instead of auto cleaning it up so i can inspect the node edges manually later.
