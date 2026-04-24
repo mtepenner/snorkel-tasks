@@ -21,9 +21,7 @@ fi
 
 # Strict Terminus binary reward assignment
 if [ $? -eq 0 ]; then
-    echo 1.0 > /logs/verifier/reward.txt
-    exit 0
+  echo 1 > /logs/verifier/reward.txt
 else
-    echo 0.0 > /logs/verifier/reward.txt
-    exit 1
+  echo 0 > /logs/verifier/reward.txt
 fi
