@@ -20,7 +20,7 @@ def test_milestone_2_anti_cheat():
     if os.path.exists(output_path):
         os.remove(output_path)
         
-    subprocess.run(['python3', script_path], check=False)
+    subprocess.run(['/usr/local/bin/python3', script_path], check=False)
     assert os.path.exists(output_path), "Script did not generate trends.json when executed."
     
     with open(output_path, 'r') as f:

@@ -8,7 +8,6 @@ def test_milestone_3_anti_cheat_and_edges():
     png_path = '/app/workspace/output/climate_graph.png'
     dot_path = '/app/workspace/output/climate_graph'
     
-    # Anti-cheat: Inject new dynamic data
     with open('/app/workspace/data/climate.csv', 'a') as f:
         f.write('3,2020,30.0\n')
     with open('/app/workspace/data/metadata.json', 'r') as f:
@@ -20,19 +19,18 @@ def test_milestone_3_anti_cheat_and_edges():
     if os.path.exists(png_path):
         os.remove(png_path)
         
-    # Patch the agent's script to prevent them from deleting the Graphviz DOT source
     with open(script_path, 'r') as f:
         code = f.read()
     code = code.replace('cleanup=True', 'cleanup=False')
     with open(script_path, 'w') as f:
         f.write(code)
         
-    subprocess.run(['python3', script_path], check=False)
+    subprocess.run(['/usr/local/bin/python3', script_path], check=False)
     assert os.path.exists(png_path), "Script did not generate climate_graph.png."
     
-    # Check the DOT source code for dynamic data mappings
+
     if not os.path.exists(dot_path):
-        dot_path += '.gv' # Fallback for some graphviz versions
+        dot_path += '.gv' 
         
     assert os.path.exists(dot_path), "Graphviz DOT source file was not preserved."
     
