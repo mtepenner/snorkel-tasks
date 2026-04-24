@@ -33,7 +33,7 @@ def test_m1_preprocessing_and_retrieval(client):
 
     client.post('/api/v1/data/upload', json=[{"color": "red"}, {"color": "blue"}])
     resp2 = client.get('/api/v1/data/processed')
-    cols = resp2.get_json()[0].keys()
+    cols = list(resp2.get_json()[0].keys())
     assert "color_red" in cols or "color_blue" in cols, "One-hot encoding failed"
 
 def test_m1_error_handling(client):
