@@ -1,6 +1,5 @@
 import os
 import subprocess
-import pytest
 
 def test_milestone_3_anti_cheat_and_edges():
     script_path = '/app/workspace/src/analyzer.py'
