@@ -2,7 +2,7 @@ FROM python:3.10-slim
 
 RUN apt-get update && apt-get install -y graphviz && rm -rf /var/lib/apt/lists/*
 
-RUN pip install "numpy<2.0.0" pandas==2.0.3 graphviz==0.20.1
+RUN pip install numpy==1.26.4 pandas==2.0.3 graphviz==0.20.1
 
 # Setup workspace
 WORKDIR /app/workspace
