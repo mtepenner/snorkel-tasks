@@ -11,11 +11,9 @@ uv pip install pytest==8.4.1
 mkdir -p /logs/verifier
 
 # Run tests
-uv run pytest /tests/test_m1.py -rA && \
-uv run pytest /tests/test_m2.py -rA && \
-uv run pytest /tests/test_m3.py -rA
+uv run pytest /tests/ -rA
 
-# Binary reward assignment (MUST be exactly 0 or 1)
+# Binary reward assignment
 if [ $? -eq 0 ]; then
   echo 1 > /logs/verifier/reward.txt
 else
