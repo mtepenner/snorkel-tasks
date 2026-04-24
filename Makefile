@@ -1,5 +1,5 @@
 # Detect the correct remote target branch using native git and strip any PowerShell ghost spaces
-TARGET_BRANCH := $(strip $(shell git show-ref --verify --quiet refs/remotes/origin/main && echo main || echo master))
+TARGET_BRANCH := $(strip $(shell git show-ref --verify --quiet refs/remotes/origin/main && echo main))
 
 # Automatically detect the OS and set the correct root directory
 ifeq ($(OS),Windows_NT)
