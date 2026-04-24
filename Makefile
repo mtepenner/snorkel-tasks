@@ -38,7 +38,7 @@ ifndef TASK
 	$(error TASK is not set. Please specify a task folder, e.g., make test_ci TASK=name-of-task)
 endif
 	@echo "Running programmatic CI and LLMaJ checks for $(TASK)..."
-	stb harbor run -a terminus-2 -m openai/@openai-tbench/gpt-5 -p "$(TASK_PATH)"
+	stb harbor run -a terminus-2 -m openai/@openai/gpt-5.2 -p "$(TASK_PATH)"
 
 # 3. Automated git upload (Direct to target branch with built-in sync)
 upload:
