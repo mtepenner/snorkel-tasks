@@ -9,7 +9,6 @@ except ImportError:
 
 @pytest.fixture
 def client():
-    """Provides a Flask test client if the API is successfully built."""
     if app:
         app.config['TESTING'] = True
         with app.test_client() as client:
