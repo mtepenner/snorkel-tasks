@@ -2,72 +2,73 @@ import os
 import requests
 from fpdf import FPDF
 
-def create_dummy_pdf(path):
-    """Generates a dummy PDF with no metadata to test fallbacks, and >2000 words to test chunking."""
+def create_dummy_pdf(path, with_metadata=False):
+    """Generates a dummy PDF with >2000 words. Can conditionally add metadata."""
     pdf = FPDF()
+    if with_metadata:
+        pdf.set_author("Jane Doe")
+        pdf.set_title("My Report")
+        
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-    # Generate ~2400 words
     for i in range(1, 300):
         pdf.cell(200, 10, txt=f"Dummy long context line {i} to test chunking mechanisms. " * 2, ln=True, align='L')
     pdf.output(path)
 
-def test_absolute_paths_and_code_constraints():
-    """1. Verify paths and enforce the 1000-word chunking constraint statically"""
-    api_path = "/app/workspace/src/api.py"
-    gui_path = "/app/workspace/src/static/index.html"
+def test_absolute_paths_and_ui():
+    """1. Verify paths and static UI contents"""
+    assert os.path.exists("/app/workspace/src/api.py"), "API file missing."
+    assert os.path.exists("/app/workspace/src/static/index.html"), "GUI file missing."
     
-    assert os.path.exists(api_path), "API file is missing from target path."
-    assert os.path.exists(gui_path), "GUI file is missing from target path."
-    
-    # Anti-Cheating: Check that the agent actually programmed the 1000 word limit
-    with open(api_path, "r") as f:
-        api_code = f.read()
-        assert "1000" in api_code, "The 1000-word per chunk max limit is not enforced in the API code."
-
-def test_gui_is_served_and_valid():
-    """2. Verify the GUI is served and contains valid upload/print logic"""
     try:
         res = requests.get("http://localhost:8000/static/index.html", timeout=3)
-        assert res.status_code == 200, "GUI endpoint returned a non-200 status code."
-        
-        # Anti-Cheating: Validate the UI actually contains upload and fetch functionality
-        html_content = res.text.lower()
-        assert 'type="file"' in html_content, "UI does not contain a file upload input."
-        assert 'fetch(' in html_content or 'xmlhttprequest' in html_content, "UI does not contain API calling logic."
+        assert res.status_code == 200, "GUI endpoint non-200."
+        html = res.text.lower()
+        assert 'type="file"' in html, "UI missing file upload."
+        assert 'fetch(' in html or 'xmlhttprequest' in html, "UI missing API call logic."
     except requests.exceptions.RequestException:
-        assert False, "Failed to connect to the GUI server on port 8000."
+        assert False, "Failed to connect to GUI server."
 
-def test_extraction_endpoint():
-    """3. Test the extraction API endpoint types, fallbacks, and logic"""
-    pdf_path = "/tmp/long_context_test.pdf"
-    create_dummy_pdf(pdf_path)
+def test_extraction_fallback_and_chunking():
+    """2. Test fallback metadata, robust chunking math, and topic schemas"""
+    pdf_path = "/tmp/fallback_test.pdf"
+    create_dummy_pdf(pdf_path, with_metadata=False)
 
-    try:
-        with open(pdf_path, 'rb') as f:
-            files = {'file': ('long_context_test.pdf', f, 'application/pdf')}
-            response = requests.post("http://localhost:8000/extract", files=files, timeout=10)
-    except requests.exceptions.RequestException:
-        assert False, "Failed to connect to the backend extraction endpoint."
+    with open(pdf_path, 'rb') as f:
+        files = {'file': ('fallback_test.pdf', f, 'application/pdf')}
+        response = requests.post("http://localhost:8000/extract", files=files, timeout=10)
         
-    assert response.status_code == 200, "API endpoint did not return a 200 Success status."
+    assert response.status_code == 200, "API endpoint failed."
     data = response.json()
     
-    # Enforce Exact Schema Presence
-    required_keys = ['author', 'title', 'topics', 'total_chunks', 'filename', 'total_words']
-    for key in required_keys:
-        assert key in data, f"Required key '{key}' is missing from the JSON response."
+    for key in ['author', 'title', 'topics', 'total_chunks', 'filename', 'total_words']:
+        assert key in data, f"Missing key: {key}"
         
-    # Enforce Data Types explicitly
-    assert isinstance(data['total_words'], int), "'total_words' must be an integer"
-    assert isinstance(data['total_chunks'], int), "'total_chunks' must be an integer"
-    assert isinstance(data['topics'], list), "'topics' must be an array/list"
-        
-    # Verify Fallback Values (Our FPDF dummy has no metadata attached to it)
-    assert data['author'] == "Unknown Author", f"Expected fallback 'Unknown Author', got {data['author']}"
-    assert data['title'] == "Untitled", f"Expected fallback 'Untitled', got {data['title']}"
+    assert data['author'] == "Unknown Author"
+    assert data['title'] == "Untitled"
+    assert data['filename'] == "fallback_test.pdf"
     
-    # Verify Anti-Cheating Chunk Math
-    assert data['total_chunks'] >= 3, f"Expected >= 3 chunks for ~2400-word PDF, got {data['total_chunks']}"
+    assert isinstance(data['total_words'], int)
+    assert data['total_words'] >= 2000, "total_words must accurately reflect PDF length."
+    assert data['total_chunks'] >= 3, "Expected >=3 chunks for ~2400 word PDF."
     words_per_chunk = data['total_words'] / data['total_chunks']
-    assert words_per_chunk <= 1000, f"Average chunk size {words_per_chunk:.0f} words exceeds 1000 limit."
+    assert words_per_chunk <= 1000, f"Average chunk size ({words_per_chunk}) exceeds 1000 max."
+    
+    assert isinstance(data['topics'], list), "topics must be a list."
+    assert len(data['topics']) > 0, "topics list cannot be empty."
+    assert all(isinstance(t, str) and len(t) > 0 for t in data['topics']), "topics must be valid strings."
+
+def test_extraction_positive_metadata():
+    """3. Verify actual metadata extraction from a valid PDF"""
+    pdf_path = "/tmp/meta_test.pdf"
+    create_dummy_pdf(pdf_path, with_metadata=True)
+
+    with open(pdf_path, 'rb') as f:
+        files = {'file': ('meta_test.pdf', f, 'application/pdf')}
+        response = requests.post("http://localhost:8000/extract", files=files, timeout=10)
+        
+    assert response.status_code == 200
+    data = response.json()
+    
+    assert data['author'] == "Jane Doe", "Failed to extract correct author from metadata."
+    assert data['title'] == "My Report", "Failed to extract correct title from metadata."
