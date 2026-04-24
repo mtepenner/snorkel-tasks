@@ -3,36 +3,40 @@ import json
 import subprocess
 
 def test_milestone_1_anti_cheat():
-    """Verify cleaned.json is dynamically regenerated with all 5 records and correct schema."""
+    """Verify cleaned.json is dynamically regenerated with correct schema and filters."""
     script_path = '/app/workspace/src/analyzer.py'
     output_path = '/app/workspace/data/cleaned.json'
-    
-    # Anti-cheat: Inject new dynamic data to prevent hardcoding
-    with open('/app/workspace/data/climate.csv', 'a') as f:
-        f.write('3,2020,30.0\n')
-    
-    with open('/app/workspace/data/metadata.json', 'r') as f:
+    csv_path = '/app/workspace/data/climate.csv'
+    meta_path = '/app/workspace/data/metadata.json'
+
+    with open(csv_path, 'r') as f:
+        csv_content = f.read()
+    if '3,2021,30.0' not in csv_content:
+        with open(csv_path, 'a') as f:
+            f.write('3,2021,30.0\n')
+
+    with open(meta_path, 'r') as f:
         meta = json.load(f)
-    meta["3"] = "Asia"
-    with open('/app/workspace/data/metadata.json', 'w') as f:
-        json.dump(meta, f)
-        
+    if "3" not in meta:
+        meta["3"] = "Asia"
+        with open(meta_path, 'w') as f:
+            json.dump(meta, f)
+
     if os.path.exists(output_path):
         os.remove(output_path)
-        
-    # FIX: Use the explicit system path to the Python containing pandas
+
     subprocess.run(['/usr/local/bin/python3', script_path], check=False)
     assert os.path.exists(output_path), "Script did not generate cleaned.json when executed."
-    
+
     with open(output_path, 'r') as f:
         data = json.load(f)
-        
+
     assert isinstance(data, list), "Output should be a list of records."
-    assert len(data) >= 5, "Expected at least 5 records after dynamic data injection. Agent hardcoded data."
-    
+    assert len(data) >= 3, "Expected at least 3 filtered records after dynamic data injection."
+
     regions = {r.get("region") for r in data}
     assert {"North America", "Europe", "Asia"}.issubset(regions), "Region mapping failed for dynamic data."
-    
+
     for rec in data:
         assert "temperature" in rec, "temperature field missing from record."
-        assert "region" in rec, "region field missing from record."
+        assert rec.get("year", 2021) >= 2021, "Failed to filter out records before 2021!"
