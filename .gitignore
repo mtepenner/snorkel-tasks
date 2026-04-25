@@ -1,2 +1,8 @@
 # Generated task artifacts
 *.zip
+
+# Generated frontend test artifacts
+**/node_modules/
+**/test-results/
+**/playwright-report/
+**/tests/package-lock.json

@@ -1,5 +1,34 @@
-hey can u throw together a quick react app for me. put the whole thing in /app/index.html and just use the babel and react cdns so we dont have to configure a build step.
+# React Journal Analyzer
 
-it just needs to fetch a giant markdown file from /data/paper.md on load. once u have the text just run some regex or whatever to count how many citations there are (stuff like [1] or [42]). also need counts for the words quantum and entanglement ignoring case. last thing is grab all the main headers which are just lines that start with exactly # .
+build a react-based interactive journal analyzer in /app/index.html. keeping it as a client-side app is fine, and using the React, ReactDOM, and Babel CDNs is completely acceptable here.
 
-make whatever simple ui to show it but my automated tests will break if u dont dump the raw json into a <pre id="stats-output"></pre> tag. stringify it exactly like this {"citations": int, "keywords": {"quantum": int, "entanglement": int}, "headers": ["string"]}. thanks
+the UI needs to let a user load a long scientific paper from either a Markdown file or a PDF file. use a real file picker in the browser and accept .md, .markdown, and .pdf files.
+
+once a file is loaded, analyze it in the browser and update the dashboard right away. the analyzer needs to compute these things:
+
+- citation frequency: count bracket citations like [1] or [42]
+- keyword density for the terms quantum and entanglement, case-insensitive. include both the raw count and density, where density is count / totalWords rounded to 3 decimals
+- section summaries. for markdown, treat lines starting with # as section headings and summarize each section with the first non-empty sentence under that heading. for pdf files, extract the text and produce section summaries when headings are recoverable from the extracted text
+
+render the results in a readable react UI. at minimum the page needs:
+
+- an upload control and a visible file/status message
+- a citation frequency summary
+- a keyword density display
+- a section summaries list
+- a machine-readable mirror of the current analysis in `<pre id="analysis-output"></pre>`
+
+the JSON shown in that analysis block should follow this shape:
+
+{
+  "fileType": "markdown" | "pdf",
+  "citations": number,
+  "totalWords": number,
+  "keywordDensity": {
+    "quantum": { "count": number, "density": number },
+    "entanglement": { "count": number, "density": number }
+  },
+  "sectionSummaries": [
+    { "title": string, "summary": string }
+  ]
+}
