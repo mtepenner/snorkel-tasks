@@ -28,7 +28,11 @@ def milestone_3(trends):
         dot.node(region, region)
         dot.node(f"{temp:.2f}", f"Avg Temp: {temp:.2f}°C")
         dot.edge(region, f"{temp:.2f}")
-    
+
+    # Explicitly write the DOT source so it reliably persists on disk
+    with open('/app/workspace/output/climate_graph.gv', 'w') as f:
+        f.write(dot.source)
+
     dot.render('/app/workspace/output/climate_graph', format='png', cleanup=False)
 
 if __name__ == "__main__":
