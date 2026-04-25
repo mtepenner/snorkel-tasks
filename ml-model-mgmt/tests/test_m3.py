@@ -6,7 +6,14 @@ def test_m3_inference_endpoint(client):
     assert client is not None
     response = client.post('/api/v1/predict', json={"features": [1, 2, 3]})
     assert response.status_code == 200
-    assert "prediction" in response.get_json(), "Response missing 'prediction' key"
+    data = response.get_json()
+    assert "prediction" in data, "Response missing 'prediction' key"
+    assert isinstance(data["prediction"], (int, float)), \
+        "prediction value must be a number (int or float)"
+    # Verify the output depends on input features — not a hardcoded constant
+    r2 = client.post('/api/v1/predict', json={"features": [10, 20, 30]})
+    assert r2.get_json()["prediction"] != data["prediction"], \
+        "Prediction must depend on input features, not be a hardcoded constant"
 
 def test_m3_frontend_fetch_logic():
     """1 pt: write some fetch logic in frontend to hit the /predict endpoint."""
@@ -27,6 +34,10 @@ def test_m3_frontend_fetch_logic():
     content = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
     content = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
     content = re.sub(r'//.*', '', content)
+
+    # Remove dead code patterns — if(false){...} blocks that would never execute
+    content = re.sub(r'if\s*\(\s*false\s*\)\s*\{[^}]*\}', '', content, flags=re.DOTALL)
+    content = re.sub(r'if\s*\(\s*0\s*\)\s*\{[^}]*\}', '', content, flags=re.DOTALL)
     
     content_lower = content.lower()
     

@@ -4,14 +4,14 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app/workspace
 
+COPY src/ /app/workspace/src/
+
 RUN pip install --no-cache-dir \
-    flask \
-    pandas \
-    scikit-learn \
-    numpy \
-    pytest \
-    pytest-flask \
-    requests \
-    werkzeug
+    flask==3.0.0 \
+    pandas==2.1.4 \
+    scikit-learn==1.3.2 \
+    numpy==1.26.4 \
+    requests==2.32.3 \
+    werkzeug==3.0.1
 
 CMD ["tail", "-f", "/dev/null"]

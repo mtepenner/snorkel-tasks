@@ -11,6 +11,8 @@ def test_m1_upload_endpoint_exists(client):
     assert response_csv.status_code == 200, "CSV Upload endpoint failed"
     processed = client.get('/api/v1/data/processed').get_json()
     assert len(processed) == 2
+    assert "A" in processed[0], "CSV column 'A' not parsed into processed rows"
+    assert "B" in processed[0], "CSV column 'B' not parsed into processed rows"
 
 def test_m1_preprocessing_and_retrieval(client):
     """1 pt: handle missing values/scaling/encoding and GET /api/v1/data/processed spits out cleaned dataset."""
