@@ -60,5 +60,9 @@ ifndef TASK
 	$(error TASK is not set. Please specify a task folder, e.g., make zip TASK=name-of-task)
 endif
 	@echo "Zipping contents of $(TASK_PATH) into $(TASK_PATH)/$(TASK).zip..."
-	@cd "$(TASK_PATH)" && zip -r "$(TASK).zip" . -x "*.git*" -x "$(TASK).zip"
+ifeq ($(OS),Windows_NT)
+	@powershell -NoProfile -Command "$$ErrorActionPreference = 'Stop'; $$hasPyLauncher = Get-Command py -ErrorAction SilentlyContinue; $$hasPython = Get-Command python -ErrorAction SilentlyContinue; if (-not $$hasPyLauncher -and -not $$hasPython) { throw 'Python is required to build task zips on Windows.' }; $$env:TASK_ROOT = (Resolve-Path '$(TASK_PATH)').Path; $$env:TASK_ZIP = '$(TASK).zip'; $$tmp = Join-Path $$env:TEMP 'make_task_zip.py'; Set-Content -Path $$tmp -Value @('import os','import pathlib','import zipfile','root = pathlib.Path(os.environ[''TASK_ROOT''])','zip_name = os.environ[''TASK_ZIP'']','zip_path = root / zip_name','if zip_path.exists(): zip_path.unlink()','with zipfile.ZipFile(zip_path, ''w'', compression=zipfile.ZIP_DEFLATED) as archive:','    for path in sorted(root.rglob(''*'')):','        if path.is_dir(): continue','        rel = path.relative_to(root).as_posix()','        if rel.endswith(''.zip''): continue','        if ''/.git/'' in f''/{rel}'' or ''/__pycache__/'' in f''/{rel}'' or ''/.pytest_cache/'' in f''/{rel}'': continue','        archive.write(path, arcname=rel)'); if ($$hasPyLauncher) { & py -3 $$tmp } else { & python $$tmp }; if ($$LASTEXITCODE -ne 0) { Remove-Item $$tmp -ErrorAction SilentlyContinue; exit $$LASTEXITCODE }; Remove-Item $$tmp"
+else
+	@cd "$(TASK_PATH)" && zip -r "$(TASK).zip" . -x "*.git*" -x "*.zip"
+endif
 	@echo "Success: $(TASK_PATH)/$(TASK).zip created."

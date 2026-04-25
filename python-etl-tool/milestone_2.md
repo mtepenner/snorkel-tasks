@@ -1,1 +1,3 @@
-putting together a C api wrapper for the tensorflow model. file goes at /app/workspace/src/api.c and the model file is sitting at /app/data/model.pb. we are classifying really long documents so the code needs to accept different formats and slice them into proper input tensors. expose three endpoints: load model, submit document, and fetch result. it just needs to be a clean interface so our external apps can hit it easily.
+# Frontend Dashboard
+
+build the frontend for the etl dashboard at /app/workspace/src/templates/index.html. add a button that sends a POST request to /trigger and disables itself while the request is in flight, then turns back on when the request finishes. include a `<pre>` block that fetches and shows /logs when the page loads, and keep a download link that points to /download.

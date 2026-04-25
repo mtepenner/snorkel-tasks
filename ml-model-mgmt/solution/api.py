@@ -19,12 +19,18 @@ def upload_data():
     try:
         # Handle CSV or JSON
         if request.is_json:
-            df = pd.DataFrame(request.json)
+            payload = request.get_json(silent=True)
+            if not isinstance(payload, list):
+                raise ValueError('JSON body must be an array of records')
+            df = pd.DataFrame(payload)
         elif request.content_type == 'text/csv':
             from io import StringIO
             df = pd.read_csv(StringIO(request.get_data(as_text=True)))
         else:
-            return jsonify({"error": "Unsupported format"}), 400
+            return jsonify({"error": "Unsupported format"}), 415
+
+        if df.empty:
+            raise ValueError('Input data must contain at least one record')
         
         # Preprocessing
         df.fillna(df.mean(numeric_only=True), inplace=True)
@@ -40,8 +46,10 @@ def upload_data():
             
         processed_df = df
         return jsonify({"message": "Data processed successfully", "rows": len(df)}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    except (ValueError, TypeError, KeyError, pd.errors.ParserError) as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception:
+        return jsonify({"error": "Internal error"}), 500
 
 @app.route('/api/v1/data/processed', methods=['GET'])
 def get_processed_data():

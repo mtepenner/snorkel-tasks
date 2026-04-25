@@ -11,7 +11,6 @@ RUN pip install --no-cache-dir \
     pandas==2.1.4 \
     scikit-learn==1.3.2 \
     numpy==1.26.4 \
-    requests==2.32.3 \
     werkzeug==3.0.1
 
 CMD ["tail", "-f", "/dev/null"]
