@@ -4,7 +4,7 @@ import pytest
 sys.path.insert(0, '/app/workspace/src')
 try:
     from api import app
-except ImportError:
+except (ImportError, SyntaxError, Exception):
     app = None
 
 @pytest.fixture

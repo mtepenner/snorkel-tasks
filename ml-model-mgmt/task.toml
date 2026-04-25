@@ -5,7 +5,7 @@ version = "2.0"
 [metadata]
 author_name = "mtepenner"
 author_email = "mtepenner@gmail.com"
-difficulty = "unknown"
+difficulty = "hard"
 category = "software-engineering"
 subcategories = ["ui_building", "api_integration"]
 # The number of milestones in the task
@@ -27,9 +27,6 @@ timeout_sec = 300.0
 # Agent: limits how long the agent can run when attempting the task
 [agent]
 timeout_sec = 1800.0
-cpus = 2
-memory_mb = 4096
-storage_mb = 2048
 
 # Sandbox environment limits
 [environment]

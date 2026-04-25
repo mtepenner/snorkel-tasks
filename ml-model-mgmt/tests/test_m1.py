@@ -17,15 +17,20 @@ def test_m1_upload_endpoint_exists(client):
 def test_m1_preprocessing_and_retrieval(client):
     """1 pt: handle missing values/scaling/encoding and GET /api/v1/data/processed spits out cleaned dataset."""
     assert client is not None
-    client.post('/api/v1/data/upload', json=[{"A": 10}, {"A": None}, {"A": 30}])
+    # Skewed column ensures mean-imputation is distinguishable from median/constant fill.
+    client.post('/api/v1/data/upload', json=[{"A": 1}, {"A": None}, {"A": 2}, {"A": 100}])
     response = client.get('/api/v1/data/processed')
     assert response.status_code == 200
     
     data = response.get_json()
-    assert isinstance(data, list) and len(data) == 3, "Processed data malformed"
+    assert isinstance(data, list) and len(data) == 4, "Processed data malformed"
     
     vals = [row["A"] for row in data]
     assert None not in vals, "Missing values not handled"
+
+    # If mean-imputation is used, the row that had None (second row) becomes column mean,
+    # then scales to ~0 after StandardScaler.
+    assert abs(vals[1]) < 0.01, "Missing numeric value was not imputed with column mean"
     
     mean_val = np.mean(vals)
     std_val = np.std(vals)
@@ -36,6 +41,7 @@ def test_m1_preprocessing_and_retrieval(client):
     resp2 = client.get('/api/v1/data/processed')
     cols = list(resp2.get_json()[0].keys())
     assert "color_red" in cols or "color_blue" in cols, "One-hot encoding failed"
+    assert "color" not in cols, "Original categorical column must be dropped after one-hot encoding"
 
 def test_m1_error_handling(client):
     """1 pt: throws a 400 for bad input."""
