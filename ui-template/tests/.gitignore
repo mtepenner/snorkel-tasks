@@ -1,0 +1,3 @@
+# Installed at test run time (or when running npm install locally)
+node_modules/
+package-lock.json
