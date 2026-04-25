@@ -7,6 +7,12 @@ uv venv .tbench-testing
 source .tbench-testing/bin/activate
 uv pip install pytest==8.4.1
 
+# Validate WORKDIR from Dockerfile.
+if [ "$PWD" = "/" ]; then
+  echo "Error: No WORKDIR set in Dockerfile."
+  exit 1
+fi
+
 # Prepare logs
 mkdir -p /logs/verifier
 

@@ -12,7 +12,7 @@ def milestone_1():
     
     df = df[df['year'] >= 2021]
     
-    cleaned = df.to_dict(orient='records')
+    cleaned = df[['region', 'year', 'temperature']].to_dict(orient='records')
     with open('/app/workspace/data/cleaned.json', 'w') as f:
         json.dump(cleaned, f, indent=4)
     return df

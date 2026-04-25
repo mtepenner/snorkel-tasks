@@ -2,6 +2,7 @@ import os
 import re
 import json
 import subprocess
+import sys
 
 def test_milestone_3_anti_cheat_and_edges():
     """Verify PNG and DOT source exist; check directed region->temp edges are present in the graph."""
@@ -28,7 +29,7 @@ def test_milestone_3_anti_cheat_and_edges():
     if os.path.exists(png_path):
         os.remove(png_path)
 
-    subprocess.run(['/usr/local/bin/python3', script_path], check=False)
+    subprocess.run([sys.executable, script_path], check=False)
     
     assert os.path.exists(png_path), "PNG missing"
     assert os.path.getsize(png_path) > 100, "PNG too small to be valid"
