@@ -1,11 +1,52 @@
 # Fluid Dynamics API
 
-i need a small service for quick fluid-flow experiments. this does not need to be a research-grade cfd package, but it should feel like a real simulation pipeline and it needs to react to the inputs instead of returning canned numbers.
+Need this quickly.
 
-put the java api in /app/workspace/src/FluidDynamicsApi.java and bind it to 0.0.0.0:8080. add a POST /simulate endpoint that accepts json with viscosity, inlet_velocity, grid_points, and steps. use those values to run a lightweight numerical fluid simulation so you end up with both a velocity profile and a pressure profile across the grid. both arrays need to have exactly grid_points entries, pressure should drop across the pipe, and changing the request values should change the output.
+Current pain:
 
-every run should write the raw simulation result to /app/workspace/data/latest_simulation.json. the response from /simulate needs to be a json object with these top-level keys: viscosity, inlet_velocity, grid_points, steps, reynolds_number, velocity_profile, pressure_profile, and analysis.
+- repeated manual flow checks whenever viscosity/inlet speed changes
+- too much copy/paste math
 
-i also want the post-processing split out into python. create /app/workspace/src/postprocess.py and have the java service call it after each simulation. that helper should read the raw simulation json and compute mean_velocity, velocity_stddev, pressure_drop, and dominant_regime. save that analysis to /app/workspace/data/latest_analysis.json and return it from the api inside the analysis field.
+Scope:
 
-last thing: add GET /latest-report so i can fetch the saved analysis json later, and GET /health so the harness can tell when the server is up.
+- keep lightweight
+- no full CFD build
+- output must react to input changes (no canned response behavior)
+
+Implementation notes:
+
+- Java service file: `/app/workspace/src/FluidDynamicsApi.java`
+- bind: `0.0.0.0:8080`
+- main endpoint: `POST /simulate`
+- request JSON keys for `/simulate`: `viscosity`, `inlet_velocity`, `grid_points`, `steps`
+
+Simulation behavior (`/simulate`):
+
+- run lightweight numerical simulation
+- return `velocity_profile` and `pressure_profile` across grid
+- both arrays must contain exactly `grid_points` values
+- pressure must drop along pipe
+- different inputs must produce different profiles
+
+Persistence:
+
+- write raw simulation output on every run to `/app/workspace/data/latest_simulation.json`
+
+Response contract (`/simulate`):
+
+- required top-level keys:
+  `viscosity`, `inlet_velocity`, `grid_points`, `steps`, `reynolds_number`, `velocity_profile`, `pressure_profile`, `analysis`
+
+Post-processing split (Python):
+
+- add `/app/workspace/src/postprocess.py`
+- Java service calls script after each simulation
+- script reads raw simulation JSON
+- script computes: `mean_velocity`, `velocity_stddev`, `pressure_drop`, `dominant_regime`
+- script writes analysis to `/app/workspace/data/latest_analysis.json`
+- same analysis must be returned in API response under `analysis`
+
+Extra endpoints:
+
+- `GET /latest-report` returns saved analysis
+- `GET /health` for harness readiness check
