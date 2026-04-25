@@ -2,7 +2,6 @@ import pandas as pd
 import json
 import subprocess
 import os
-import graphviz
 
 def milestone_1():
     df = pd.read_csv('/app/workspace/data/climate.csv')
@@ -27,17 +26,21 @@ def milestone_2(df):
 def milestone_3(trends):
     os.makedirs('/app/workspace/output', exist_ok=True)
 
-    dot = graphviz.Digraph(comment='Climate Trends')
+    # Build DOT source manually — avoids any graphviz library version quirks
+    lines = ['digraph {']
     for region, temp in trends.items():
-        dot.node(region, region)
-        dot.node(f"{temp:.2f}", f"Avg Temp: {temp:.2f}°C")
-        dot.edge(region, f"{temp:.2f}")
+        temp_str = f"{temp:.2f}"
+        lines.append(f'    "{region}" [label="{region}"]')
+        lines.append(f'    "{temp_str}" [label="Avg Temp: {temp_str}C"]')
+        lines.append(f'    "{region}" -> "{temp_str}"')
+    lines.append('}')
+    dot_source = '\n'.join(lines) + '\n'
 
     dot_file = '/app/workspace/output/climate_graph.gv'
     png_file = '/app/workspace/output/climate_graph.png'
 
-    with open(dot_file, 'w') as f:
-        f.write(dot.source)
+    with open(dot_file, 'w', encoding='utf-8') as f:
+        f.write(dot_source)
 
     subprocess.run(['dot', '-Tpng', dot_file, '-o', png_file], check=True)
 
