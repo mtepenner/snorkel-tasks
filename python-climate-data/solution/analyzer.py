@@ -1,5 +1,7 @@
 import pandas as pd
 import json
+import subprocess
+import os
 import graphviz
 
 def milestone_1():
@@ -23,17 +25,21 @@ def milestone_2(df):
     return trends
 
 def milestone_3(trends):
+    os.makedirs('/app/workspace/output', exist_ok=True)
+
     dot = graphviz.Digraph(comment='Climate Trends')
     for region, temp in trends.items():
         dot.node(region, region)
         dot.node(f"{temp:.2f}", f"Avg Temp: {temp:.2f}°C")
         dot.edge(region, f"{temp:.2f}")
 
-    # Explicitly write the DOT source so it reliably persists on disk
-    with open('/app/workspace/output/climate_graph.gv', 'w') as f:
+    dot_file = '/app/workspace/output/climate_graph.gv'
+    png_file = '/app/workspace/output/climate_graph.png'
+
+    with open(dot_file, 'w') as f:
         f.write(dot.source)
 
-    dot.render('/app/workspace/output/climate_graph', format='png', cleanup=False)
+    subprocess.run(['dot', '-Tpng', dot_file, '-o', png_file], check=True)
 
 if __name__ == "__main__":
     df = milestone_1()
