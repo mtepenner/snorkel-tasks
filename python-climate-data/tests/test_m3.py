@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import subprocess
 
@@ -31,7 +32,10 @@ def test_milestone_3_anti_cheat_and_edges():
     
     assert os.path.exists(png_path), "PNG missing"
     assert os.path.getsize(png_path) > 100, "PNG too small to be valid"
-    
+    with open(png_path, 'rb') as f:
+        header = f.read(8)
+    assert header[:4] == b'\x89PNG', "File is not a valid PNG image"
+
     actual_dot = dot_path if os.path.exists(dot_path) else dot_path + '.gv'
     assert os.path.exists(actual_dot), "DOT source missing"
 
@@ -40,11 +44,14 @@ def test_milestone_3_anti_cheat_and_edges():
 
     assert 'digraph' in dot_src, "DOT source must be a directed graph"
     assert '->' in dot_src, "No directed edges found in DOT source"
-    
-    assert 'north america' in dot_src, "Missing North America region node"
-    assert 'europe' in dot_src, "Missing Europe region node"
-    assert 'asia' in dot_src, "Missing dynamically injected Asia region node"
-    
-    assert '15.0' in dot_src or '15.00' in dot_src, "Mean temp node missing for North America"
-    assert '22.5' in dot_src or '22.50' in dot_src, "Mean temp node missing for Europe"
-    assert '30.0' in dot_src or '30.00' in dot_src, "Mean temp node missing for Asia"
+
+    def has_edge(dot, src, dst):
+        pat = re.escape(src) + r'[^;]*->[^;]*' + re.escape(dst)
+        return re.search(pat, dot) is not None
+
+    assert has_edge(dot_src, 'north america', '15.0') or has_edge(dot_src, 'north america', '15.00'), \
+        "North America must have a directed edge to its mean temperature 15.0"
+    assert has_edge(dot_src, 'europe', '22.5') or has_edge(dot_src, 'europe', '22.50'), \
+        "Europe must have a directed edge to its mean temperature 22.5"
+    assert has_edge(dot_src, 'asia', '30.0') or has_edge(dot_src, 'asia', '30.00'), \
+        "Asia must have a directed edge to its mean temperature 30.0"
