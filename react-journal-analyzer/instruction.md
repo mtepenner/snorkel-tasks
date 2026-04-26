@@ -1,34 +1,41 @@
-# React Journal Analyzer
+# [UI-505] React Client-Side Journal Analyzer
 
-build a react-based interactive journal analyzer in /app/index.html. keeping it as a client-side app is fine, and using the React, ReactDOM, and Babel CDNs is completely acceptable here.
+**Context:**
+Need a quick tool for the researchers to analyze journals. Keeping it entirely client-side is fine.
 
-the UI needs to let a user load a long scientific paper from either a Markdown file or a PDF file. use a real file picker in the browser and accept .md, .markdown, and .pdf files.
+**AC:**
+* Build the app in `/app/index.html`.
+* You can just use React, ReactDOM, and Babel CDNs in the HTML file, don't bother setting up a full build pipeline.
+* Put a real file picker on the page that accepts `.md`, `.markdown`, and `.pdf` files.
+* App should analyze the file as soon as it's loaded and update the dashboard automatically.
 
-once a file is loaded, analyze it in the browser and update the dashboard right away. the analyzer needs to compute these things:
+**Analysis Requirements:**
+* **Citations:** Count bracket style citations e.g., `[1]` or `[42]`.
+* **Keywords:** Count frequency & density for "quantum" and "entanglement" (case-insensitive). Density = `count / totalWords` (round to 3 decimals).
+* **Summaries:**
+  * For Markdown: Treat lines starting with `#` as headers. Summarize with the first non-empty sentence under that heading.
+  * For PDF: Extract text, recover headings if possible, and do the same summary logic.
 
-- citation frequency: count bracket citations like [1] or [42]
-- keyword density for the terms quantum and entanglement, case-insensitive. include both the raw count and density, where density is count / totalWords rounded to 3 decimals
-- section summaries. for markdown, treat lines starting with # as section headings and summarize each section with the first non-empty sentence under that heading. for pdf files, extract the text and produce section summaries when headings are recoverable from the extracted text
+**UI Requirements:**
+* Upload control & status message.
+* Citation frequency summary widget.
+* Keyword density display.
+* Section summaries list.
+* **CRITICAL FOR TESTS:** A machine-readable mirror of the data in a `<pre id="analysis-output"></pre>`. 
+  Must be this exact JSON shape:
+  ```json
+  {
+    "fileType": "markdown" | "pdf",
+    "citations": number,
+    "totalWords": number,
+    "keywordDensity": {
+      "quantum": { "count": number, "density": number },
+      "entanglement": { "count": number, "density": number }
+    },
+    "sectionSummaries": [
+      { "title": string, "summary": string }
+    ]
+  }
+  ```
 
-render the results in a readable react UI. at minimum the page needs:
-
-- an upload control and a visible file/status message
-- a citation frequency summary
-- a keyword density display
-- a section summaries list
-- a machine-readable mirror of the current analysis in `<pre id="analysis-output"></pre>`
-
-the JSON shown in that analysis block should follow this shape:
-
-{
-  "fileType": "markdown" | "pdf",
-  "citations": number,
-  "totalWords": number,
-  "keywordDensity": {
-    "quantum": { "count": number, "density": number },
-    "entanglement": { "count": number, "density": number }
-  },
-  "sectionSummaries": [
-    { "title": string, "summary": string }
-  ]
-}
+Plz match that JSON schema exactly, the e2e test will blow up otherwise.

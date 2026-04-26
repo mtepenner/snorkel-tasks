@@ -1,9 +1,15 @@
-Build a simple web app at the task root (in the sandbox this is `/app`) so that the main page is served at the root URL (`/`).
+# [UI-831] Build static UI for testing
 
-The page must have:
+**As a** tester
+**I need** a super basic static HTML page
+**So that** I can run our e2e/unit test suite against it
 
-1. **Document title** – The `<title>` must be `UI task`.
-2. **Heading** – A heading (e.g. `<h1>`) with the exact text `Hello, UI task`.
-3. **Button** – A button with the visible label `Click me` that can be focused when clicked.
+**AC (Acceptance Criteria):**
+* Drop it in the task root (`/app` in the sandbox container). The root URL (`/`) needs to serve this page. Just `index.html` is fine.
+* Document `<title>` has to be exactly `UI task`. (Don't get creative here, the tests will fail).
+* Add an `<h1>` (or similar heading) with exactly `Hello, UI task`.
+* Needs a `<button>` with the label `Click me`.
+* The button MUST be focusable when clicked.
 
-Use static HTML (e.g. an `index.html` at the task root). The verifier will serve the task root and run unit and E2E tests against this page.
+**Notes:**
+Plz don't overengineer this, just hardcoded HTML is fine. Need this ASAP so the verifier can run its checks. Thx.

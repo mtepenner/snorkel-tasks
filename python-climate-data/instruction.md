@@ -1,11 +1,18 @@
-# Climate Data Analyzer
+# [DATA-942] Climate Data Analyzer Script
 
-we need a python script at `/app/workspace/src/analyzer.py` to crunch some climate data. the input files are `/app/workspace/data/climate.csv` and `/app/workspace/data/metadata.json`. the solution needs to keep working if those files include regions beyond the starter examples, so adding a new region should not require code changes.
+**Context:**
+We need a python script to crunch some climate data ASAP. The ingestion team is complaining about hardcoded regions, so this needs to be dynamic. 
 
-one rule that really matters: anything before 2021 is invalid for this task. those rows cannot show up in outputs, and they cannot affect any averages or graph edges.
+**AC:**
+* Script must live at `/app/workspace/src/analyzer.py`
+* Inputs are `/app/workspace/data/climate.csv` and `/app/workspace/data/metadata.json`
+* **CRITICAL:** If they add new regions to the CSV, the code shouldn't break. No hardcoding!
+* **Filter Rule:** Anything before year 2021 is BAD DATA. Drop those rows entirely. Do not include them in outputs, averages, or graph nodes.
 
-three things need to come out of this, details in the milestone files but here's the gist:
+**Outputs required (see milestone files for deep dive, but here's the TL;DR):**
+1. `cleaned.json` goes to `/app/workspace/data/`: List of dicts (one per record). Keys needed: `region` (str), `year` (int), `temperature` (float). Again, NO 2020 OR EARLIER.
+2. `trends.json` goes to `/app/workspace/data/`: Flat dict of `{ region_name: mean_temp }`. Values must be floats.
+3. `climate_graph.png` goes to `/app/workspace/output/`: A Graphviz directed graph. Nodes = regions, pointing at their mean temps. 
+   *(Note: Keep the raw `.gv` dot source file at `/app/workspace/output/climate_graph.gv` on disk after rendering, the test suite checks for it).*
 
-- `cleaned.json` goes in `/app/workspace/data/` — list of dicts, one per record. each one needs `region` as a string, `year` as an int, `temperature` as a float. no 2020 or earlier rows.
-- `trends.json` also in `/app/workspace/data/` — just a flat `{ region_name: mean_temp }` dict, floats for the values
-- graphviz png at `/app/workspace/output/climate_graph.png`, directed graph with region nodes pointing at their mean temps. keep the raw dot source file at `/app/workspace/output/climate_graph.gv` on disk after rendering because it gets checked too
+Plz just get this working, the pipeline is blocked.

@@ -42,3 +42,9 @@ cat << 'EOF' > /app/workspace/src/templates/index.html
 </body>
 </html>
 EOF
+
+sed -i "/if __name__ == '__main__':/i \\
+@app.route('/')\\
+def index():\\
+    return render_template('index.html')\\
+" /app/workspace/src/app.py

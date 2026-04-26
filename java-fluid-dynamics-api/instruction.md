@@ -1,32 +1,26 @@
-# Fluid Dynamics API
+# [SIM-88] Fluid Dynamics API (Java)
 
-Need this quickly.
+**Description:**
+Need this quickly. The engineers are doing repeated manual flow checks whenever viscosity or inlet speed changes and there's way too much copy/paste math happening.
 
-Current pain:
+**Scope:**
+* Keep it lightweight. We do NOT need a full CFD build here.
+* Output MUST react dynamically to input changes (no canned/mock responses!).
 
-- repeated manual flow checks whenever viscosity/inlet speed changes
-- too much copy/paste math
+**Technical AC:**
+* **File location:** Java service MUST be at `/app/workspace/src/FluidDynamicsApi.java`
+* **Bind:** `0.0.0.0:8080`
+* **Endpoint:** `POST /simulate`
+* **Request JSON payload keys:** `viscosity`, `inlet_velocity`, `grid_points`, `steps`
 
-Scope:
+**Simulation Behavior for `/simulate`:**
+* Run a lightweight numerical simulation.
+* Return JSON with `velocity_profile` and `pressure_profile` across the grid.
+* Both arrays MUST contain exactly `grid_points` number of values.
+* Physics check: Pressure MUST drop along the pipe.
+* Sanity check: Different inputs MUST produce genuinely different profiles.
 
-- keep lightweight
-- no full CFD build
-- output must react to input changes (no canned response behavior)
-
-Implementation notes:
-
-- Java service file: `/app/workspace/src/FluidDynamicsApi.java`
-- bind: `0.0.0.0:8080`
-- main endpoint: `POST /simulate`
-- request JSON keys for `/simulate`: `viscosity`, `inlet_velocity`, `grid_points`, `steps`
-
-Simulation behavior (`/simulate`):
-
-- run lightweight numerical simulation
-- return `velocity_profile` and `pressure_profile` across grid
-- both arrays must contain exactly `grid_points` values
-- pressure must drop along pipe
-- different inputs must produce different profiles
+Get this unblocked so the team can automate their checks. Thx.
 
 Persistence:
 

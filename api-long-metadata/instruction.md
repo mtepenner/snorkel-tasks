@@ -1,7 +1,30 @@
-we are having issues processing 50k+ token pdfs so i need a python api built at /app/workspace/src/api.py. bind the server to 0.0.0.0:8000. since the docs are so big you have to implement text chunking (cap it at 1000 words per chunk max) so it doesnt run out of memory.
+# [DOC-192] Large PDF Processing API
 
-the endpoint needs to be POST /extract and accept a multipart/form-data upload using file as the field name. pull the author and title straight out of the pdf metadata properties. if its missing those fields just fallback to "Unknown Author" and "Untitled". after that, parse the text chunks themselves to figure out the topics.
+**Context:**
+We are having massive OOM issues processing 50k+ token PDFs. I need a python API built at `/app/workspace/src/api.py` to handle this. 
 
-for the output it has to be a flat json object. do not change these keys or types: author as string, title as string, topics as an array of strings, total_chunks as int, filename as string, and total_words as int.
+**AC:**
+* Bind the server to `0.0.0.0:8000`.
+* Implement text chunking for the docs (cap at 1000 words per chunk MAX) so the server doesn't crash.
+* **Endpoint:** `POST /extract`
+  * Must accept `multipart/form-data` upload
+  * Field name MUST be `file`.
+* **Metadata extraction:**
+  * Pull `author` and `title` directly from the PDF metadata properties.
+  * Fallbacks if missing: `"Unknown Author"` and `"Untitled"`.
+* **Processing:**
+  * Parse the text chunks to figure out the `topics`.
+* **Response Format:**
+  * Must be a flat JSON object. DO NOT CHANGE THESE KEYS OR TYPES:
+    * `author` (string)
+    * `title` (string)
+    * `topics` (array of strings)
+    * `total_chunks` (int)
+    * `filename` (string)
+    * `total_words` (int)
 
-finally just make a really basic test ui at /app/workspace/src/static/index.html. all it needs is a file picker that hits the api and dumps the raw json response on the screen so i can verify the math.
+**UI AC:**
+* Throw together a really basic, ugly test UI at `/app/workspace/src/static/index.html`. 
+* Just needs a file picker that hits the API and dumps the raw JSON response onto the screen so I can verify the math manually.
+
+Plz fix this, prod is struggling with big files.

@@ -1,3 +1,25 @@
-I am putting together a logic puzzle game that runs in the terminal using Ruby. The main script needs to be saved exactly at /app/workspace/src/puzzle_game.rb, and it will pull all of its configuration data from /app/puzzles.json. If you look at the JSON file, you will see it contains an array of objects. Each object represents a puzzle and has a 'title', a list of 'clues', an 'items' object that groups things by category like mapping "Pastries" to a list of baked goods, and finally a 'solution' object that maps a person's name to the specific item they bought. I have some very specific string requirements for the interface so my testing suite will pass. When the game starts, it has to print "Welcome to the Logic Grid Puzzle!" followed by a line saying "Loaded: " and the puzzle's title. After that, it should drop into a loop with the prompt "Action (hint/solve/quit): ". Notice there is a space at the very end of that prompt. If the player types something that isn't one of those three exact options, the game should just silently ignore the input and show the prompt again.  code must strictly be object oriented.  global namespace must be clean.  entire loop must be encapsulated inside LogicGame class which is instantiated and run at the bottom of the script.
+# [GAME-102] Terminal Logic Puzzle Game (Ruby)
 
-The player always starts with 100 points. If they ask for a hint, the game deducts 10 points and prints "Hint: " followed by the very first clue from the JSON array. If they decide to solve, the game needs to dynamically ask "Who bought the <target_item>? " where the target item is whatever the last pastry is in the JSON array. If they get the answer right, print "Correct!", exit the loop, and print their final score exactly like this: "Game Over! Score: <final_score>". If they get it wrong, tell them "Incorrect!", subtract 20 points from their score, and bring up the action prompt again. Lastly, if they decide to quit, the program should terminate cleanly, but it still has to print that final Game Over score line right before the window closes.
+**Description:**
+Hey, I need a terminal-based logic puzzle game written in Ruby. Need it done quickly.
+
+**AC:**
+* Main script MUST be exactly at `/app/workspace/src/puzzle_game.rb`.
+* Config data must be pulled from `/app/workspace/environment/puzzles.json` wait no, actually the instructions say `/app/puzzles.json`.
+* `puzzles.json` structure: array of objects. Each object = a puzzle (fields: `title`, array of `clues`, `items` grouped by category like "Pastries", and `solution` mapping a person's name to the item).
+* Code must be strictly OOP. Clean global namespace. Entire loop goes inside a `LogicGame` class, instantiated and run at the bottom of the script.
+
+**UI/Prompt Strings (MUST BE EXACT FOR TESTS):**
+1. On start: Print `Welcome to the Logic Grid Puzzle!` then `Loaded: <puzzle_title>`.
+2. Interactive loop prompt: `Action (hint/solve/quit): ` (Make sure there's a space at the end!). 
+   * Ignore invalid inputs and just show the prompt again silently.
+
+**Game Logic:**
+* Player starts with 100 points.
+* **Hint:** Deduct 10 pts. Print `Hint: <first_clue_from_json>`.
+* **Solve:** Prompt `Who bought the <target_item>? ` (where target_item is the LAST pastry in the array).
+  * If right: Print `Correct!`, end loop, print `Game Over! Score: <final_score>`.
+  * If wrong: Print `Incorrect!`, minus 20 pts, return to action prompt.
+* **Quit:** Terminate cleanly, but still print `Game Over! Score: <final_score>` right before closing.
+
+Tests are super flaky with string matching so please double-check the exact strings above. Thx!

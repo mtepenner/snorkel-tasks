@@ -1,33 +1,32 @@
-# ML Model Management API
+# [ML-404] ML Model Management API & Dashboard
 
-Extend the Flask stub at `/app/workspace/src/api.py`. Add your implementation on top of the existing stub rather than replacing the file outright.
+**Context:**
+We need to extend the Flask stub at `/app/workspace/src/api.py`. Plz add your code on top of the existing stub, don't just nuke the whole file and rewrite it!
 
 ## Milestone 1 - Data Preprocessing API
 
-Implement the backend work in `/app/workspace/src/api.py`.
-
-Add `POST /api/v1/data/upload` with support for both of the following input formats:
-- a JSON array of objects, for example `[{"A": 1, "B": null}, {"A": 2, "B": 4}]`
-- raw CSV text with a header row
-
-Validation requirements:
-- return HTTP 400 for malformed or empty input
-- return HTTP 415 for unsupported content types
-- do not allow invalid input to surface as an HTTP 500 response
-
-After a successful upload, run this preprocessing pipeline:
-- fill missing numeric values with the column mean
-- standard-scale numeric columns with z-score normalization so the mean is approximately `0` and the standard deviation is approximately `1`
-- one-hot encode string or categorical columns and drop the original categorical columns
-
-Add `GET /api/v1/data/processed` to return the current processed dataset as a flat JSON array of row objects.
+**AC for `api.py`:**
+* **POST `/api/v1/data/upload`**: Needs to handle TWO formats:
+  1. JSON array of objects (e.g. `[{"A": 1, "B": null}, {"A": 2, "B": 4}]`)
+  2. Raw CSV text (must have a header row)
+* **Validation requirements:**
+  * Throw 400 for malformed/empty input.
+  * Throw 415 if the content-type is unsupported.
+  * **NO 500 ERRORS** from bad input. Handle it gracefully!
+* **Processing Pipeline (runs after successful upload):**
+  * Impute missing numeric values with the column mean.
+  * Z-score normalization for numeric columns (mean approx 0, std dev approx 1).
+  * One-hot encode categorical/string columns (and drop the original string columns).
+* **GET `/api/v1/data/processed`**: Return the processed dataset as a flat JSON array of objects.
 
 ## Milestone 2 - Frontend Dashboard
 
-Create a responsive HTML page at `/app/workspace/src/templates/index.html`. Client-side JavaScript may be placed in `/app/workspace/src/static/js/app.js` or written inline in the HTML.
+**AC for UI:**
+* Create a responsive HTML page at `/app/workspace/src/templates/index.html`. 
+* You can put JS in `/app/workspace/src/static/js/app.js` or just inline it in the HTML, I don't care.
+* Page MUST have a nav area or sidebar containing the exact words `data`, `model`, and `inference`.
 
-The page must include:
-- a navigation area or sidebar containing the words `data`, `model`, and `inference`
+Need this deployed by EOD. Thx.
 - a model configuration form with a `<select>` element containing at least two options
 - an `<input type="range">` slider for hyperparameters
 - a chart area using either `<canvas>` or `<svg>`
