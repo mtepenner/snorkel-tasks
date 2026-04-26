@@ -38,7 +38,7 @@ ifndef TASK
 	$(error TASK is not set. Please specify a task folder, e.g., make test_ci TASK=name-of-task)
 endif
 	@echo "Running programmatic CI and LLMaJ checks for $(TASK)..."
-	stb harbor run -a terminus-2 -m "@openai/@openai/gpt-5.2" -p "$(TASK_PATH)"
+	stb harbor run -a terminus-2 -m openai/@openai/gpt-5.2 -p "$(TASK_PATH)"
 	stb harbor run -a terminus-2 -m "@anthropic/claude-opus-4-6" -p "$(TASK_PATH)"
 	
 
