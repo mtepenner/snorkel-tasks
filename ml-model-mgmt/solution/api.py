@@ -10,6 +10,31 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 processed_df = None
 
+
+def _looks_like_headerless_csv(raw_csv):
+    rows = list(csv.reader(raw_csv.splitlines()))
+    if len(rows) < 2:
+        return False
+
+    first_row = [cell.strip() for cell in rows[0]]
+    second_row = [cell.strip() for cell in rows[1]]
+
+    if len(first_row) != len(second_row):
+        return False
+
+    def is_numeric(cell):
+        if cell == "":
+            return False
+        try:
+            float(cell)
+            return True
+        except ValueError:
+            return False
+
+    return all(is_numeric(cell) for cell in first_row) and all(
+        cell == "" or is_numeric(cell) for cell in second_row
+    )
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -29,11 +54,8 @@ def upload_data():
             raw_csv = request.get_data(as_text=True)
             if not raw_csv.strip():
                 raise ValueError('Input data must contain at least one record')
-            try:
-                if not csv.Sniffer().has_header(raw_csv):
-                    raise ValueError('CSV input must include a header row')
-            except csv.Error as error:
-                raise ValueError(f'Malformed CSV input: {error}')
+            if _looks_like_headerless_csv(raw_csv):
+                raise ValueError('CSV input must include a header row')
             df = pd.read_csv(StringIO(raw_csv))
         else:
             return jsonify({"error": "Unsupported format"}), 415

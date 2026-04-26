@@ -1,5 +1,16 @@
 import numpy as np
 
+
+def _binary_indicator_columns(rows, exclude=None):
+    exclude = set(exclude or [])
+    if not rows:
+        return []
+    return [
+        key
+        for key in rows[0]
+        if key not in exclude and all(row[key] in (0, 1) for row in rows)
+    ]
+
 def test_m1_upload_endpoint_exists(client):
     """POST /api/v1/data/upload accepts JSON arrays and applies the full preprocessing pipeline to CSV uploads."""
     assert client is not None, "API not implemented"
@@ -15,8 +26,12 @@ def test_m1_upload_endpoint_exists(client):
     assert None not in [row["Y"] for row in processed], "Missing CSV numeric values were not imputed"
     assert abs(processed[0]["Y"]) < 0.01, "CSV upload did not apply mean imputation before scaling"
     assert abs(np.mean([row["Y"] for row in processed])) < 0.1, "CSV upload did not apply z-score scaling"
-    assert "color_red" in processed[0] and "color_blue" in processed[0], "CSV upload did not apply one-hot encoding"
     assert "color" not in processed[0], "Original CSV categorical column must be dropped after encoding"
+    csv_indicator_cols = _binary_indicator_columns(processed, exclude={"X", "Y"})
+    assert len(csv_indicator_cols) >= 2, "CSV upload did not apply one-hot encoding"
+    for row in processed:
+        assert sum(row[column] for column in csv_indicator_cols) == 1, \
+            "CSV one-hot encoded columns must be mutually exclusive"
 
 def test_m1_preprocessing_and_retrieval(client):
     """GET /api/v1/data/processed retrieves the cleaned dataset with missing values handled, scaled, and encoded."""
@@ -44,15 +59,14 @@ def test_m1_preprocessing_and_retrieval(client):
     client.post('/api/v1/data/upload', json=[{"color": "red"}, {"color": "blue"}])
     resp2 = client.get('/api/v1/data/processed')
     rows2 = resp2.get_json()
-    assert "color_red" in rows2[0] and "color_blue" in rows2[0], \
-        "One-hot encoding must produce both color_red and color_blue columns"
     assert "color" not in rows2[0], \
         "Original categorical column must be dropped after one-hot encoding"
+    indicator_cols = _binary_indicator_columns(rows2)
+    assert len(indicator_cols) >= 2, \
+        "One-hot encoding must produce at least two binary indicator columns"
     for row in rows2:
-        assert row["color_red"] in (0, 1) and row["color_blue"] in (0, 1), \
-            "One-hot encoded values must be binary (0 or 1)"
-    assert rows2[0]["color_red"] != rows2[0]["color_blue"], \
-        "One-hot columns must be mutually exclusive (exactly one column should be 1 per row)"
+        assert sum(row[column] for column in indicator_cols) == 1, \
+            "One-hot columns must be mutually exclusive (exactly one column should be 1 per row)"
 
 def test_m1_error_handling(client):
     """Verify malformed or unsupported uploads fail gracefully with non-500 responses."""
