@@ -2,6 +2,8 @@
 set -euo pipefail
 # Oracle solution for milestone 1
 
+pip install flask==3.1.1 --quiet
+
 mkdir -p /app/workspace/src/templates
 mkdir -p /app/workspace/data/input
 

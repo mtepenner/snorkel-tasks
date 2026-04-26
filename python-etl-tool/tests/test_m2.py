@@ -34,8 +34,10 @@ class TestMilestone2:
         content = requests.get("http://127.0.0.1:5000/").text
         lowered = content.lower()
         assert "<button" in lowered, "Missing trigger button element"
-        assert re.search(r"fetch\((['\"])\/trigger\1", content), "Missing fetch('/trigger') call"
-        assert re.search(r"['\"]POST['\"]", content), "Missing POST method in /trigger fetch call"
+        assert re.search(
+            r"fetch\(['\"`]\/trigger['\"`].*['\"]POST['\"]",
+            content, re.DOTALL
+        ), "fetch('/trigger') must include method: 'POST'"
 
     def test_button_disable_logic(self):
         """Button disables itself while /trigger is in flight and re-enables after."""
@@ -43,13 +45,9 @@ class TestMilestone2:
         # Strip JS single-line comments to avoid matching commented-out code.
         js_stripped = re.sub(r'//[^\n]*', '', content)
         assert re.search(
-            r"\.disabled\s*=\s*true|\.setAttribute\s*\(\s*['\"]disabled['\"]",
-            js_stripped
-        ), "Missing button disable-while-running logic (must use .disabled = true or setAttribute)"
-        assert re.search(
-            r"\.disabled\s*=\s*false|\.removeAttribute\s*\(\s*['\"]disabled['\"]",
-            js_stripped
-        ), "Missing button re-enable logic (must use .disabled = false or removeAttribute)"
+            r"\.disabled\s*=\s*true.*fetch.*\.disabled\s*=\s*false",
+            js_stripped, re.DOTALL
+        ), "Missing button disable-while-running logic and re-enable logic (approximate lifecycle logging)"
 
     def test_logs_fetched_on_page_load(self):
         """<pre> block fetches /logs on page load and populates the element."""
