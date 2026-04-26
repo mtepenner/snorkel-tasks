@@ -51,6 +51,7 @@ uvx \
   -w pytest==8.4.1 \
   -w pytest-json-ctrf==0.3.5 \
   -w requests==2.32.3 \
+  -w flask==3.1.1 \
   pytest --ctrf /logs/verifier/ctrf.json "${TEST_FILES[@]}" -rA
 
 # Produce reward file (REQUIRED)
