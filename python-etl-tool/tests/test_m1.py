@@ -21,7 +21,7 @@ class TestMilestone1:
             f.write("col1,col2,col3\nval4,val5,val6\n")
             
         # Kill anything already bound to port 5000 to prevent bind conflicts on retries.
-        subprocess.run(["fuser", "-k", "5000/tcp"], capture_output=True)
+        subprocess.run(["sh", "-c", "lsof -t -i:5000 | xargs -r kill -9"], capture_output=True)
         time.sleep(0.3)
 
         cls.proc = subprocess.Popen(["python3", "/app/workspace/src/app.py"])

@@ -8,7 +8,7 @@ class TestMilestone2:
     @classmethod
     def setup_class(cls):
         # Kill any leftover server from milestone 1 and start a fresh one.
-        subprocess.run(["fuser", "-k", "5000/tcp"], capture_output=True)
+        subprocess.run(["sh", "-c", "lsof -t -i:5000 | xargs -r kill -9"], capture_output=True)
         time.sleep(0.3)
         cls.proc = subprocess.Popen(["python3", "/app/workspace/src/app.py"])
         for _ in range(20):
