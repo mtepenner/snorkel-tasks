@@ -13,6 +13,19 @@ if [ "$PWD" = "/" ]; then
   exit 1
 fi
 
+# Start the API server (uvicorn is pre-installed in the Docker image)
+cd /app/workspace/src
+python3 -m uvicorn api:app --host 0.0.0.0 --port 8000 > /tmp/uvicorn.log 2>&1 &
+SERVER_PID=$!
+
+# Poll until the server is accepting connections (max 15 seconds)
+for i in $(seq 1 15); do
+  sleep 1
+  curl -sf http://localhost:8000/static/index.html > /dev/null 2>&1 && break
+done
+
+cd -
+
 # Run tests using pinned dependencies and the correct harness mount path
 uvx \
   -p 3.13 \
