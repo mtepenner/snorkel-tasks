@@ -4,7 +4,8 @@ import pytest
 sys.path.insert(0, '/app/workspace/src')
 try:
     from api import app
-except (ImportError, SyntaxError, Exception):
+except Exception as error:
+    print(f"[conftest] Failed to import app: {error}", file=sys.stderr, flush=True)
     app = None
 
 @pytest.fixture

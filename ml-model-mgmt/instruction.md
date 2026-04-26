@@ -1,36 +1,46 @@
-hey so we need to finish this ml model management thing. there's already a flask stub at `/app/workspace/src/api.py` — don't replace it, just build on top of it.
+# ML Model Management API
 
-## milestone 1 - data preprocessing api
+Extend the Flask stub at `/app/workspace/src/api.py`. Add your implementation on top of the existing stub rather than replacing the file outright.
 
-work inside `/app/workspace/src/api.py`
+## Milestone 1 - Data Preprocessing API
 
-first thing is a `POST /api/v1/data/upload` endpoint. needs to handle two formats — either json (array of objects, like `[{"A": 1, "B": null}, {"A": 2, "B": 4}]`) or raw csv text with a header. don't let it blow up on bad input, return a 400 or 415, NOT a 500.
+Implement the backend work in `/app/workspace/src/api.py`.
 
-once data is uploaded run it through a preprocessing pipeline:
-- fill in missing numeric values with the column mean
-- standard scale the numeric cols (z-score, mean should come out ~0, std ~1)
-- one-hot encode any string/categorical cols. so like a `color` column with "red" and "blue" in it becomes `color_red` and `color_blue`, drop the original
+Add `POST /api/v1/data/upload` with support for both of the following input formats:
+- a JSON array of objects, for example `[{"A": 1, "B": null}, {"A": 2, "B": 4}]`
+- raw CSV text with a header row
 
-then wire up `GET /api/v1/data/processed` to return whatever's currently in the pipeline as a flat json array of objects (one dict per row).
+Validation requirements:
+- return HTTP 400 for malformed or empty input
+- return HTTP 415 for unsupported content types
+- do not allow invalid input to surface as an HTTP 500 response
 
-## milestone 2 - frontend dashboard
+After a successful upload, run this preprocessing pipeline:
+- fill missing numeric values with the column mean
+- standard-scale numeric columns with z-score normalization so the mean is approximately `0` and the standard deviation is approximately `1`
+- one-hot encode string or categorical columns and drop the original categorical columns
 
-drop a responsive html page at `/app/workspace/src/templates/index.html`. js can go in `/app/workspace/src/static/js/app.js` or just inline it, doesn't matter.
+Add `GET /api/v1/data/processed` to return the current processed dataset as a flat JSON array of row objects.
 
-the page needs:
-- a nav or sidebar — just needs the words "data", "model", and "inference" in it somewhere
-- a model config form with a `<select>` dropdown (2+ options) and a range slider for hyperparams
-- a chart area, `<canvas>` or `<svg>` is fine, just needs to be there
-- viewport meta tag so it's not broken on mobile
+## Milestone 2 - Frontend Dashboard
 
-## milestone 3 - wire up inference
+Create a responsive HTML page at `/app/workspace/src/templates/index.html`. Client-side JavaScript may be placed in `/app/workspace/src/static/js/app.js` or written inline in the HTML.
 
-backend side: add `POST /api/v1/predict` to the api. takes `{"features": [1, 2, 3]}` and gives back `{"prediction": <some number>}`. the number has to actually come from the features — sum them, dot product, whatever, just don't return a hardcoded value.
+The page must include:
+- a navigation area or sidebar containing the words `data`, `model`, and `inference`
+- a model configuration form with a `<select>` element containing at least two options
+- an `<input type="range">` slider for hyperparameters
+- a chart area using either `<canvas>` or `<svg>`
+- a viewport meta tag so the layout works on mobile screens
 
-frontend side: hook it up. form submit should call fetch against `/api/v1/predict` with whatever the user put in. a few things that are non-negotiable:
-- `e.preventDefault()` so the page doesn't reload
-- show a spinner or "loading" somewhere while it's waiting
-- put the prediction result in the dom when it comes back (`innerHTML` or `textContent`)
-- `.catch()` for when the request bombs out
+## Milestone 3 - Inference Flow
+
+Add `POST /api/v1/predict` in `/app/workspace/src/api.py`. The endpoint must accept `{"features": [1, 2, 3]}` and return `{"prediction": <number>}`. The prediction value must be derived from the submitted features rather than returned as a hardcoded constant.
+
+Wire the frontend form to call `/api/v1/predict` with the user-provided input. The frontend implementation must:
+- call `e.preventDefault()` so the form does not trigger a full page reload
+- show a spinner or visible `loading` indicator while the request is in flight
+- write the returned prediction into the DOM using `innerHTML` or `textContent`
+- use `.catch()` or equivalent `try`/`catch` handling for request failures
 
 

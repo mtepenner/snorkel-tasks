@@ -1,6 +1,30 @@
 import os
 import re
 
+
+def _strip_frontend_comments_and_dead_code(content):
+    """Remove comments and a few trivial dead-code wrappers before static checks."""
+    content = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
+    content = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
+    content = re.sub(r'//.*', '', content)
+
+    dead_patterns = [
+        r'if\s*\(\s*(?:false|0|null|undefined|!1|1\s*===\s*0)\s*\)\s*\{[^}]*\}',
+    ]
+    for pattern in dead_patterns:
+        content = re.sub(pattern, '', content, flags=re.DOTALL | re.IGNORECASE)
+
+    return content
+
+
+def _predict_flow_windows(content_lower, radius=1400):
+    windows = []
+    for match in re.finditer(r'/api/v1/predict', content_lower):
+        start = max(0, match.start() - radius)
+        end = min(len(content_lower), match.end() + radius)
+        windows.append(content_lower[start:end])
+    return windows
+
 def test_m3_inference_endpoint(client):
     """1 pt: add a dummy prediction route POST /api/v1/predict."""
     assert client is not None
@@ -30,22 +54,13 @@ def test_m3_frontend_fetch_logic():
             
     assert content, "Frontend files missing"
     
-    # Strip HTML and JS comments
-    content = re.sub(r'<!--.*?-->', '', content, flags=re.DOTALL)
-    content = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)
-    content = re.sub(r'//.*', '', content)
-
-    # Remove dead code patterns — if(false){...} blocks that would never execute
-    content = re.sub(r'if\s*\(\s*false\s*\)\s*\{[^}]*\}', '', content, flags=re.DOTALL)
-    content = re.sub(r'if\s*\(\s*0\s*\)\s*\{[^}]*\}', '', content, flags=re.DOTALL)
-    
+    content = _strip_frontend_comments_and_dead_code(content)
     content_lower = content.lower()
-    
+
     # Require handler wiring, not just free-floating keywords.
     has_submit_or_click_handler = bool(
-        re.search(r'addEventListener\s*\(\s*["\'](?:submit|click)["\']', content)
-        or re.search(r'onsubmit\s*=\s*["\']', content_lower)
-        or re.search(r'function\s+\w+\s*\(\s*(?:e|event)', content_lower)
+        re.search(r'addEventListener\s*\(\s*["\'](?:submit|click)["\']', content, flags=re.IGNORECASE)
+        or re.search(r'on(?:submit|click)\s*=\s*["\']', content_lower)
     )
     assert has_submit_or_click_handler, "Missing submit/click handler wiring for prediction flow"
 
@@ -56,16 +71,31 @@ def test_m3_frontend_fetch_logic():
     )
     assert predict_fetch_pattern.search(content), "No executable fetch/XHR targeting /api/v1/predict found"
 
+    request_windows = _predict_flow_windows(content_lower)
+    assert request_windows, "Missing a local request flow around /api/v1/predict"
+
+    flow_with_loading_dom_and_error = [
+        window for window in request_windows
+        if ('spinner' in window or 'loading' in window)
+        and any(kw in window for kw in ['innerhtml', 'textcontent', 'appendchild', 'innertext', '.text(', '.html('])
+        and bool(re.search(r'\.catch\s*\(|\bcatch\s*\(|onerror', window))
+    ]
+    assert flow_with_loading_dom_and_error, (
+        "Prediction flow must keep loading state, DOM updates, and error handling "
+        "near the /api/v1/predict request"
+    )
+
     # preventDefault should be present in event-driven code paths.
     assert (
-        re.search(r'(?:e|event)\.preventDefault\s*\(', content)
-        or re.search(r'return\s+false\s*;', content_lower)
+        any(
+            re.search(r'(?:e|event)\.preventdefault\s*\(', window)
+            or re.search(r'return\s+false\s*;', window)
+            for window in flow_with_loading_dom_and_error
+        )
     ), "Missing preventDefault to stop page reload"
 
-    # Verify loading indicator intent and error handling around request flow.
-    assert 'spinner' in content_lower or 'loading' in content_lower or 'display:block' in content_lower or 'display: block' in content_lower, "Missing loading state/spinner"
-    assert '.catch(' in content or 'catch ' in content or 'onerror' in content_lower, "Missing error handling for failed API call"
-
-    # Verify DOM update logic exists for prediction output.
-    dom_update = any(kw in content_lower for kw in ['innerhtml', 'textcontent', 'appendchild', 'innertext', '.text(', '.html('])
-    assert dom_update, "No DOM/chart update logic found after fetch"
+    # Require a JSON request body shaped around a features payload.
+    assert any(
+        'json.stringify' in window and 'features' in window
+        for window in flow_with_loading_dom_and_error
+    ), "Prediction request must serialize a JSON body containing features"
