@@ -10,6 +10,19 @@ def test_milestone_2_anti_cheat():
     csv_path = '/app/workspace/data/climate.csv'
     meta_path = '/app/workspace/data/metadata.json'
 
+    # Option A – restore original CSV at the start of the test, so the assertion is always stable regardless of run order:
+    original_csv = (
+        "region_id,year,temperature\n"
+        "1,2020,14.5\n"
+        "1,2021,15.0\n"
+        "2,2020,22.1\n"
+        "2,2021,22.5\n"
+    )
+    with open(csv_path, 'w') as f:
+        f.write(original_csv)
+    with open(meta_path, 'w') as f:
+        json.dump({"1": "North America", "2": "Europe"}, f)
+
     with open(csv_path, 'r') as f:
         csv_content = f.read()
     if '3,2021,30.0' not in csv_content:

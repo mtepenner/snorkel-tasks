@@ -1,1 +1,0 @@
-the first requested file is /app/workspace/data/cleaned.json  and the layout is just a list of dictionaries. it needs to be a dynamically mapped payload of the /app/workspace/data/climate.csv records and the text regions from /app/workspace/data/metadata.json. ensure region string year int and temperature float types are strict. post 2020 only please.
