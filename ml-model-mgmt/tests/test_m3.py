@@ -26,7 +26,7 @@ def _predict_flow_windows(content_lower, radius=1400):
     return windows
 
 def test_m3_inference_endpoint(client):
-    """1 pt: add a dummy prediction route POST /api/v1/predict."""
+    """POST /api/v1/predict computes and returns a non-constant prediction value from input features."""
     assert client is not None
     response = client.post('/api/v1/predict', json={"features": [1, 2, 3]})
     assert response.status_code == 200
@@ -40,7 +40,7 @@ def test_m3_inference_endpoint(client):
         "Prediction must depend on input features, not be a hardcoded constant"
 
 def test_m3_frontend_fetch_logic():
-    """1 pt: write some fetch logic in frontend to hit the /predict endpoint."""
+    """Verify frontend correctly wires up the prediction fetch request with preventDefault, loading state, error handling, and JSON serialization."""
     js_or_html_path = '/app/workspace/src/templates/index.html'
     js_path = '/app/workspace/src/static/js/app.js'
     

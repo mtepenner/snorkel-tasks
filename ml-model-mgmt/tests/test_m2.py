@@ -2,11 +2,11 @@ import os
 from bs4 import BeautifulSoup
 
 def test_m2_ui_files_exist():
-    """1 pt: drop the main html into /app/workspace/src/templates/index.html."""
+    """Verify that the required index.html file is present at the expected path."""
     assert os.path.exists('/app/workspace/src/templates/index.html'), "index.html missing"
 
 def test_m2_ui_content():
-    """1 pt: build a basic dashboard layout with config form and chart area using functional HTML parsing."""
+    """Verify dashboard layout includes config form, chart area, navigation, dropdown, slider, and viewport meta tag."""
     with open('/app/workspace/src/templates/index.html', 'r') as f:
         soup = BeautifulSoup(f.read(), 'html.parser')
         

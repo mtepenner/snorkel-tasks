@@ -1,7 +1,7 @@
 import numpy as np
 
 def test_m1_upload_endpoint_exists(client):
-    """1 pt: wire up a POST /api/v1/data/upload endpoint to swallow csv or json payloads."""
+    """POST /api/v1/data/upload accepts JSON arrays and CSV payloads."""
     assert client is not None, "API not implemented"
     response = client.post('/api/v1/data/upload', json=[{"A": 1, "B": None}, {"A": 2, "B": 4}])
     assert response.status_code == 200, "JSON Upload endpoint failed"
@@ -15,7 +15,7 @@ def test_m1_upload_endpoint_exists(client):
     assert "B" in processed[0], "CSV column 'B' not parsed into processed rows"
 
 def test_m1_preprocessing_and_retrieval(client):
-    """1 pt: handle missing values/scaling/encoding and GET /api/v1/data/processed spits out cleaned dataset."""
+    """GET /api/v1/data/processed retrieves the cleaned dataset with missing values handled, scaled, and encoded."""
     assert client is not None
     # Skewed column ensures mean-imputation is distinguishable from median/constant fill.
     client.post('/api/v1/data/upload', json=[{"A": 1}, {"A": None}, {"A": 2}, {"A": 100}])
@@ -44,7 +44,21 @@ def test_m1_preprocessing_and_retrieval(client):
     assert "color" not in cols, "Original categorical column must be dropped after one-hot encoding"
 
 def test_m1_error_handling(client):
-    """1 pt: throws a 400 for bad input."""
+    """Verify HTTP 400 and HTTP 415 error handling for invalid input and unsupported content types."""
     assert client is not None
-    response = client.post('/api/v1/data/upload', data="this is garbage text")
-    assert response.status_code in [400, 415], "Did not handle bad input gracefully. Expected 4xx, not 5xx."
+    
+    # Test empty JSON body
+    resp_empty_json = client.post('/api/v1/data/upload', json=[], content_type='application/json')
+    assert resp_empty_json.status_code == 400
+
+    # Test empty CSV body
+    resp_empty_csv = client.post('/api/v1/data/upload', data="", content_type='text/csv')
+    assert resp_empty_csv.status_code == 400
+
+    # Malformed JSON with correct content type -> 400
+    resp_bad = client.post('/api/v1/data/upload', data="not json", content_type='application/json')
+    assert resp_bad.status_code == 400
+
+    # Unsupported content type -> 415
+    resp_xml = client.post('/api/v1/data/upload', data="<root/>", content_type='application/xml')
+    assert resp_xml.status_code == 415
