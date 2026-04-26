@@ -4,8 +4,9 @@ prod is literally falling over trying to process 50k+ token PDFs rn. I need a py
 
 Requirements:
 
+* make sure the FastAPI application instance is exactly named `app` (so our runner `uvicorn api:app` works!)
 * bind to `0.0.0.0:8000`
-* write some text chunking logic for the docs. cap it at 1000 words per chunk max so we don't nuke the server again.
+* write some text chunking logic for the docs. cap it at 1000 words per chunk max so we don't nuke the server again. Only use `PyPDF2` (specifically `PdfReader`) since that's all I installed in the container
 * needs a `POST /extract` endpoint (must be POST!) taking `multipart/form-data` upload with the field name `file`
 * grab `author` and `title` from the pdf metadata directly. if they are missing just use `"Unknown Author"` and `"Untitled"`
 * you have to parse the text chunks themselves to figure out the `topics`
