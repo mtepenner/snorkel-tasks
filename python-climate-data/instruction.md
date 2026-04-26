@@ -1,33 +1,12 @@
 # [DATA-942] Climate Data Analyzer Script
 
-**Context:**
-We need a python script to crunch some climate data ASAP. The ingestion team is complaining about hardcoded regions, so this needs to be dynamic. 
+We need a python script to crunch some climate data at `/app/workspace/src/analyzer.py` ASAP. The ingestion team requires the regions to map dynamically, so do not hardcode them. We also have a strict filtering rule: anything before year 2021 is considered bad data and must be completely excluded from outputs, averages, and graph nodes.
 
-**AC:**
-* Script must live at `/app/workspace/src/analyzer.py`
-* Inputs are `/app/workspace/data/climate.csv` and `/app/workspace/data/metadata.json`
-* **CRITICAL:** If they add new regions to the CSV, the code shouldn't break. No hardcoding!
-* **Filter Rule:** Anything before year 2021 is BAD DATA. Drop those rows entirely. Do not include them in outputs, averages, or graph nodes.
+## Deliverables
+The python script must ingest `/app/workspace/data/climate.csv` alongside the mappings in `/app/workspace/data/metadata.json` and generate the following outputs automatically based strictly on post-2020 valid data:
 
-## Requirements & Output Specifications
-All output files below must exclude pre-2021 records and apply the dynamic regions.
-
-### 1. `cleaned.json`
-* **Path:** `/app/workspace/data/cleaned.json`
-* **Structure:** A JSON array of objects (one per record).
-* **Fields & Types:**
-  * `region`: Extracted region string from `metadata.json` (e.g. "North America").
-  * `year`: The year from the CSV cast strictly as an integer.
-  * `temperature`: The temperature value cast strictly as a float.
-
-### 2. `trends.json`
-* **Path:** `/app/workspace/data/trends.json`
-* **Structure:** A single flat JSON object mapping the region text directly to its computed float average temperature: `{ "North America": 15.5, ... }`
-
-### 3. `climate_graph.png` and `climate_graph.gv`
-* **Paths:** `/app/workspace/output/climate_graph.png` and `/app/workspace/output/climate_graph.gv`
-* **Structure:** A Graphviz directed graph.
-* **Nodes & Edges:** Generate nodes for the regions and the mean temps. Establish directed edges pointing from the regions to their respective mean temperatures (e.g. `North America -> 15.5`).
-* **Note:** Render the graph to the `.png` format, and explicitly retain the raw `.gv` dot source file on disk afterwards for manual test verifications.
+1. **/app/workspace/data/cleaned.json**: A dynamically mapped JSON array containing the cleaned records with the strict types for the extracted region name (string), the parsed temperature (float), and the year (integer).
+2. **/app/workspace/data/trends.json**: A single flat JSON object mapping each region text to its computed float average temperature.
+3. **/app/workspace/output/climate_graph.png**: A rendered Graphviz directed graph illustrating the regions generating directed edges pointing to their calculated mean temperatures, alongside the raw `climate_graph.gv` dot source file on disk.
 
 Plz just get this working, the pipeline is blocked.
