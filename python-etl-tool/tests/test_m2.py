@@ -2,7 +2,6 @@ import re
 import time
 import requests
 import subprocess
-from pathlib import Path
 
 class TestMilestone2:
     @classmethod

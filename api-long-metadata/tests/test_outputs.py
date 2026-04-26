@@ -1,6 +1,8 @@
 import os
+import re
 import math
 import requests
+from pathlib import Path
 from fpdf import FPDF
 
 def create_dummy_pdf(path, with_metadata=False):
@@ -17,9 +19,19 @@ def create_dummy_pdf(path, with_metadata=False):
     pdf.output(path)
 
 def test_absolute_paths_and_ui():
-    """1. Verify paths and static UI contents"""
+    """1. Verify paths, static UI contents, and structural source requirements."""
     assert os.path.exists("/app/workspace/src/api.py"), "API file missing."
     assert os.path.exists("/app/workspace/src/static/index.html"), "GUI file missing."
+
+    api_source = Path("/app/workspace/src/api.py").read_text()
+    assert re.search(r"^app\s*=\s*FastAPI\(", api_source, re.MULTILINE), \
+        "FastAPI application instance must be named 'app' for uvicorn api:app to resolve."
+    assert "0.0.0.0" in api_source and "8000" in api_source, \
+        "api.py must bind to 0.0.0.0:8000."
+    assert "PyPDF2" in api_source or "PdfReader" in api_source, \
+        "api.py must use PyPDF2.PdfReader — no other PDF library is installed."
+    assert re.search(r"chunk_size\s*=\s*1000|range\(0.*1000|words\[.*1000", api_source), \
+        "api.py must implement 1000-word chunking logic."
     
     try:
         res = requests.get("http://localhost:8000/static/index.html", timeout=3)
@@ -51,7 +63,8 @@ def test_extraction_fallback_and_chunking():
     assert data['filename'] == "fallback_test.pdf"
     
     assert isinstance(data['total_words'], int)
-    assert data['total_words'] >= 2000, "total_words must accurately reflect PDF length."
+    assert 2000 <= data['total_words'] <= 10000, \
+        f"total_words={data['total_words']} is outside the plausible range for this PDF."
     assert data['total_chunks'] >= 3, "Expected >=3 chunks for large dummy PDF."
     
     expected_min_chunks = math.ceil(data['total_words'] / 1000)
@@ -65,10 +78,15 @@ def test_extraction_fallback_and_chunking():
     assert len(data['topics']) > 0, "topics list cannot be empty."
     assert all(isinstance(t, str) and len(t) > 0 for t in data['topics']), "topics must be valid strings."
     
-    expected_any = {"chunking", "context", "testing", "mechanisms", "dummy"}
+    # Topics must reflect actual PDF text content, not hardcoded strings.
+    # The dummy PDF contains: "Dummy long context line {i} to test chunking mechanisms."
+    # Any correct frequency-based extractor will surface these high-frequency words.
+    pdf_words = {"dummy", "long", "context", "line", "test", "chunk", "chunking", "mechanisms"}
     found = [t.lower() for t in data['topics']]
-    assert any(kw in " ".join(found) for kw in expected_any), \
-        f"Topics {found} do not reflect PDF content."
+    joined = " ".join(found)
+    matches = [w for w in pdf_words if w in joined]
+    assert len(matches) >= 2, \
+        f"Expected >=2 topic keywords from the PDF text {pdf_words}, got {matches} in topics {found}."
 
 def test_extraction_positive_metadata():
     """3. Verify actual metadata extraction from a valid PDF"""

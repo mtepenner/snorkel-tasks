@@ -10,7 +10,7 @@ Requirements:
 * needs a `POST /extract` endpoint (must be POST!) taking `multipart/form-data` upload with the field name `file`
 * grab `author` and `title` from the pdf metadata directly. if they are missing just use `"Unknown Author"` and `"Untitled"`
 * you have to parse the text chunks themselves to figure out the `topics`
-* MUST return a flat JSON object with these EXACT keys and types (do not change these or the downstream processor will break): `author` (str), `title` (str), `topics` (list of str), `total_chunks` (int), `filename` (str), `total_words` (int)
+* MUST return a flat JSON object with these EXACT keys and types (do not change these or the downstream processor will break): `author` (str), `title` (str), `topics` (list of str), `total_chunks` (int), `filename` (str — must be the original uploaded file's name, exactly as provided in the upload), `total_words` (int)
 
 UI requirement:
 
