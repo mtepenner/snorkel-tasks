@@ -1,4 +1,5 @@
 import os
+import math
 import requests
 from fpdf import FPDF
 
@@ -26,6 +27,7 @@ def test_absolute_paths_and_ui():
         html = res.text.lower()
         assert 'type="file"' in html, "UI missing file upload."
         assert 'fetch(' in html or 'xmlhttprequest' in html, "UI missing API call logic."
+        assert 'json.stringify' in html or 'textcontent' in html or 'innerhtml' in html or 'innertext' in html, "UI does not render the API response."
     except requests.exceptions.RequestException:
         assert False, "Failed to connect to GUI server."
 
@@ -50,13 +52,23 @@ def test_extraction_fallback_and_chunking():
     
     assert isinstance(data['total_words'], int)
     assert data['total_words'] >= 2000, "total_words must accurately reflect PDF length."
-    assert data['total_chunks'] >= 3, "Expected >=3 chunks for ~2400 word PDF."
-    words_per_chunk = data['total_words'] / data['total_chunks']
-    assert words_per_chunk <= 1000, f"Average chunk size ({words_per_chunk}) exceeds 1000 max."
+    assert data['total_chunks'] >= 3, "Expected >=3 chunks for large dummy PDF."
+    
+    expected_min_chunks = math.ceil(data['total_words'] / 1000)
+    assert data['total_chunks'] >= expected_min_chunks, (
+        f"Expected at least {expected_min_chunks} chunks for "
+        f"{data['total_words']} words with 1000-word cap, "
+        f"got {data['total_chunks']}."
+    )
     
     assert isinstance(data['topics'], list), "topics must be a list."
     assert len(data['topics']) > 0, "topics list cannot be empty."
     assert all(isinstance(t, str) and len(t) > 0 for t in data['topics']), "topics must be valid strings."
+    
+    expected_any = {"chunking", "context", "testing", "mechanisms", "dummy"}
+    found = [t.lower() for t in data['topics']]
+    assert any(kw in " ".join(found) for kw in expected_any), \
+        f"Topics {found} do not reflect PDF content."
 
 def test_extraction_positive_metadata():
     """3. Verify actual metadata extraction from a valid PDF"""
