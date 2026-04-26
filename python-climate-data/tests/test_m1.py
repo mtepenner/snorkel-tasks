@@ -38,6 +38,8 @@ def test_milestone_1_anti_cheat():
     regions = {r.get("region") for r in data}
     assert {"North America", "Europe", "Asia"}.issubset(regions), "Region mapping failed for dynamic data."
 
+    expected_temps = {"North America": 15.0, "Europe": 22.5, "Asia": 30.0}
+
     for rec in data:
         assert "region" in rec, "region field missing."
         assert "temperature" in rec, "temperature field missing."
@@ -47,3 +49,8 @@ def test_milestone_1_anti_cheat():
         assert isinstance(rec["year"], int), "year must be an integer"
         assert isinstance(rec["temperature"], float), "temperature must be a float"
         assert rec["year"] >= 2021, "Failed to filter out records before 2021!"
+
+        region = rec["region"]
+        assert region in expected_temps, f"Unexpected region: {region}"
+        assert abs(rec["temperature"] - expected_temps[region]) < 1e-9, \
+            f"Wrong temperature for {region}: expected {expected_temps[region]}, got {rec['temperature']}"

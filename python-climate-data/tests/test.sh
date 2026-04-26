@@ -1,17 +1,18 @@
 #!/bin/bash
+# Validate WORKDIR from Dockerfile.
+if [ "$PWD" = "/" ]; then
+  echo "Error: No WORKDIR set in Dockerfile."
+  exit 1
+fi
+
 # Install test dependencies
 apt-get update -q && apt-get install -y -q curl
 curl -LsSf https://astral.sh/uv/0.7.13/install.sh | sh
 source $HOME/.local/bin/env
 uv venv .tbench-testing
 source .tbench-testing/bin/activate
-uv pip install pytest==8.4.1
-
-# Validate WORKDIR from Dockerfile.
-if [ "$PWD" = "/" ]; then
-  echo "Error: No WORKDIR set in Dockerfile."
-  exit 1
-fi
+uv pip install pytest==8.4.1 \
+    pandas==2.0.3 numpy==1.26.4 graphviz==0.20.1
 
 # Prepare logs
 mkdir -p /logs/verifier
