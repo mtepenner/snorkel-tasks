@@ -72,24 +72,25 @@ def test_milestone_3_anti_cheat_and_edges():
             2. Quoted plain label:    "north america" -> "16.00"
             3. Quoted compound ID:    "region:north america" [label="north america"]; "mean:north america" [label="16.00"]
             """
+            # Only extract node labels from non-edge lines to prevent edge attributes
+            # (e.g. -> "dst" [label="x"]) from overwriting node attribute declarations.
+            node_lines = '\n'.join(line for line in dot.splitlines() if '->' not in line)
+
             # Build a map: node_id_token -> label text
             # Captures both bare identifiers (\w+) and quoted strings ("...")
             node_labels = {}
             for m in re.finditer(
                 r'("(?:[^"\\]|\\.)*"|\w+)\s*\[[^\]]*label\s*=\s*"([^"]*)"',
-                dot
+                node_lines
             ):
                 node_labels[m.group(1).strip('"')] = m.group(2)
 
             # Also treat a bare quoted string used directly as a node ID (no attrs)
             # e.g.  "north america" -> "16.00"  — add them with label == id
-            for m in re.finditer(r'"((?:[^"\\]|\\.)*)"', dot):
+            for m in re.finditer(r'"((?:[^"\\]|\\.)*)"', node_lines):
                 nid = m.group(1)
                 if nid not in node_labels:
                     node_labels[nid] = nid
-
-            region_nodes = {nid for nid, lbl in node_labels.items() if region in lbl}
-            temp_nodes   = {nid for nid, lbl in node_labels.items() if temp_value in lbl}
 
             # Build the set of directed edges (src_token -> dst_token)
             edges = set()
@@ -97,7 +98,19 @@ def test_milestone_3_anti_cheat_and_edges():
                 r'("(?:[^"\\]|\\.)*"|\w+)\s*->\s*("(?:[^"\\]|\\.)*"|\w+)',
                 dot
             ):
-                edges.add((m.group(1).strip('"'), m.group(2).strip('"')))
+                src = m.group(1).strip('"')
+                dst = m.group(2).strip('"')
+                edges.add((src, dst))
+                # Add bare node IDs seen in edges but missing from label declarations,
+                # treating the ID itself as the label (handles unquoted bare identifiers
+                # like:  europe -> "22.5c"  where 'europe' has no explicit label attr).
+                if src not in node_labels:
+                    node_labels[src] = src
+                if dst not in node_labels:
+                    node_labels[dst] = dst
+
+            region_nodes = {nid for nid, lbl in node_labels.items() if region in lbl}
+            temp_nodes   = {nid for nid, lbl in node_labels.items() if temp_value in lbl}
 
             return any((rn, tn) in edges for rn in region_nodes for tn in temp_nodes)
     # North America has two post-2021 rows (15.0, 17.0) -> mean 16.0
