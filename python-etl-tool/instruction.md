@@ -1,5 +1,34 @@
 # ETL Dashboard
 
-we need an etl system that processes some incoming csv files and brings the results to light on a simple web dashboard interface.  the primary objective is to allow the data team to manually trigger the pipeline, monitor the processing logs, and download the final aggregated data without needing terminal access.
+Build a Python/Flask ETL web dashboard that lets the data team trigger a processing pipeline, monitor logs, and download results — all from a browser.
 
-implementation and constraints: backend must be built in python; frontend in html and js; backend goes into /app/workspace/src/app.py and run flask app on host 0.0.0.0 at port 5000; etl logic -> all csvs must come from /app/workspace/data/input/ and the combined records go to /app/workspace/data/output.json; after that, insert the records into /app/workspace/data/etl.db; it is also important you make use of this exact sqlite schema: CREATE TABLE records (id INTEGER PRIMARY KEY, data TEXT) where the data column stores the json string for the row.; for endpoints -> set up POST /trigger to run the etl process.  GET /logs needs to return the contents of /app/workspace/data/etl.log, ensuring your script appends timestamped successes and error logs; GET /download serves the generated json file; ui behavior -> put the frontend at /app/workspace/src/templates/index.html; the interface will need a button to trigger the endpoint, but you have to include js to temporarily disable it while the request is in flight to prevent db locks; include a `<pre>` block that fetches logs and a standard download link
+## Backend
+
+- Create `/app/workspace/src/app.py`; run the Flask app on host `0.0.0.0` at port `5000`.
+- Read all `.csv` files from `/app/workspace/data/input/`, preserve all original columns, and aggregate every row into `/app/workspace/data/output.json` as a JSON array where each element is an object whose keys are the CSV column names and whose values are the corresponding string values, e.g.:
+  ```json
+  [
+    {"col1": "val1", "col2": "val2", "col3": "val3"},
+    {"col1": "val4", "col2": "val5", "col3": "val6"}
+  ]
+  ```
+- Insert each record into `/app/workspace/data/etl.db` using the exact schema:
+  ```sql
+  CREATE TABLE records (id INTEGER PRIMARY KEY, data TEXT)
+  ```
+  The `data` column must store the JSON string for each row.
+- Append a timestamped success or error entry to `/app/workspace/data/etl.log` on every ETL run.
+
+## Endpoints
+
+- `POST /trigger` — run the ETL pipeline (read CSVs → write output.json → insert into DB → append to log).
+- `GET /logs` — return the full contents of `/app/workspace/data/etl.log`.
+- `GET /download` — serve `/app/workspace/data/output.json`.
+
+## Frontend
+
+- Place the UI at `/app/workspace/src/templates/index.html`.
+- Include a button that sends a `POST` request to `/trigger`.
+  - Use JavaScript to **disable** the button while the request is in flight (set `btn.disabled = true`) and **re-enable** it (`btn.disabled = false`) once the response is received, to prevent concurrent ETL runs.
+- Include a `<pre>` block that automatically fetches `/logs` and displays the log content **on page load** (use `window.onload` or a `DOMContentLoaded` event listener).
+- Include a standard download link (`<a href="/download">`) for the output JSON file.

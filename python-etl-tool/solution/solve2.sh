@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Oracle solution for milestone 2
 
 cat << 'EOF' > /app/workspace/src/templates/index.html

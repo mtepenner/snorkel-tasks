@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 # Oracle solution for milestone 1
 
 mkdir -p /app/workspace/src/templates

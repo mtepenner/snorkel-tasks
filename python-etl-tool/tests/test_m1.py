@@ -20,6 +20,10 @@ class TestMilestone1:
         with open("/app/workspace/data/input/test_2.csv", "w") as f:
             f.write("col1,col2,col3\nval4,val5,val6\n")
             
+        # Kill anything already bound to port 5000 to prevent bind conflicts on retries.
+        subprocess.run(["fuser", "-k", "5000/tcp"], capture_output=True)
+        time.sleep(0.3)
+
         cls.proc = subprocess.Popen(["python3", "/app/workspace/src/app.py"])
         
         for _ in range(20):
@@ -68,7 +72,10 @@ class TestMilestone1:
         
         c.execute("SELECT data FROM records")
         rows = [json.loads(r[0]) for r in c.fetchall()]
-        assert any("col3" in r for r in rows), "Did not find expected test data in records"
+        assert len(rows) == 2, "Expected 2 rows in records table"
+        values = {(r["col1"], r["col2"], r["col3"]) for r in rows}
+        assert ("val1", "val2", "val3") in values, "Row from test.csv not found in DB"
+        assert ("val4", "val5", "val6") in values, "Row from test_2.csv not found in DB"
         conn.close()
 
     def test_logs_endpoint(self):
