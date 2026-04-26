@@ -15,6 +15,7 @@ Hey, I need a Python/Flask ETL web dashboard built out. Our data team is complai
 * Append a timestamped success or error entry to `/app/workspace/data/etl.log` on every ETL run.
 
 **Endpoints:**
+* `GET /` — serve the frontend dashboard (render `templates/index.html`).
 * `POST /trigger` — run the ETL pipeline (read CSVs → write output.json → insert into DB → append to log).
 * `GET /logs` — return the full contents of `/app/workspace/data/etl.log`.
 * `GET /download` — serve `/app/workspace/data/output.json`.

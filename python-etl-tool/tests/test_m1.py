@@ -93,10 +93,14 @@ class TestMilestone1:
         assert json.loads(resp.text) == expected
 
     def test_etl_log_appended(self):
-        """ETL run appends a timestamped success or error entry to etl.log."""
+        """ETL run appends a new timestamped entry to etl.log on every run — must not overwrite."""
         log = Path("/app/workspace/data/etl.log")
         assert log.exists()
-        text = log.read_text().strip()
-        assert len(text) > 0
-        assert re.search(r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}", text), "No timestamp found in etl.log"
-        assert re.search(r"(?i)success|error", text), "No success/error status found in etl.log"
+        before_lines = log.read_text().strip().splitlines()
+        assert len(before_lines) >= 1, "No entries in etl.log after initial trigger"
+        assert re.search(r"\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}", before_lines[-1]), "No timestamp found in etl.log"
+        assert re.search(r"(?i)success|error", before_lines[-1]), "No success/error status found in etl.log"
+        # Trigger again and verify the log grew (append, not overwrite)
+        requests.post("http://127.0.0.1:5000/trigger")
+        after_lines = log.read_text().strip().splitlines()
+        assert len(after_lines) > len(before_lines), "etl.log did not grow after a second trigger — must append, not overwrite"

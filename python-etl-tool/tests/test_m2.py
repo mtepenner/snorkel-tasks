@@ -22,32 +22,53 @@ class TestMilestone2:
     def teardown_class(cls):
         cls.proc.terminate()
 
-    def test_html_endpoints_and_logic(self):
-        """Verify index.html is served by Flask and contains the required UI elements and endpoint wiring."""
-        # Verify the page is actually served via Flask, not just present on disk.
+    def test_index_served_by_flask(self):
+        """GET / returns 200 and Flask actually renders the index.html template."""
         resp = requests.get("http://127.0.0.1:5000/")
         assert resp.status_code == 200, "GET / did not return 200 — Flask route for index.html is missing"
+        # Verify Flask serves real template content, not a blank or stub response.
+        assert "/trigger" in resp.text, "Flask-served page is missing /trigger reference"
+        assert "/download" in resp.text, "Flask-served page is missing /download reference"
 
-        content = Path("/app/workspace/src/templates/index.html").read_text()
+    def test_trigger_button_and_post_method(self):
+        """index.html has a button that sends a POST fetch to /trigger."""
+        content = requests.get("http://127.0.0.1:5000/").text
         lowered = content.lower()
-        
-        assert "/trigger" in content, "Missing /trigger endpoint in UI"
-        assert "/logs" in content, "Missing /logs endpoint in UI"
-        assert "/download" in content, "Missing /download endpoint in UI"
-        
-        assert "fetch" in content, "Missing fetch() API calls"
+        assert "<button" in lowered, "Missing trigger button element"
+        assert re.search(r"fetch\((['\"])\/trigger\1", content), "Missing fetch('/trigger') call"
+        assert re.search(r"['\"]POST['\"]", content), "Missing POST method in /trigger fetch call"
+
+    def test_button_disable_logic(self):
+        """Button disables itself while /trigger is in flight and re-enables after."""
+        content = requests.get("http://127.0.0.1:5000/").text
+        # Strip JS single-line comments to avoid matching commented-out code.
+        js_stripped = re.sub(r'//[^\n]*', '', content)
+        assert re.search(
+            r"\.disabled\s*=\s*true|\.setAttribute\s*\(\s*['\"]disabled['\"]",
+            js_stripped
+        ), "Missing button disable-while-running logic (must use .disabled = true or setAttribute)"
+        assert re.search(
+            r"\.disabled\s*=\s*false|\.removeAttribute\s*\(\s*['\"]disabled['\"]",
+            js_stripped
+        ), "Missing button re-enable logic (must use .disabled = false or removeAttribute)"
+
+    def test_logs_fetched_on_page_load(self):
+        """<pre> block fetches /logs on page load and populates the element."""
+        content = requests.get("http://127.0.0.1:5000/").text
+        lowered = content.lower()
         assert "<pre" in lowered, "Missing <pre> block for log display"
-        assert "<button" in lowered, "Missing trigger button"
-        assert re.search(r"<a[^>]+href=[\"']?/download[\"']?", lowered), "Missing download link"
-        assert re.search(r"fetch\((['\"])\/trigger\1", content), "Missing POST fetch to /trigger"
-        assert re.search(r"fetch\((['\"])\/logs\1", content), "Missing fetch to /logs"
-        # Accept both .disabled = true/false and setAttribute('disabled', ...) patterns.
+        assert "window.onload" in content or "DOMContentLoaded" in content, \
+            "Missing window.onload or DOMContentLoaded handler for on-load log fetch"
+        assert re.search(r"fetch\((['\"])\/logs\1", content), "Missing fetch('/logs') call"
+        # Verify the fetch result is actually assigned to a DOM element (not silently discarded).
         assert re.search(
-            r"disabled\s*=\s*true|\.setAttribute\s*\(\s*['\"]disabled['\"]",
+            r"\.(?:textContent|innerText|innerHTML)\s*=",
             content
-        ), "Missing button disable-while-running logic"
-        assert re.search(
-            r"disabled\s*=\s*false|\.removeAttribute\s*\(\s*['\"]disabled['\"]",
-            content
-        ), "Missing button re-enable logic"
-        assert "window.onload" in content or "DOMContentLoaded" in content, "Missing log fetch on page load"
+        ), "Fetched /logs result does not appear to be assigned to any DOM element"
+
+    def test_download_link(self):
+        """index.html contains a standard anchor link to /download."""
+        content = requests.get("http://127.0.0.1:5000/").text
+        lowered = content.lower()
+        assert re.search(r"<a[^>]+href=[\"']?/download[\"']?", lowered), \
+            "Missing <a href='/download'> download link"
