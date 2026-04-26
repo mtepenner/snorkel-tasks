@@ -54,9 +54,8 @@ def test_milestone_1_anti_cheat():
     expected_temps = {"North America": 15.0, "Europe": 22.5, "Asia": 30.0}
 
     for rec in data:
-        assert "region" in rec, "region field missing."
-        assert "temperature" in rec, "temperature field missing."
-        assert "year" in rec, "year field missing."
+        assert set(rec.keys()) == {"region", "temperature", "year"}, \
+            f"Record must have exactly keys region, temperature, year; got {set(rec.keys())}"
         
         assert isinstance(rec["region"], str), "region must be a string"
         assert isinstance(rec["year"], int), "year must be an integer"

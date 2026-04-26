@@ -6,9 +6,7 @@ if [ "$PWD" = "/" ]; then
 fi
 
 # Install test dependencies
-apt-get update -q && apt-get install -y -q curl
-curl -LsSf https://astral.sh/uv/0.7.13/install.sh | sh
-source $HOME/.local/bin/env
+python3 -m pip install --no-cache-dir uv==0.7.13
 uv venv .tbench-testing
 source .tbench-testing/bin/activate
 uv pip install pytest==8.4.1 \
