@@ -2,6 +2,7 @@ import re
 import time
 import requests
 import subprocess
+from pathlib import Path
 
 class TestMilestone2:
     @classmethod
@@ -23,6 +24,8 @@ class TestMilestone2:
 
     def test_index_served_by_flask(self):
         """GET / returns 200 and Flask actually renders the index.html template."""
+        assert Path("/app/workspace/src/templates/index.html").exists(), \
+            "Template file must exist at /app/workspace/src/templates/index.html"
         resp = requests.get("http://127.0.0.1:5000/")
         assert resp.status_code == 200, "GET / did not return 200 — Flask route for index.html is missing"
         # Verify Flask serves real template content, not a blank or stub response.

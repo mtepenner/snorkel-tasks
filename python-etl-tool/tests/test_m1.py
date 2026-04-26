@@ -66,9 +66,13 @@ class TestMilestone1:
         c = conn.cursor()
         
         c.execute("PRAGMA table_info(records)")
-        columns = {row[1]: row[2] for row in c.fetchall()}
-        assert "id" in columns and "INTEGER" in columns["id"].upper()
-        assert "data" in columns and "TEXT" in columns["data"].upper()
+        schema_rows = c.fetchall()
+        columns = {row[1]: row[2] for row in schema_rows}
+        primary_keys = {row[1]: row[5] for row in schema_rows}
+        assert set(columns.keys()) == {"id", "data"}, "Table 'records' has extra columns beyond id and data"
+        assert "INTEGER" in columns["id"].upper(), "Column 'id' must be INTEGER"
+        assert primary_keys["id"] == 1, "Column 'id' must be the PRIMARY KEY"
+        assert "TEXT" in columns["data"].upper(), "Column 'data' must be TEXT"
         
         c.execute("SELECT data FROM records")
         rows = [json.loads(r[0]) for r in c.fetchall()]
