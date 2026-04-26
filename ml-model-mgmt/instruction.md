@@ -1,7 +1,7 @@
 # [ML-404] ML Model Management API & Dashboard
 
 **Context:**
-We need to extend the Flask stub at `/app/workspace/src/api.py`. Plz add your code on top of the existing stub, don't just nuke the whole file and rewrite it!
+We need to extend the Flask stub at `/app/workspace/src/api.py`.
 
 ## Milestone 1 - Data Preprocessing API
 
@@ -25,12 +25,12 @@ We need to extend the Flask stub at `/app/workspace/src/api.py`. Plz add your co
 * Create a responsive HTML page at `/app/workspace/src/templates/index.html`. 
 * You can put JS in `/app/workspace/src/static/js/app.js` or just inline it in the HTML, I don't care.
 * Page MUST have a nav area or sidebar containing the exact words `data`, `model`, and `inference`.
-
-Need this deployed by EOD. Thx.
 - a model configuration form with a `<select>` element containing at least two options
 - an `<input type="range">` slider for hyperparameters
 - a chart area using either `<canvas>` or `<svg>`
 - a viewport meta tag so the layout works on mobile screens
+
+Need this deployed by EOD. Thx.
 
 ## Milestone 3 - Inference Flow
 

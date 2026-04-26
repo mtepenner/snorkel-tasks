@@ -38,6 +38,10 @@ def test_m3_inference_endpoint(client):
     r2 = client.post('/api/v1/predict', json={"features": [10, 20, 30]})
     assert r2.get_json()["prediction"] != data["prediction"], \
         "Prediction must depend on input features, not be a hardcoded constant"
+    # Verify the output is deterministic — same features must always return the same result
+    r3 = client.post('/api/v1/predict', json={"features": [1, 2, 3]})
+    assert r3.get_json()["prediction"] == data["prediction"], \
+        "Prediction must be deterministic — same features must always return the same value"
 
 def test_m3_frontend_fetch_logic():
     """Verify frontend correctly wires up the prediction fetch request with preventDefault, loading state, error handling, and JSON serialization."""

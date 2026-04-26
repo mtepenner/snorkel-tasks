@@ -39,9 +39,16 @@ def test_m1_preprocessing_and_retrieval(client):
 
     client.post('/api/v1/data/upload', json=[{"color": "red"}, {"color": "blue"}])
     resp2 = client.get('/api/v1/data/processed')
-    cols = list(resp2.get_json()[0].keys())
-    assert "color_red" in cols or "color_blue" in cols, "One-hot encoding failed"
-    assert "color" not in cols, "Original categorical column must be dropped after one-hot encoding"
+    rows2 = resp2.get_json()
+    assert "color_red" in rows2[0] and "color_blue" in rows2[0], \
+        "One-hot encoding must produce both color_red and color_blue columns"
+    assert "color" not in rows2[0], \
+        "Original categorical column must be dropped after one-hot encoding"
+    for row in rows2:
+        assert row["color_red"] in (0, 1) and row["color_blue"] in (0, 1), \
+            "One-hot encoded values must be binary (0 or 1)"
+    assert rows2[0]["color_red"] != rows2[0]["color_blue"], \
+        "One-hot columns must be mutually exclusive (exactly one column should be 1 per row)"
 
 def test_m1_error_handling(client):
     """Verify HTTP 400 and HTTP 415 error handling for invalid input and unsupported content types."""
