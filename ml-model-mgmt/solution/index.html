@@ -17,16 +17,16 @@
     
     <div id="main">
         <h1>Model Configuration</h1>
-        <select id="model-select">
-            <option value="rf">Random Forest</option>
-            <option value="lr">Linear Regression</option>
-        </select>
-        
-        <label for="slider">Hyperparameter:</label>
-        <input type="range" id="slider" min="1" max="100">
-
-        <h2>Run Inference</h2>
         <form onsubmit="runPrediction(event)">
+            <select id="model-select">
+                <option value="rf">Random Forest</option>
+                <option value="lr">Linear Regression</option>
+            </select>
+
+            <label for="slider">Hyperparameter:</label>
+            <input type="range" id="slider" min="1" max="100">
+
+            <h2>Run Inference</h2>
             <input type="text" id="features" placeholder="e.g. 1,2,3">
             <button type="submit" id="run-btn">Run Prediction</button>
         </form>

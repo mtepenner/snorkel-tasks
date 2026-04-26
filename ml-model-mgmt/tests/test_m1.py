@@ -1,18 +1,22 @@
 import numpy as np
 
 def test_m1_upload_endpoint_exists(client):
-    """POST /api/v1/data/upload accepts JSON arrays and CSV payloads."""
+    """POST /api/v1/data/upload accepts JSON arrays and applies the full preprocessing pipeline to CSV uploads."""
     assert client is not None, "API not implemented"
     response = client.post('/api/v1/data/upload', json=[{"A": 1, "B": None}, {"A": 2, "B": 4}])
     assert response.status_code == 200, "JSON Upload endpoint failed"
     
-    csv_data = "A,B\n1,\n2,4\n"
+    csv_data = "X,Y,color\n1,,red\n2,4,blue\n100,6,red\n"
     response_csv = client.post('/api/v1/data/upload', data=csv_data, content_type='text/csv')
     assert response_csv.status_code == 200, "CSV Upload endpoint failed"
     processed = client.get('/api/v1/data/processed').get_json()
-    assert len(processed) == 2
-    assert "A" in processed[0], "CSV column 'A' not parsed into processed rows"
-    assert "B" in processed[0], "CSV column 'B' not parsed into processed rows"
+    assert len(processed) == 3
+    assert "Y" in processed[0], "CSV numeric column 'Y' not preserved in processed rows"
+    assert None not in [row["Y"] for row in processed], "Missing CSV numeric values were not imputed"
+    assert abs(processed[0]["Y"]) < 0.01, "CSV upload did not apply mean imputation before scaling"
+    assert abs(np.mean([row["Y"] for row in processed])) < 0.1, "CSV upload did not apply z-score scaling"
+    assert "color_red" in processed[0] and "color_blue" in processed[0], "CSV upload did not apply one-hot encoding"
+    assert "color" not in processed[0], "Original CSV categorical column must be dropped after encoding"
 
 def test_m1_preprocessing_and_retrieval(client):
     """GET /api/v1/data/processed retrieves the cleaned dataset with missing values handled, scaled, and encoded."""
@@ -51,21 +55,18 @@ def test_m1_preprocessing_and_retrieval(client):
         "One-hot columns must be mutually exclusive (exactly one column should be 1 per row)"
 
 def test_m1_error_handling(client):
-    """Verify HTTP 400 and HTTP 415 error handling for invalid input and unsupported content types."""
+    """Verify malformed or unsupported uploads fail gracefully with non-500 responses."""
     assert client is not None
-    
-    # Test empty JSON body
-    resp_empty_json = client.post('/api/v1/data/upload', json=[], content_type='application/json')
-    assert resp_empty_json.status_code == 400
 
-    # Test empty CSV body
-    resp_empty_csv = client.post('/api/v1/data/upload', data="", content_type='text/csv')
-    assert resp_empty_csv.status_code == 400
+    cases = [
+        ("empty json", {"json": [], "content_type": 'application/json'}, 400),
+        ("empty csv", {"data": "", "content_type": 'text/csv'}, 400),
+        ("malformed json", {"data": "not json", "content_type": 'application/json'}, 400),
+        ("headerless csv", {"data": "1,2\n3,4\n", "content_type": 'text/csv'}, 400),
+        ("unsupported xml", {"data": "<root/>", "content_type": 'application/xml'}, 415),
+    ]
 
-    # Malformed JSON with correct content type -> 400
-    resp_bad = client.post('/api/v1/data/upload', data="not json", content_type='application/json')
-    assert resp_bad.status_code == 400
-
-    # Unsupported content type -> 415
-    resp_xml = client.post('/api/v1/data/upload', data="<root/>", content_type='application/xml')
-    assert resp_xml.status_code == 415
+    for label, kwargs, expected_status in cases:
+        response = client.post('/api/v1/data/upload', **kwargs)
+        assert response.status_code == expected_status, f"Unexpected status for {label}"
+        assert response.status_code < 500, f"{label} should not raise a 500 error"

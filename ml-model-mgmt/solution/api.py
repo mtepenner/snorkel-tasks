@@ -1,3 +1,4 @@
+import csv
 import os
 import pandas as pd
 from flask import Flask, request, jsonify, render_template
@@ -25,7 +26,15 @@ def upload_data():
             df = pd.DataFrame(payload)
         elif request.content_type == 'text/csv':
             from io import StringIO
-            df = pd.read_csv(StringIO(request.get_data(as_text=True)))
+            raw_csv = request.get_data(as_text=True)
+            if not raw_csv.strip():
+                raise ValueError('Input data must contain at least one record')
+            try:
+                if not csv.Sniffer().has_header(raw_csv):
+                    raise ValueError('CSV input must include a header row')
+            except csv.Error as error:
+                raise ValueError(f'Malformed CSV input: {error}')
+            df = pd.read_csv(StringIO(raw_csv))
         else:
             return jsonify({"error": "Unsupported format"}), 415
 

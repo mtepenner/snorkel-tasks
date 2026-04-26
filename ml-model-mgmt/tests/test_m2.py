@@ -15,11 +15,14 @@ def test_m2_ui_content():
     
     nav_text = nav.get_text().lower()
     assert 'data' in nav_text and 'model' in nav_text and 'inference' in nav_text, "Sidebar must have data prep, model config, inference links"
+
+    form = soup.find('form')
+    assert form is not None, "Missing model configuration <form>"
     
-    select = soup.find('select')
+    select = form.find('select')
     assert select is not None and len(select.find_all('option')) >= 2, "Missing model selection dropdown with >=2 options"
     
-    slider = soup.find('input', {'type': 'range'})
+    slider = form.find('input', {'type': 'range'})
     assert slider is not None, "Missing hyperparameter sliders"
     
     chart = soup.find(['canvas', 'svg']) or soup.find(id=lambda x: x and 'chart' in x.lower())

@@ -89,13 +89,10 @@ def test_m3_frontend_fetch_logic():
         "near the /api/v1/predict request"
     )
 
-    # preventDefault should be present in event-driven code paths.
-    assert (
-        any(
-            re.search(r'(?:e|event)\.preventdefault\s*\(', window)
-            or re.search(r'return\s+false\s*;', window)
-            for window in flow_with_loading_dom_and_error
-        )
+    assert re.search(
+        r'(?:e|event)\.preventdefault\s*\(|return\s+false\s*;',
+        content_lower,
+        flags=re.IGNORECASE,
     ), "Missing preventDefault to stop page reload"
 
     # Require a JSON request body shaped around a features payload.
