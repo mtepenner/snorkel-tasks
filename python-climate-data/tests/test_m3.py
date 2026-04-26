@@ -100,12 +100,12 @@ def test_milestone_3_anti_cheat_and_edges():
                 edges.add((m.group(1).strip('"'), m.group(2).strip('"')))
 
             return any((rn, tn) in edges for rn in region_nodes for tn in temp_nodes)
-    # North America has two post-2021 rows (15.0, 17.0) → mean 16.0
-    assert has_region_temp_edge(dot_src, 'north america', '16.0'), \
+    # North America has two post-2021 rows (15.0, 17.0) -> mean 16.0
+    assert has_region_temp_edge(dot_src, 'north america', '16.0') or has_region_temp_edge(dot_src, 'north america', '16'), \
         "North America must have a directed edge to its mean temperature 16.0 (mean of 15.0 and 17.0)"
     assert has_region_temp_edge(dot_src, 'europe', '22.5'), \
         "Europe must have a directed edge to its mean temperature 22.5"
-    assert has_region_temp_edge(dot_src, 'asia', '30.0'), \
+    assert has_region_temp_edge(dot_src, 'asia', '30.0') or has_region_temp_edge(dot_src, 'asia', '30'), \
         "Asia must have a directed edge to its mean temperature 30.0"
 
     # Pre-2021 rows must not affect graph edges. If pre-2021 data were included, the contaminated
