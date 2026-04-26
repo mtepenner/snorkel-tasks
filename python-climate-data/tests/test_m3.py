@@ -52,28 +52,41 @@ def test_milestone_3_anti_cheat_and_edges():
     assert '->' in dot_src, "No directed edges found in DOT source"
 
     def has_region_temp_edge(dot, region, temp_value):
-        """Check that a node with `region` in its label has a directed edge to a node with `temp_value` in its label.
+            """Check that a node whose label contains `region` has a directed edge to a node whose label contains `temp_value`.
 
-        Handles two DOT styles:
-        - Quoted labels as node IDs: "north america" -> "16.00"
-        - Symbolic node IDs with separate label attrs: n_region_north_america -> n_mean_north_america
-        """
-        # Method 1: label text used directly as node ID
-        pat = re.escape(region) + r'[^;\n]*->[^;\n]*' + re.escape(temp_value)
-        if re.search(pat, dot):
-            return True
-        # Method 2: symbolic node IDs — build label map then check edges
-        node_labels = {}
-        for m in re.finditer(r'(\w+)\s*\[[^\]]*label\s*=\s*"([^"]*)"', dot):
-            node_labels[m.group(1)] = m.group(2)
-        region_nodes = {nid for nid, lbl in node_labels.items() if region in lbl}
-        temp_nodes   = {nid for nid, lbl in node_labels.items() if temp_value in lbl}
-        for rn in region_nodes:
-            for tn in temp_nodes:
-                if re.search(re.escape(rn) + r'\s*->\s*' + re.escape(tn), dot):
-                    return True
-        return False
+            Handles three DOT node-ID styles:
+            1. Bare unquoted word:    north_america -> 16_00
+            2. Quoted plain label:    "north america" -> "16.00"
+            3. Quoted compound ID:    "region:north america" [label="north america"]; "mean:north america" [label="16.00"]
+            """
+            # Build a map: node_id_token -> label text
+            # Captures both bare identifiers (\w+) and quoted strings ("...")
+            node_labels = {}
+            for m in re.finditer(
+                r'("(?:[^"\\]|\\.)*"|\w+)\s*\[[^\]]*label\s*=\s*"([^"]*)"',
+                dot
+            ):
+                node_labels[m.group(1).strip('"')] = m.group(2)
 
+            # Also treat a bare quoted string used directly as a node ID (no attrs)
+            # e.g.  "north america" -> "16.00"  — add them with label == id
+            for m in re.finditer(r'"((?:[^"\\]|\\.)*)"', dot):
+                nid = m.group(1)
+                if nid not in node_labels:
+                    node_labels[nid] = nid
+
+            region_nodes = {nid for nid, lbl in node_labels.items() if region in lbl}
+            temp_nodes   = {nid for nid, lbl in node_labels.items() if temp_value in lbl}
+
+            # Build the set of directed edges (src_token -> dst_token)
+            edges = set()
+            for m in re.finditer(
+                r'("(?:[^"\\]|\\.)*"|\w+)\s*->\s*("(?:[^"\\]|\\.)*"|\w+)',
+                dot
+            ):
+                edges.add((m.group(1).strip('"'), m.group(2).strip('"')))
+
+            return any((rn, tn) in edges for rn in region_nodes for tn in temp_nodes)
     # North America has two post-2021 rows (15.0, 17.0) → mean 16.0
     assert has_region_temp_edge(dot_src, 'north america', '16.0'), \
         "North America must have a directed edge to its mean temperature 16.0 (mean of 15.0 and 17.0)"
