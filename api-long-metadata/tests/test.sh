@@ -17,6 +17,7 @@ fi
 cd /app/workspace/src
 python3 -m uvicorn api:app --host 0.0.0.0 --port 8000 > /tmp/uvicorn.log 2>&1 &
 SERVER_PID=$!
+trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
 
 # Poll until the server is accepting connections (max 15 seconds)
 for i in $(seq 1 15); do

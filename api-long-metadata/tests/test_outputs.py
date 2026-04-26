@@ -28,8 +28,6 @@ def test_absolute_paths_and_ui():
         "FastAPI application instance must be named 'app' for uvicorn api:app to resolve."
     assert "PyPDF2" in api_source or "PdfReader" in api_source, \
         "api.py must use PyPDF2.PdfReader — no other PDF library is installed."
-    assert re.search(r"\b1000\b", api_source), \
-        "api.py must implement 1000-word chunking logic (1000 not found in source)."
     
     try:
         res = requests.get("http://localhost:8000/static/index.html", timeout=3)
@@ -71,9 +69,15 @@ def test_extraction_fallback_and_chunking():
         f"{data['total_words']} words with 1000-word cap, "
         f"got {data['total_chunks']}."
     )
+    expected_max_chunks = math.ceil(data['total_words'] / 1000) + 1
+    assert data['total_chunks'] <= expected_max_chunks, (
+        f"Expected at most {expected_max_chunks} chunks for "
+        f"{data['total_words']} words with 1000-word cap, "
+        f"got {data['total_chunks']}."
+    )
     
     assert isinstance(data['topics'], list), "topics must be a list."
-    assert len(data['topics']) > 0, "topics list cannot be empty."
+    assert 3 <= len(data['topics']) <= 10, "topics must contain between 3 and 10 keywords."
     assert all(isinstance(t, str) and len(t) > 0 for t in data['topics']), "topics must be valid strings."
     
     # Topics must reflect actual PDF text content, not hardcoded strings.
