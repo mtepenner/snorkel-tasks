@@ -30,7 +30,7 @@ else
 fi
 
 uvx \
-  -p 3.13 \
+  -p 3.12 \
   -w pytest==8.4.1 \
   -w pytest-json-ctrf==0.3.5 \
   -w pytest-flask==1.3.0 \
