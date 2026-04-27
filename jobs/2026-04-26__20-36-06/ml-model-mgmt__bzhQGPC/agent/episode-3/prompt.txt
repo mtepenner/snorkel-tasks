@@ -1,0 +1,106 @@
+New Terminal Output:
+
+root@18536abd51d4:/app/workspace# python3 -c "import sys; sys.path.insert(0, '/app/workspace/src'); from api import app; print('Import OK')"
+Import OK
+root@18536abd51d4:/app/workspace# cd /app/workspace/src && python3 -c "
+> import json
+> from api import app
+>
+> client = app.test_client()
+>
+> # Test 1: JSON upload
+> print('=== Test 1: JSON Upload ===')
+> resp = client.post('/api/v1/data/upload',
+>     data=json.dumps([{'A': 1, 'B': None}, {'A': 2, 'B': 4}]),
+>     content_type='application/json')
+> print(f'Status: {resp.status_code}')
+> print(f'Body: {resp.get_json()}')
+>
+> # Test 2: Get processed data
+> print('\n=== Test 2: Get Processed ===')
+> resp = client.get('/api/v1/data/processed')
+> print(f'Status: {resp.status_code}')
+> print(f'Body: {resp.get_json()}')
+>
+> # Test 3: CSV upload with valid header
+> print('\n=== Test 3: CSV Upload (valid) ===')
+> resp = client.post('/api/v1/data/upload',
+>     data='name,age\nalice,30\nbob,25\n',
+>     content_type='text/csv')
+> print(f'Status: {resp.status_code}')
+> print(f'Body: {resp.get_json()}')
+>
+> # Test 4: CSV with no header (should 400)
+> print('\n=== Test 4: CSV Upload (no header) ===')
+> resp = client.post('/api/v1/data/upload',
+>     data='1,2\n3,4\n',
+>     content_type='text/csv')
+> print(f'Status: {resp.status_code}')
+> print(f'Body: {resp.get_json()}')
+>
+> # Test 5: Unsupported content type (415)
+> print('\n=== Test 5: Unsupported content type ===')
+> resp = client.post('/api/v1/data/upload',
+>     data='hello',
+>     content_type='text/plain')
+> print(f'Status: {resp.status_code}')
+> print(f'Body: {resp.get_json()}')
+>
+> # Test 6: Predict
+> print('\n=== Test 6: Predict ===')
+> resp = client.post('/api/v1/predict',
+>     data=json.dumps({'features': [1, 2, 3]}),
+>     content_type='application/json')
+> print(f'Status: {resp.status_code}')
+> print(f'Body: {resp.get_json()}')
+>
+> # Test 7: Predict determinism
+> print('\n=== Test 7: Predict determinism ===')
+> resp2 = client.post('/api/v1/predict',
+>     data=json.dumps({'features': [1, 2, 3]}),
+>     content_type='application/json')
+> print(f'Same result: {resp.get_json() == resp2.get_json()}')
+>
+> # Test 8: Empty JSON (400)
+> print('\n=== Test 8: Empty JSON ===')
+> resp = client.post('/api/v1/data/upload',
+>     data=json.dumps([]),
+>     content_type='application/json')
+> print(f'Status: {resp.status_code}')
+> print(f'Body: {resp.get_json()}')
+>
+> print('\nAll tests passed!')
+> "
+=== Test 1: JSON Upload ===
+Status: 200
+Body: {'columns': ['A', 'B'], 'message': 'Data uploaded and processed successfully', 'rows': 2}
+
+=== Test 2: Get Processed ===
+Status: 200
+Body: [{'A': -1.0, 'B': 0.0}, {'A': 1.0, 'B': 0.0}]
+
+=== Test 3: CSV Upload (valid) ===
+Status: 200
+Body: {'columns': ['age', 'name_alice', 'name_bob'], 'message': 'Data uploaded and processed successfully', 'rows': 2}
+
+=== Test 4: CSV Upload (no header) ===
+Status: 400
+Body: {'error': 'CSV appears to have no header row'}
+
+=== Test 5: Unsupported content type ===
+Status: 415
+Body: {'error': 'Unsupported content type'}
+
+=== Test 6: Predict ===
+Status: 200
+Body: {'prediction': 13.9092}
+
+=== Test 7: Predict determinism ===
+Same result: True
+
+=== Test 8: Empty JSON ===
+Status: 400
+Body: {'error': 'Empty dataset'}
+
+All tests passed!
+root@18536abd51d4:/app/workspace/src#

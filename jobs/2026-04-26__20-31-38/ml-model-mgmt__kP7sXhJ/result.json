@@ -1,0 +1,94 @@
+{
+    "id": "8b07527a-3797-4c3d-bb7e-8be2b04d965a",
+    "task_name": "ml-model-mgmt",
+    "trial_name": "ml-model-mgmt__kP7sXhJ",
+    "trial_uri": "file:///mnt/c/Users/mtepe/Scripts/snorkel-ai/tasks/jobs/2026-04-26__20-31-38/ml-model-mgmt__kP7sXhJ",
+    "task_id": {
+        "path": "ml-model-mgmt"
+    },
+    "source": null,
+    "task_checksum": "abe1d7affe0de5085ecd25bfe566f5fe2027c0a57295faefa64758b41de884f9",
+    "config": {
+        "task": {
+            "path": "ml-model-mgmt",
+            "git_url": null,
+            "git_commit_id": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "ml-model-mgmt__kP7sXhJ",
+        "trials_dir": "jobs/2026-04-26__20-31-38",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "oracle",
+            "import_path": null,
+            "model_name": null,
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {},
+            "env": {}
+        },
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": false,
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "eedf7ee1-0a34-4ac5-b85b-6718e7b7a0cf"
+    },
+    "agent_info": {
+        "name": "oracle",
+        "version": "1.0.0",
+        "model_info": null
+    },
+    "agent_result": {
+        "n_input_tokens": null,
+        "n_cache_tokens": null,
+        "n_output_tokens": null,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-04-27T03:31:38.078506Z",
+    "finished_at": "2026-04-27T03:31:46.944154Z",
+    "environment_setup": {
+        "started_at": "2026-04-27T03:31:38.159770Z",
+        "finished_at": "2026-04-27T03:31:43.882170Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-04-27T03:31:43.882240Z",
+        "finished_at": "2026-04-27T03:31:43.882295Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-04-27T03:31:43.882324Z",
+        "finished_at": "2026-04-27T03:31:44.169871Z"
+    },
+    "verifier": {
+        "started_at": "2026-04-27T03:31:44.169968Z",
+        "finished_at": "2026-04-27T03:31:44.877600Z"
+    }
+}

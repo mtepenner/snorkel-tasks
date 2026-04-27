@@ -1,0 +1,108 @@
+New Terminal Output:
+
+root@93bccacddc27:/app/workspace# python3 /app/workspace/src/api.py > /tmp/flask.log 2>&1 & echo $! > /tmp/flask.pid
+[1] 865
+root@93bccacddc27:/app/workspace# python3 - <<'PY'
+> import json
+> import urllib.request
+> import urllib.error
+>
+> BASE = 'http://127.0.0.1:5000'
+>
+> def req(method, path, body=None, headers=None):
+>     url = BASE + path
+>     data = None
+>     if body is not None:
+>         if isinstance(body, (dict, list)):
+>             data = json.dumps(body).encode('utf-8')
+>         elif isinstance(body, str):
+>             data = body.encode('utf-8')
+>         else:
+>             data = body
+>     h = headers or {}
+>     r = urllib.request.Request(url, data=data, headers=h, method=method)
+>     try:
+>         with urllib.request.urlopen(r, timeout=5) as resp:
+>             b = resp.read().decode('utf-8', errors='replace')
+>             return resp.status, b
+>     except urllib.error.HTTPError as e:
+>         b = e.read().decode('utf-8', errors='replace')
+>         return e.code, b
+>
+> cases = []
+> cases.append(("predict ok", req('POST','/api/v1/predict', {'features':[1,2,3]}, {'Content-Type':'application/json'})))
+> cases.append(("predict 415", req('POST','/api/v1/predict', 'x', {'Content-Type':'text/plain'})))
+>
+> cases.append(("upload json ok", req('POST','/api/v1/data/upload', [{'A':1,'B':None,'C':'x'},{'A':2,'B':4,'C':'y'}], {'Content-Type':'application/json'})))
+> cases.append(("processed after json", req('GET','/api/v1/data/processed')))
+>
+> cases.append(("upload csv ok", req('POST','/api/v1/data/upload', 'A,B\n1,2\n3,4\n', {'Content-Type':'text/csv'})))
+> cases.append(("upload csv headerless 400", req('POST','/api/v1/data/upload', '1,2\n3,4\n', {'Content-Type':'text/csv'})))
+>
+> cases.append(("upload 415", req('POST','/api/v1/data/upload', b'abc', {'Content-Type':'application/octet-stream'})))
+> cases.append(("upload empty 400", req('POST','/api/v1/data/upload', '', {'Content-Type':'text/plain'})))
+>
+> for name, (status, body) in cases:
+>     print('\n==', name)
+>     print('status:', status)
+>     print('body:', body[:300])
+> PY
+
+== predict ok
+status: 200
+body: {"prediction":6.0}
+
+
+== predict 415
+status: 415
+body: {"error":"unsupported content type"}
+
+
+== upload json ok
+status: 200
+body: {"status":"ok"}
+
+
+== processed after json
+status: 200
+body: [{"A":-1.0,"B":0.0,"C_x":true,"C_y":false},{"A":1.0,"B":0.0,"C_x":false,"C_y":true}]
+
+
+== upload csv ok
+status: 200
+body: {"status":"ok"}
+
+
+== upload csv headerless 400
+status: 400
+body: {"error":"CSV must include a header row"}
+
+
+== upload 415
+status: 415
+body: {"error":"unsupported content type"}
+
+
+== upload empty 400
+status: 400
+body: {"error":"malformed or empty input"}
+
+root@93bccacddc27:/app/workspace# kill $(cat /tmp/flask.pid)
+root@93bccacddc27:/app/workspace# tail -n 80 /tmp/flask.log
+ * Serving Flask app 'api'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.22.0.2:5000
+Press CTRL+C to quit
+127.0.0.1 - - [27/Apr/2026 03:35:26] "POST /api/v1/predict HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 03:35:26] "POST /api/v1/predict HTTP/1.1" 415 -
+127.0.0.1 - - [27/Apr/2026 03:35:26] "POST /api/v1/data/upload HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 03:35:26] "GET /api/v1/data/processed HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 03:35:26] "POST /api/v1/data/upload HTTP/1.1" 200 -
+127.0.0.1 - - [27/Apr/2026 03:35:26] "POST /api/v1/data/upload HTTP/1.1" 400 -
+127.0.0.1 - - [27/Apr/2026 03:35:26] "POST /api/v1/data/upload HTTP/1.1" 415 -
+127.0.0.1 - - [27/Apr/2026 03:35:26] "POST /api/v1/data/upload HTTP/1.1" 400 -
+[1]+  Terminated              python3 /app/workspace/src/api.py > /tmp/flask.log 2>&1
+root@93bccacddc27:/app/workspace#

@@ -1,0 +1,41 @@
+New Terminal Output:
+root@18536abd51d4:/app/workspace# find /app/workspace -type f 2>/dev/null
+/app/workspace/src/api.py
+root@18536abd51d4:/app/workspace# cat /app/workspace/src/api.py 2>/dev/null; echo '---END---'
+from flask import Flask
+
+app = Flask(__name__)
+
+# TODO: Implement Milestone 1, 2, and 3 endpoints here.
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+---END---
+root@18536abd51d4:/app/workspace# pip list 2>/dev/null | grep -i -E 'flask|pandas|numpy'
+Flask           3.0.0
+numpy           1.26.4
+pandas          2.1.4
+root@18536abd51d4:/app/workspace#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

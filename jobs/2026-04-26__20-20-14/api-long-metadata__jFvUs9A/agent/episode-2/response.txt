@@ -1,0 +1,26 @@
+{
+  "analysis": "Both files are created and the FastAPI app imports successfully. Let me do a quick functional test by creating a small test PDF and hitting the /extract endpoint.",
+  "plan": "1. Create a small test PDF using Python\n2. Start uvicorn in the background\n3. Test the /extract endpoint with curl\n4. Test the /static/index.html route\n5. Shut down the server",
+  "commands": [
+    {
+      "keystrokes": "cd /app/workspace/src && python3 -c \"\nfrom PyPDF2 import PdfWriter\nfrom PyPDF2.generic import NameObject, TextStringObject\nw = PdfWriter()\nw.add_blank_page(width=612, height=792)\nw.add_metadata({'/Author': 'Test Author', '/Title': 'Test Document'})\nwith open('/tmp/test.pdf', 'wb') as f:\n    w.write(f)\nprint('Test PDF created')\n\"\n",
+      "duration": 2.0
+    },
+    {
+      "keystrokes": "cd /app/workspace/src && uvicorn api:app --host 0.0.0.0 --port 9999 &\n",
+      "duration": 2.0
+    },
+    {
+      "keystrokes": "curl -s -X POST http://localhost:9999/extract -F file=@/tmp/test.pdf | python3 -m json.tool\n",
+      "duration": 3.0
+    },
+    {
+      "keystrokes": "curl -s -o /dev/null -w '%{http_code}' http://localhost:9999/static/index.html\n",
+      "duration": 2.0
+    },
+    {
+      "keystrokes": "kill %1 2>/dev/null; wait 2>/dev/null\n",
+      "duration": 1.0
+    }
+  ]
+}

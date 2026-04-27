@@ -1,0 +1,42 @@
+Collecting uv
+  Downloading uv-0.11.7-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (24.9 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.9/24.9 MB 17.6 MB/s eta 0:00:00
+Installing collected packages: uv
+Successfully installed uv-0.11.7
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+
+[notice] A new release of pip is available: 23.0.1 -> 26.1
+[notice] To update, run: pip install --upgrade pip
+Downloading cpython-3.12.13-linux-x86_64-gnu (download) (32.9MiB)
+ Downloaded cpython-3.12.13-linux-x86_64-gnu (download)
+Downloading pygments (1.2MiB)
+Downloading pandas (11.1MiB)
+Downloading numpy (17.1MiB)
+Downloading scipy (33.6MiB)
+Downloading scikit-learn (10.3MiB)
+ Downloaded pygments
+ Downloaded scikit-learn
+ Downloaded pandas
+ Downloaded numpy
+ Downloaded scipy
+Installed 25 packages in 86ms
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 7 items
+
+../../tests/test_m1.py ...                                               [ 42%]
+../../tests/test_m2.py ..                                                [ 71%]
+../../tests/test_m3.py ..                                                [100%]
+
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../../tests/test_m1.py::test_m1_upload_endpoint_exists
+PASSED ../../tests/test_m1.py::test_m1_preprocessing_and_retrieval
+PASSED ../../tests/test_m1.py::test_m1_error_handling
+PASSED ../../tests/test_m2.py::test_m2_ui_files_exist
+PASSED ../../tests/test_m2.py::test_m2_ui_content
+PASSED ../../tests/test_m3.py::test_m3_inference_endpoint
+PASSED ../../tests/test_m3.py::test_m3_frontend_fetch_logic
+============================== 7 passed in 0.11s ===============================

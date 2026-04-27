@@ -2,7 +2,7 @@
 
 Need the Flask stub at `/app/workspace/src/api.py` finished today. Please do not freestyle extra routes or alternate payload shapes because the checks downstream are already wired.
 
-## Milestone 1 - Data Preprocessing API
+## Phase 1 - Data Preprocessing API
 
 For `api.py`:
 * **POST `/api/v1/data/upload`** has to accept exactly two upload shapes:
@@ -19,7 +19,7 @@ For `api.py`:
   * one-hot encode categorical/string columns and drop the original string columns afterward
 * **GET `/api/v1/data/processed`** must return the processed dataset as one flat JSON array of objects
 
-## Milestone 2 - Frontend Dashboard
+## Phase 2 - Frontend Dashboard
 
 For the UI:
 * put a responsive page at `/app/workspace/src/templates/index.html`
@@ -33,7 +33,7 @@ For the UI:
 
 Need this out by EOD.
 
-## Milestone 3 - Inference Flow
+## Phase 3 - Inference Flow
 
 Add `POST /api/v1/predict` in `/app/workspace/src/api.py`. It must accept `{"features": [1, 2, 3]}` and return `{"prediction": <number>}`. The prediction has to be derived from the submitted features, and it also has to be deterministic for the same feature list. Do not use randomness, clock time, or request state.
 

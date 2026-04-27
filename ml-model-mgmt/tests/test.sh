@@ -68,12 +68,8 @@ uvx \
   -w beautifulsoup4==4.12.3 \
   pytest --ctrf /logs/verifier/ctrf.json "${TEST_FILES[@]}" -rA
 
-status=$?
-
-if [ $status -eq 0 ]; then
+if [ $? -eq 0 ]; then
   echo 1 > /logs/verifier/reward.txt
 else
   echo 0 > /logs/verifier/reward.txt
 fi
-
-exit $status

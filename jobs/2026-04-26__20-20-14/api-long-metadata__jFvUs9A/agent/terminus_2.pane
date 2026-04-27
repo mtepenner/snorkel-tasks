@@ -14,4 +14,324 @@ WARNING: Running pip as the 'root' user can result in broken permissions and con
 
 [notice] A new release of pip is available: 23.0.1 -> 26.1
 [notice] To update, run: pip install --upgrade pip
-[?2004hroot@d6a8b0842045:/app/workspace# 
+[?2004hroot@d6a8b0842045:/app/workspace# cat > /app/workspace/src/api.py << 'PYEOF'
+[?2004l[?2004h> import re
+[?2004l[?2004h> from collections import Counter
+[?2004l[?2004h> from fastapi import FastAPI, File, UploadFile
+[?2004l[?2004h> from fastapi.staticfiles import StaticFiles
+[?2004l[?2004h> from PyPDF2 import PdfReader
+[?2004l[?2004h> import io
+[?2004l[?2004h> import os
+[?2004l[?2004h> 
+[?2004l[?2004h> app = FastAPI()
+[?2004l[?2004h> 
+[?2004l[?2004h> # Mount static files
+[?2004lno[?2004h> app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
+[?2004l[?2004h> 
+[?2004l[?2004h> STOP_WORDS = {
+[?2004lrd[:6[?2004h>     "the", "be", "to", "of", "and", "a", "in", "that", "have", "i",
+[?2004l[?2004h>     "it", "for", "not", "on", "with", "he", "as", "you", "do", "at",
+[?2004l[?2004h>     "this", "but", "his", "by", "from", "they", "we", "say", "her",
+[?2004l[?2004h>     "she", "or", "an", "will", "my", "one", "all", "would", "there",
+[?2004l[?2004h>     "their", "what", "so", "up", "out", "if", "about", "who", "get",
+[?2004l[?2004h>     "which", "go", "me", "when", "make", "can", "like", "time", "no",
+[?2004l[?2004h>     "just", "him", "know", "take", "people", "into", "year", "your",
+[?2004l[?2004h>     "good", "some", "could", "them", "see", "other", "than", "then",
+[?2004l[?2004h>     "now", "look", "only", "come", "its", "over", "think", "also",
+[?2004l[?2004h>     "back", "after", "use", "two", "how", "our", "work", "first",
+[?2004l[?2004h>     "well", "way", "even", "new", "want", "because", "any", "these",
+[?2004l[?2004h>     "give", "day", "most", "us", "is", "are", "was", "were", "been",
+[?2004l[?2004h>     "being", "has", "had", "did", "does", "doing", "am", "may", "might",
+[?2004l[?2004h>     "shall", "should", "must", "need", "ought", "dare", "used",
+[?2004l[?2004h>     "such", "very", "much", "more", "many", "each", "every", "own",
+[?2004l[?2004h>     "same", "both", "few", "still", "those", "through", "between",
+[?2004l[?2004h>     "where", "here", "while", "during", "before", "since", "until",
+[?2004l[?2004h>     "too", "quite", "rather", "already", "yet", "again", "often",
+[?2004l[?2004h>     "never", "always", "sometimes", "however", "therefore", "thus",
+[?2004l[?2004h>     "hence", "also", "else", "further", "then", "once", "twice",
+[?2004l[?2004h>     "per", "via", "etc", "ie", "eg", "page", "de", "le", "la",
+[?2004l[?2004h>     "et", "en", "un", "une", "les", "des", "du", "au", "se", "ce",
+[?2004l[?2004h>     "est", "il", "pas", "ne", "que", "qui", "dans", "pour", "sur",
+[?2004l[?2004h>     "son", "sa", "ses", "avec", "plus", "tout", "fait", "mais",
+[?2004l[?2004h>     "been", "being", "below", "above", "down", "off", "don", "doesn",
+[?2004l[?2004h>     "didn", "won", "wouldn", "shouldn", "couldn", "wasn", "weren",
+[?2004l[?2004h>     "hasn", "hadn", "isn", "aren", "ain", "nor", "couldn", "didn",
+[?2004l[?2004h>     "doesn", "hadn", "hasn", "haven", "isn", "ll", "re", "ve",
+[?2004l[?2004h>     "wasn", "weren", "won", "wouldn", "shouldn", "mustn", "needn",
+[?2004l[?2004h>     "shan", "aren", "don", "let", "may", "said", "also", "upon",
+[?2004l[?2004h>     "using", "without", "within", "among", "along", "across",
+[?2004l[?2004h>     "around", "though", "although", "whether", "another", "man",
+[?2004l[?2004h>     "set", "put", "end", "got", "made", "went", "going", "thing",
+[?2004l[?2004h>     "things", "something", "nothing", "everything", "anything",
+[?2004l[?2004h>     "able", "cannot", "really", "right", "left", "part", "number",
+[?2004l[?2004h>     "long", "great", "little", "old", "big", "small", "high", "low",
+[?2004l[?2004h>     "large", "called", "came", "under", "next", "last", "keep",
+[?2004l[?2004h>     "found", "hand", "place", "point", "away", "turn", "might",
+[?2004l[?2004h>     "world", "home", "still", "kind", "head", "began", "far",
+[?2004l[?2004h>     "near", "state", "three", "four", "five", "six", "seven",
+[?2004l[?2004h>     "eight", "nine", "ten", "hundred", "thousand", "million",
+[?2004l[?2004h>     "become", "became", "taken", "given", "known", "seen", "done",
+[?2004l[?2004h>     "gone", "told", "ask", "asked", "tell", "find", "run", "help",
+[?2004l[?2004h>     "show", "try", "start", "began", "begin", "began", "seem",
+[?2004l[?2004h>     "seemed", "move", "live", "play", "read", "write", "written",
+[?2004l[?2004h>     "include", "including", "included", "based", "form", "case",
+[?2004l[?2004h>     "second", "third", "general", "particular", "open", "close",
+[?2004l[?2004h>     "different", "important", "possible", "certain", "others",
+[?2004l[?2004h>     "example", "information", "following", "according", "often",
+[?2004l[?2004h>     "order", "line", "name", "area", "group", "may", "shall",
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> def extract_topics(text: str, min_topics: int = 3, max_topics: int = 10) -> list:
+[?2004l[?2004h>     """Extract meaningful keyword topics from text via frequency analysis."""
+[?2004l[?2004h>     words = re.findall(r"[a-zA-Z]+", text.lower())
+[?2004l[?2004h>     # Filter: not a stop word, length >= 4
+[?2004l[?2004h>     filtered = [w for w in words if w not in STOP_WORDS and len(w) >= 4]
+[?2004l[?2004h>     if not filtered:
+[?2004l[?2004h>         # fallback: relax length constraint
+[?2004l[?2004h>         filtered = [w for w in words if w not in STOP_WORDS and len(w) >= 3]
+[?2004l[?2004h>     counts = Counter(filtered)
+[?2004l[?2004h>     # Take the most common, capped at max_topics
+[?2004l[?2004h>     top = counts.most_common(max_topics * 3)
+[?2004l[?2004h>     # Deduplicate stems loosely: if one word starts with another shorter word, keep the shorter
+[?2004l[?2004h>     selected = []
+[?2004l[?2004h>     seen_stems = set()
+[?2004l[?2004h>     for word, freq in top:
+[?2004l[?2004h>         stem = word[:6]
+[?2004l[?2004h>         if stem not in seen_stems:
+[?2004l[?2004h>             seen_stems.add(stem)
+[?2004l[?2004h>             selected.append(word)
+[?2004l[?2004h>         if len(selected) >= max_topics:
+[?2004l[?2004h>             break
+[?2004l[?2004h>     # Ensure minimum
+[?2004l[?2004h>     if len(selected) < min_topics:
+[?2004l[?2004h>         # Pad from remaining words
+[?2004l[?2004h>         for word, freq in top:
+[?2004l[?2004h>             if word not in selected:
+[?2004l[?2004h>                 selected.append(word)
+[?2004l[?2004h>             if len(selected) >= min_topics:
+[?2004l[?2004h>                 break
+[?2004l[?2004h>     return selected[:max_topics]
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.post("/extract")
+[?2004l[?2004h> async def extract(file: UploadFile = File(...)):
+[?2004l[?2004h>     contents = await file.read()
+[?2004l[?2004h>     reader = PdfReader(io.BytesIO(contents))
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Metadata
+[?2004l[?2004h>     meta = reader.metadata
+[?2004l[?2004h>     author = "Unknown Author"
+[?2004l[?2004h>     title = "Untitled"
+[?2004l[?2004h>     if meta:
+[?2004l[?2004h>         if meta.author and str(meta.author).strip():
+[?2004l[?2004h>             author = str(meta.author).strip()
+[?2004l[?2004h>         if meta.title and str(meta.title).strip():
+[?2004l[?2004h>             title = str(meta.title).strip()
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Extract all text
+[?2004l[?2004h>     full_text = ""
+[?2004l[?2004h>     for page in reader.pages:
+[?2004l[?2004h>         page_text = page.extract_text()
+[?2004l[?2004h>         if page_text:
+[?2004l[?2004h>             full_text += page_text + " "
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Split into words and chunk
+[?2004l[?2004h>     words = full_text.split()
+[?2004l[?2004h>     total_words = len(words)
+[?2004l[?2004h>     chunk_size = 1000
+[?2004l[?2004h>     chunks = []
+[?2004l[?2004h>     for i in range(0, max(total_words, 1), chunk_size):
+[?2004l[?2004h>         chunk = words[i:i + chunk_size]
+[?2004l[?2004h>         if chunk:
+[?2004l[?2004h>             chunks.append(" ".join(chunk))
+[?2004l[?2004h>     total_chunks = len(chunks) if chunks else 1
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Topics
+[?2004l[?2004h>     topics = extract_topics(full_text)
+[?2004l[?2004h> 
+[?2004l[?2004h>     return {
+[?2004l[?2004h>         "author": author,
+[?2004l[?2004h>         "title": title,
+[?2004l[?2004h>         "topics": topics,
+[?2004l[?2004h>         "total_chunks": total_chunks,
+[?2004l[?2004h>         "filename": file.filename,
+[?2004l[?2004h>         "total_words": total_words,
+[?2004l[?2004h>     }
+[?2004l[?2004h> PYEOF
+[?2004l[?2004hroot@d6a8b0842045:/app/workspace# cat > /app/workspace/src/static/index.html << 'HTMLEOF'
+[?2004l[?2004h> <!DOCTYPE html>
+[?2004l[?2004h> <html lang="en">
+[?2004l[?2004h> <head>
+[?2004l[?2004h>   <meta charset="UTF-8">
+[?2004l[?2004h>   <title>PDF Extractor Check</title>
+[?2004l[?2004h>   <style>
+[?2004l[?2004h>     body { font-family: monospace; margin: 2em; }
+[?2004l[?2004h>     pre { background: #eee; padding: 1em; white-space: pre-wrap; }
+[?2004l[?2004h>   </style>
+[?2004l[?2004h> </head>
+[?2004l[?2004h> <body>
+[?2004l[?2004h>   <h1>PDF Extractor Manual Check</h1>
+[?2004l[?2004h>   <input type="file" id="filePicker" accept=".pdf" />
+[?2004l[?2004h>   <button id="submitBtn">Extract</button>
+[?2004l[?2004h>   <h2>Result:</h2>
+[?2004l[?2004h>   <pre id="output">No result yet.</pre>
+[?2004l[?2004h>   <script>
+[?2004l[?2004h>     document.getElementById('submitBtn').addEventListener('click', async () => {
+[?2004l[?2004h>       const fileInput = document.getElementById('filePicker');
+[?2004l[?2004h>       if (!fileInput.files.length) { alert('Pick a PDF first'); return; }
+[?2004l[?2004h>       const formData = new FormData();
+[?2004l[?2004h>       formData.append('file', fileInput.files[0]);
+[?2004l[?2004h>       const output = document.getElementById('output');
+[?2004l[?2004h>       output.textContent = 'Processing...';
+[?2004l[?2004h>       try {
+[?2004l[?2004h>         const resp = await fetch('/extract', { method: 'POST', body: formData });
+[?2004l[?2004h>         const json = await resp.json();
+[?2004l[?2004h>         output.textContent = JSON.stringify(json, null, 2);
+[?2004l[?2004h>       } catch (err) {
+[?2004l[?2004h>         output.textContent = 'Error: ' + err.message;
+[?2004l[?2004h>       }
+[?2004l[?2004h>     });
+[?2004l[?2004h>   </script>
+[?2004l[?2004h> </body>
+[?2004l[?2004h> </html>
+[?2004l[?2004h> HTMLEOF
+[?2004l[?2004hroot@d6a8b0842045:/app/workspace# cat /app/workspace/src/api.py | head -5
+[?2004limport re
+from collections import Counter
+from fastapi import FastAPI, File, UploadFile
+from fastapi.staticfiles import StaticFiles
+from PyPDF2 import PdfReader
+[?2004hroot@d6a8b0842045:/app/workspace# cat /app/workspace/src/static/index.html | head -5
+[?2004l<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Extractor Check</title>
+[?2004hroot@d6a8b0842045:/app/workspace# cd /app/workspace/src && python -c "from api import app; print('Import OK:', app)" 2>&1
+[?2004lImport OK: <fastapi.applications.FastAPI object at 0x7e82085ba770>
+[?2004hroot@d6a8b0842045:/app/workspace/src# cd /app/workspace/src && python3 -c "
+[?2004l[?2004h> from PyPDF2 import PdfWriter
+[?2004l[?2004h> from PyPDF2.generic import NameObject, TextStringObject
+[?2004l[?2004h> w = PdfWriter()
+[?2004l[?2004h> w.add_blank_page(width=612, height=792)
+[?2004l[?2004h> w.add_metadata({'/Author': 'Test Author', '/Title': 'Test Document'})
+[?2004l[?2004h> with open('/tmp/test.pdf', 'wb') as f:
+[?2004l[?2004h>     w.write(f)
+[?2004l[?2004h> print('Test PDF created')
+[?2004l[?2004h> "
+[?2004lTest PDF created
+[?2004hroot@d6a8b0842045:/app/workspace/src# cd /app/workspace/src && uvicorn api:app --host 0.0.0.0 --port 9999 &
+[?2004l[1] 629
+[?2004hroot@d6a8b0842045:/app/workspace/src# [32mINFO[0m:     Started server process [[36m630[0m]
+[32mINFO[0m:     Waiting for application startup.
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:9999[0m (Press CTRL+C to quit)
+curl -s -X POST http://localhost:9999/extract -F file=@/tmp/test.pdf | python3 -m json.tool
+[?2004lbash: curl: command not found
+Expecting value: line 1 column 1 (char 0)
+[?2004hroot@d6a8b0842045:/app/workspace/src# curl -s -o /dev/null -w '%{http_code}' http://localhost:9999/static/index.html
+[?2004lbash: curl: command not found
+[?2004hroot@d6a8b0842045:/app/workspace/src# kill %1 2>/dev/null; wait 2>/dev/null
+[?2004l[?2004hroot@d6a8b0842045:/app/workspace/src# [32mINFO[0m:     Shutting down
+[32mINFO[0m:     Waiting for application shutdown.
+[32mINFO[0m:     Application shutdown complete.
+[32mINFO[0m:     Finished server process [[36m630[0m]
+cd /app/workspace/src && uvicorn api:app --host 0.0.0.0 --port 9999 &
+[?2004l[1] 670
+[?2004hroot@d6a8b0842045:/app/workspace/src# [32mINFO[0m:     Started server process [[36m671[0m]
+[32mINFO[0m:     Waiting for application startup.
+[32mINFO[0m:     Application startup complete.
+[32mINFO[0m:     Uvicorn running on [1mhttp://0.0.0.0:9999[0m (Press CTRL+C to quit)
+python3 -c "
+[?2004l[?2004h> import urllib.request, json
+[?2004l[?2004h> from urllib.request import Request
+[?2004l[?2004h> 
+[?2004l[?2004h> # Test /extract with multipart
+[?2004l[?2004h> import io
+[?2004l[?2004h> boundary = 'TESTBOUNDARY'
+[?2004l[?2004h> with open('/tmp/test.pdf', 'rb') as f:
+[?2004l[?2004h>     pdf_data = f.read()
+[?2004l[?2004h> body = (
+[?2004l[?2004h>     '--' + boundary + '\r\n'
+[?2004l[?2004h>     'Content-Disposition: form-data; name=\"file\"; filename=\"test.pdf\"\r\n'
+[?2004l[?2004h>     'Content-Type: application/pdf\r\n\r\n'
+[?2004l[?2004h> ).encode() + pdf_data + ('\r\n--' + boundary + '--\r\n').encode()
+[?2004l[?2004h> req = Request('http://localhost:9999/extract', data=body, method='POST')
+[?2004l[?2004h> req.add_header('Content-Type', 'multipart/form-data; boundary=' + boundary)
+[?2004l[?2004h> resp = urllib.request.urlopen(req)
+[?2004l[?2004h> result = json.loads(resp.read())
+[?2004l[?2004h> print('Extract response:', json.dumps(result, indent=2))
+[?2004l[?2004h> print()
+[?2004l[?2004h> print('Keys:', sorted(result.keys()))
+[?2004l[?2004h> print('Types:', {k: type(v).__name__ for k,v in result.items()})
+[?2004l[?2004h> 
+[?2004l[?2004h> # Test /static/index.html
+[?2004l[?2004h> resp2 = urllib.request.urlopen('http://localhost:9999/static/index.html')
+[?2004l[?2004h> print()
+[?2004l[?2004h> print('Static status:', resp2.status)
+[?2004l[?2004h> print('Static content starts with:', resp2.read(50).decode())
+[?2004l[?2004h> "
+[?2004l[32mINFO[0m:     127.0.0.1:39106 - "[1mPOST /extract HTTP/1.1[0m" [32m200 OK[0m
+Extract response: {
+  "author": "Test Author",
+  "title": "Test Document",
+  "topics": [],
+  "total_chunks": 1,
+  "filename": "test.pdf",
+  "total_words": 0
+}
+
+Keys: ['author', 'filename', 'title', 'topics', 'total_chunks', 'total_words']
+Types: {'author': 'str', 'title': 'str', 'topics': 'list', 'total_chunks': 'int', 'filename': 'str', 'total_words': 'int'}
+[32mINFO[0m:     127.0.0.1:39110 - "[1mGET /static/index.html HTTP/1.1[0m" [32m200 OK[0m
+
+Static status: 200
+Static content starts with: <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta ch
+[?2004hroot@d6a8b0842045:/app/workspace/src# kill %1 2>/dev/null; wait 2>/dev/null
+[?2004l[?2004hroot@d6a8b0842045:/app/workspace/src# [32mINFO[0m:     Shutting down
+[32mINFO[0m:     Waiting for application shutdown.
+[32mINFO[0m:     Application shutdown complete.
+[32mINFO[0m:     Finished server process [[36m671[0m]
+python3 -c "
+[?2004l[?2004h> from PyPDF2 import PdfWriter
+[?2004l[?2004h> from PyPDF2.generic import NameObject, TextStringObject
+[?2004l[?2004h> from reportlab.pdfgen import canvas
+[?2004l[?2004h> from reportlab.lib.pagesizes import letter
+[?2004l[?2004h> import tempfile
+[?2004l[?2004h> 
+[?2004l[?2004h> # Try reportlab first
+[?2004l[?2004h> c = canvas.Canvas('/tmp/test_content.pdf', pagesize=letter)
+[?2004l[?2004h> text = '''Machine learning algorithms process training data to build mathematical models. Neural networks contain layers of interconnected nodes that transform input features through nonlinear activation functions. Deep learning architectures enable hierarchical feature extraction from raw sensory data. Convolutional neural networks excel at image recognition tasks by applying learned filters across spatial dimensions. Recurrent neural networks process sequential data through temporal feedback connections. Transformer architectures leverage self-attention mechanisms to capture long-range dependencies in text sequences. Gradient descent optimization iteratively adjusts model parameters to minimize prediction errors on training examples. Regularization techniques prevent overfitting by constraining model complexity during training. Transfer learning allows pretrained models to adapt quickly to new domains with limited labeled data. Reinforcement learning agents learn optimal decision policies through environmental interaction and reward signals.'''
+[?2004l[?2004h> c.drawString(72, 700, text[:90])
+[?2004l[?2004h> c.drawString(72, 680, text[90:180])
+[?2004l[?2004h> c.drawString(72, 660, text[180:270])
+[?2004l[?2004h> c.drawString(72, 640, text[270:360])
+[?2004l[?2004h> c.drawString(72, 620, text[360:450])
+[?2004l[?2004h> c.drawString(72, 600, text[450:540])
+[?2004l[?2004h> c.drawString(72, 580, text[540:630])
+[?2004l[?2004h> c.drawString(72, 560, text[630:720])
+[?2004l[?2004h> c.drawString(72, 540, text[720:810])
+[?2004l[?2004h> c.drawString(72, 520, text[810:])
+[?2004l[?2004h> c.save()
+[?2004l[?2004h> print('Content PDF created')
+[?2004l[?2004h> " 2>&1 || python3 -c "
+[?2004l[?2004h> from PyPDF2 import PdfWriter, PdfReader
+[?2004l[?2004h> import io
+[?2004l[?2004h> 
+[?2004l[?2004h> # Create a simple PDF with text content using fpdf2 or just test with the API
+[?2004l[?2004h> print('reportlab not available, testing with alternative method')
+[?2004l[?2004h> # We can install fpdf2
+[?2004l[?2004h> " 2>&1
+[?2004lTraceback (most recent call last):
+  File "<string>", line 4, in <module>
+ModuleNotFoundError: No module named 'reportlab'
+reportlab not available, testing with alternative method
+[?2004hroot@d6a8b0842045:/app/workspace/src# pip install reportlab 2>&1 | tail -3
+[?2004l
+[notice] A new release of pip is available: 23.0.1 -> 26.1
+[notice] To update, run: pip install --upgrade pip
+[?2004hroot@d6a8b0842045:/app/workspace/src# 

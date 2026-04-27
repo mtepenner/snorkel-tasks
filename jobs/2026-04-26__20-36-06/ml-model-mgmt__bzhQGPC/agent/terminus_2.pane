@@ -1,0 +1,573 @@
+[?2004hroot@18536abd51d4:/app/workspace# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@18536abd51d4:/app/workspace# clear
+[?2004l[H[J[3J[?2004hroot@18536abd51d4:/app/workspace# find /app/workspace -type f 2>/dev/null
+[?2004l/app/workspace/src/api.py
+[?2004hroot@18536abd51d4:/app/workspace# cat /app/workspace/src/api.py 2>/dev/null; echo '---END---'
+[?2004lfrom flask import Flask
+
+app = Flask(__name__)
+
+# TODO: Implement Milestone 1, 2, and 3 endpoints here.
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+---END---
+[?2004hroot@18536abd51d4:/app/workspace# pip list 2>/dev/null | grep -i -E 'flask|pandas|numpy'
+[?2004lFlask           3.0.0
+numpy           1.26.4
+pandas          2.1.4
+[?2004hroot@18536abd51d4:/app/workspace# mkdir -p /app/workspace/src/templates /app/workspace/src/static/js
+[?2004l[?2004hroot@18536abd51d4:/app/workspace# cat > /app/workspace/src/api.py << 'PYEOF'
+[?2004l[?2004h> import math
+[?2004l[?2004h> import io
+[?2004l[?2004h> import csv
+[?2004les[?2004h> from flask import Flask, request, jsonify, render_template
+[?2004l[?2004h> import pandas as pd
+[?2004l[?2004h> import numpy as np
+[?2004ld_[?2004h> 
+[?2004l[?2004h> app = Flask(__name__)
+[?2004l[?2004h> 
+[?2004l[?2004h> # In-memory store for processed data
+[?2004l[?2004h> _processed_df = None
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> def _is_headerless_csv(first_row_values):
+[?2004l[?2004h>     """Return True if every cell in the first row looks numeric (i.e. no real header)."""
+[?2004l[?2004h>     for v in first_row_values:
+[?2004l[?2004h>         v = v.strip()
+[?2004l[?2004h>         if not v:
+[?2004l0[?2004h>             # empty cell in header is suspicious but let's treat as non-numeric
+[?2004l[?2004h>             return False
+[?2004l[?2004h>         try:
+[?2004l[?2004h>             float(v)
+[?2004l[?2004h>         except ValueError:
+[?2004l[?2004h>             return False
+[?2004l[?2004h>     return True
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> def _preprocess(df):
+[?2004l[?2004h>     """Impute, z-score normalize numerics, one-hot encode categoricals."""
+[?2004l[?2004h>     df = df.copy()
+[?2004l[?2004h> 
+[?2004lon(force=False, silent=False)
+    except Exception:
+        return jsonify({"error": "Malformed JSON"}), 400
+
+    if data is None:
+   [?2004h>     # Identify numeric and categorical columns
+[?2004l[?2004h>     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+[?2004l[?2004h>     categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Impute missing numeric values with column mean
+[?2004l[?2004h>     for col in numeric_cols:
+[?2004l[?2004h>         col_mean = df[col].mean()
+[?2004l[?2004h>         if pd.isna(col_mean):
+[?2004l[?2004h>             col_mean = 0.0
+[?2004l[?2004h>         df[col] = df[col].fillna(col_mean)
+[?2004l[?2004h> 
+[?2004le[?2004h>     # Z-score normalize numeric columns
+[?2004l[?2004h>     for col in numeric_cols:
+[?2004l[?2004h>         std = df[col].std(ddof=0)
+[?2004l[?2004h>         mean = df[col].mean()
+[?2004l[?2004h>         if std == 0 or pd.isna(std):
+[?2004l[?2004h>             df[col] = 0.0
+[?2004l[?2004h>         else:
+[?2004l[?2004h>             df[col] = (df[col] - mean) / std
+[?2004l[?2004h> 
+[?2004l[?2004h>     # One-hot encode categorical columns
+[?2004l[?2004h>     if categorical_cols:
+[?2004l[?2004h>         df = pd.get_dummies(df, columns=categorical_cols)
+[?2004l[?2004h>         # Ensure all one-hot columns are numeric (they should be bool/int)
+[?2004l[?2004h>         for col in df.columns:
+[?2004l[?2004h>             if df[col].dtype == bool:
+[?2004l[?2004h>                 df[col] = df[col].astype(int)
+[?2004l[?2004h> 
+[?2004l[?2004h>     return df
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.route('/')
+[?2004l[?2004h> def index():
+[?2004l[?2004h>     return render_template('index.html')
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.route('/api/v1/data/upload', methods=['POST'])
+[?2004l[?2004h> def upload_data():
+[?2004l[?2004h>     global _processed_df
+[?2004l[?2004h> 
+[?2004l[?2004h>     content_type = request.content_type or ''
+[?2004l[?2004h> 
+[?2004l[?2004h>     try:
+[?2004l[?2004h>         if 'application/json' in content_type:
+[?2004l[?2004h>             # JSON array of objects
+[?2004l[?2004h>             try:
+[?2004l[?2004h>                 data = request.get_json(force=False, silent=False)
+[?2004l[?2004h>             except Exception:
+[?2004l[?2004h>                 return jsonify({"error": "Malformed JSON"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>             if data is None:
+[?2004l[?2004h>                 return jsonify({"error": "Malformed or empty JSON"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>             if not isinstance(data, list):
+[?2004l[?2004h>                 return jsonify({"error": "Expected a JSON array of objects"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>             if len(data) == 0:
+[?2004l[?2004h>                 return jsonify({"error": "Empty dataset"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>             # Each element should be a dict
+[?2004l[?2004h>             for item in data:
+[?2004l[?2004h>                 if not isinstance(item, dict):
+[?2004l[?2004h>                     return jsonify({"error": "Each element must be a JSON object"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>             df = pd.DataFrame(data)
+[?2004l[?2004h> 
+[?2004l[?2004h>         elif 'text/csv' in content_type:
+[?2004l[?2004h>             raw = request.get_data(as_text=True)
+[?2004l[?2004h>             if not raw or not raw.strip():
+[?2004l[?2004h>                 return jsonify({"error": "Empty CSV"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>             # Check if first row is headerless (all numeric)
+[?2004l[?2004h>             lines = raw.strip().split('\n')
+[?2004l[?2004h>             if len(lines) < 1:
+[?2004l[?2004h>                 return jsonify({"error": "Empty CSV"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>             # Parse first row
+[?2004l[?2004h>             reader = csv.reader(io.StringIO(lines[0]))
+[?2004l[?2004h>             first_row = next(reader, None)
+[?2004l[?2004h>             if first_row is None or len(first_row) == 0:
+[?2004l[?2004h>                 return jsonify({"error": "Empty CSV"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>             if _is_headerless_csv(first_row):
+[?2004l[?2004h>                 return jsonify({"error": "CSV appears to have no header row"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>             # Need at least a header + one data row
+[?2004l[?2004h>             if len(lines) < 2:
+[?2004l[?2004h>                 return jsonify({"error": "CSV has header but no data rows"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>             df = pd.read_csv(io.StringIO(raw))
+[?2004l[?2004h> 
+[?2004l[?2004h>             if df.empty:
+[?2004l[?2004h>                 return jsonify({"error": "Empty dataset after parsing"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>         else:
+[?2004l[?2004h>             return jsonify({"error": "Unsupported content type"}), 415
+[?2004l[?2004h> 
+[?2004l[?2004h>         # Preprocess
+[?2004l[?2004h>         _processed_df = _preprocess(df)
+[?2004l[?2004h> 
+[?2004l[?2004h>         return jsonify({
+[?2004l[?2004h>             "message": "Data uploaded and processed successfully",
+[?2004l[?2004h>             "rows": len(_processed_df),
+[?2004l[?2004h>             "columns": list(_processed_df.columns)
+[?2004l[?2004h>         }), 200
+[?2004l[?2004h> 
+[?2004l[?2004h>     except Exception as e:
+[?2004l[?2004h>         return jsonify({"error": "Bad input: " + str(e)}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.route('/api/v1/data/processed', methods=['GET'])
+[?2004l[?2004h> def get_processed():
+[?2004l[?2004h>     if _processed_df is None:
+[?2004l[?2004h>         return jsonify({"error": "No data uploaded yet"}), 404
+[?2004l[?2004h> 
+[?2004l[?2004h>     result = _processed_df.to_dict(orient='records')
+[?2004l[?2004h>     return jsonify(result), 200
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.route('/api/v1/predict', methods=['POST'])
+[?2004l[?2004h> def predict():
+[?2004l[?2004h>     try:
+[?2004l[?2004h>         data = request.get_json(force=False, silent=False)
+[?2004l[?2004h>     except Exception:
+[?2004l[?2004h>         return jsonify({"error": "Malformed JSON"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>     if data is None:
+[?2004l[?2004h>         return jsonify({"error": "Missing JSON body"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>     if "features" not in data:
+[?2004l[?2004h>         return jsonify({"error": "Missing 'features' key"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>     features = data["features"]
+[?2004l[?2004h>     if not isinstance(features, list):
+[?2004l[?2004h>         return jsonify({"error": "'features' must be a list"}), 400
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Deterministic prediction: weighted sum with index-based weights + nonlinearity
+[?2004l[?2004h>     prediction = 0.0
+[?2004l[?2004h>     for i, val in enumerate(features):
+[?2004l[?2004h>         try:
+[?2004l[?2004h>             v = float(val)
+[?2004l[?2004h>         except (TypeError, ValueError):
+[?2004l[?2004h>             return jsonify({"error": f"Feature at index {i} is not numeric"}), 400
+[?2004l[?2004h>         prediction += (i + 1) * v
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Apply a deterministic nonlinearity (tanh scaled)
+[?2004l[?2004h>     prediction = round(math.tanh(prediction / 100.0) * 100.0, 4)
+[?2004l[?2004h> 
+[?2004l[?2004h>     return jsonify({"prediction": prediction}), 200
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> if __name__ == '__main__':
+[?2004l[?2004h>     app.run(host='0.0.0.0', port=5000)
+[?2004l[?2004h> PYEOF
+[?2004l[?2004hroot@18536abd51d4:/app/workspace# cat > /app/workspace/src/templates/index.html << 'HTMLEOF'
+[?2004l</div>
+      </form>
+    </div>
+
+    <div class="card" id=[?2004h> <!DOCTYPE html>
+[?2004l[?2004h> <html lang="en">
+[?2004l[?2004h> <head>
+[?2004l[?2004h>   <meta charset="UTF-8">
+[?2004l[?2004h>   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+[?2004l[?2004h>   <title>ML Dashboard</title>
+[?2004l[?2004h>   <style>
+[?2004l[?2004h>     * { margin: 0; padding: 0; box-sizing: border-box; }
+[?2004l[?2004h>     body { font-family: Arial, sans-serif; display: flex; min-height: 100vh; }
+[?2004l[?2004h>     nav {
+[?2004l[?2004h>       width: 220px;
+[?2004l[?2004h>       min-width: 220px;
+[?2004l[?2004h>       background: #1e293b;
+[?2004l[?2004h>       color: #fff;
+[?2004l[?2004h>       padding: 1.5rem 1rem;
+[?2004l[?2004h>       display: flex;
+[?2004l[?2004h>       flex-direction: column;
+[?2004l[?2004h>       gap: 0.5rem;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     nav h2 { margin-bottom: 1rem; font-size: 1.2rem; }
+[?2004l[?2004h>     nav a {
+[?2004l[?2004h>       color: #cbd5e1;
+[?2004l[?2004h>       text-decoration: none;
+[?2004l[?2004h>       padding: 0.6rem 0.8rem;
+[?2004l[?2004h>       border-radius: 6px;
+[?2004l[?2004h>       transition: background 0.2s;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     nav a:hover { background: #334155; }
+[?2004l[?2004h>     .main {
+[?2004l[?2004h>       flex: 1;
+[?2004l[?2004h>       padding: 2rem;
+[?2004l[?2004h>       overflow-y: auto;
+[?2004l[?2004h>       background: #f8fafc;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     .card {
+[?2004l[?2004h>       background: #fff;
+[?2004l[?2004h>       border-radius: 8px;
+[?2004l[?2004h>       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+[?2004l[?2004h>       padding: 1.5rem;
+[?2004l[?2004h>       margin-bottom: 1.5rem;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     .card h3 { margin-bottom: 1rem; }
+[?2004l[?2004h>     label { display: block; margin-bottom: 0.3rem; font-weight: bold; }
+[?2004l[?2004h>     select, input[type="range"] { width: 100%; margin-bottom: 1rem; }
+[?2004l[?2004h>     .range-val { font-size: 0.9rem; color: #666; margin-bottom: 1rem; }
+[?2004l[?2004h>     input[type="text"] {
+[?2004l[?2004h>       width: 100%; padding: 0.5rem; margin-bottom: 1rem;
+[?2004l[?2004h>       border: 1px solid #ccc; border-radius: 4px;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     button {
+[?2004l[?2004h>       background: #2563eb; color: #fff; border: none;
+[?2004l[?2004h>       padding: 0.6rem 1.4rem; border-radius: 6px; cursor: pointer;
+[?2004l[?2004h>       font-size: 1rem;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     button:hover { background: #1d4ed8; }
+[?2004l[?2004h>     .spinner {
+[?2004l[?2004h>       display: none;
+[?2004l[?2004h>       border: 3px solid #e5e7eb;
+[?2004l[?2004h>       border-top: 3px solid #2563eb;
+[?2004l[?2004h>       border-radius: 50%;
+[?2004l[?2004h>       width: 20px; height: 20px;
+[?2004l[?2004h>       animation: spin 0.8s linear infinite;
+[?2004l[?2004h>       margin-left: 0.5rem;
+[?2004l[?2004h>       vertical-align: middle;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     .spinner.loading { display: inline-block; }
+[?2004l[?2004h>     @keyframes spin { to { transform: rotate(360deg); } }
+[?2004l[?2004h>     #prediction-result {
+[?2004l[?2004h>       margin-top: 1rem;
+[?2004l[?2004h>       font-size: 1.1rem;
+[?2004l[?2004h>       font-weight: bold;
+[?2004l[?2004h>       min-height: 1.5em;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     #error-msg { color: #dc2626; margin-top: 0.5rem; }
+[?2004l[?2004h>     .chart-area {
+[?2004l[?2004h>       width: 100%;
+[?2004l[?2004h>       max-width: 600px;
+[?2004l[?2004h>       height: 300px;
+[?2004l[?2004h>       background: #f1f5f9;
+[?2004l[?2004h>       border: 1px dashed #94a3b8;
+[?2004l[?2004h>       border-radius: 8px;
+[?2004l[?2004h>       display: flex;
+[?2004l[?2004h>       align-items: center;
+[?2004l[?2004h>       justify-content: center;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     @media (max-width: 768px) {
+[?2004l[?2004h>       body { flex-direction: column; }
+[?2004l[?2004h>       nav {
+[?2004l[?2004h>         width: 100%; min-width: unset;
+[?2004l[?2004h>         flex-direction: row; flex-wrap: wrap;
+[?2004l[?2004h>         padding: 0.8rem;
+[?2004l[?2004h>       }
+[?2004l[?2004h>       nav h2 { width: 100%; }
+[?2004l[?2004h>     }
+[?2004l[?2004h>   </style>
+[?2004l[?2004h> </head>
+[?2004l[?2004h> <body>
+[?2004l[?2004h>   <nav>
+[?2004l[?2004h>     <h2>ML Platform</h2>
+[?2004l[?2004h>     <a href="#data">data</a>
+[?2004l[?2004h>     <a href="#model">model</a>
+[?2004l[?2004h>     <a href="#inference">inference</a>
+[?2004l[?2004h>   </nav>
+[?2004l[?2004h>   <div class="main">
+[?2004l[?2004h>     <div class="card" id="data">
+[?2004l[?2004h>       <h3>Data Upload</h3>
+[?2004l[?2004h>       <p>Use the API endpoint <code>POST /api/v1/data/upload</code> to upload data.</p>
+[?2004l[?2004h>     </div>
+[?2004l[?2004h> 
+[?2004l[?2004h>     <div class="card" id="model">
+[?2004l[?2004h>       <h3>Model Configuration</h3>
+[?2004l[?2004h>       <form id="predict-form">
+[?2004l[?2004h>         <label for="model-select">Algorithm</label>
+[?2004l[?2004h>         <select id="model-select" name="algorithm">
+[?2004l[?2004h>           <option value="linear_regression">Linear Regression</option>
+[?2004l[?2004h>           <option value="random_forest">Random Forest</option>
+[?2004l[?2004h>           <option value="gradient_boosting">Gradient Boosting</option>
+[?2004l[?2004h>         </select>
+[?2004l[?2004h> 
+[?2004l[?2004h>         <label for="hyperparam-range">Learning Rate: <span id="range-display">0.50</span></label>
+[?2004l[?2004h>         <input type="range" id="hyperparam-range" name="learning_rate"
+[?2004l[?2004h>                min="0" max="1" step="0.01" value="0.50">
+[?2004l[?2004h> 
+[?2004l[?2004h>         <label for="features-input">Features (comma-separated numbers)</label>
+[?2004l[?2004h>         <input type="text" id="features-input" name="features" placeholder="e.g. 1, 2, 3">
+[?2004l[?2004h> 
+[?2004l[?2004h>         <button type="submit">Predict</button>
+[?2004l[?2004h>         <span class="spinner" id="spinner"></span>
+[?2004l[?2004h> 
+[?2004l[?2004h>         <div id="prediction-result"></div>
+[?2004l[?2004h>         <div id="error-msg"></div>
+[?2004l[?2004h>       </form>
+[?2004l[?2004h>     </div>
+[?2004l[?2004h> 
+[?2004l[?2004h>     <div class="card" id="inference">
+[?2004l[?2004h>       <h3>Visualization</h3>
+[?2004l[?2004h>       <div class="chart-area">
+[?2004l[?2004h>         <canvas id="chart-canvas" width="580" height="280"></canvas>
+[?2004l[?2004h>       </div>
+[?2004l[?2004h>     </div>
+[?2004l[?2004h>   </div>
+[?2004l[?2004h> 
+[?2004l[?2004h>   <script src="/static/js/app.js"></script>
+[?2004l[?2004h> </body>
+[?2004l[?2004h> </html>
+[?2004l[?2004h> HTMLEOF
+[?2004l[?2004hroot@18536abd51d4:/app/workspace# cat > /app/workspace/src/static/js/app.js << 'JSEOF'
+[?2004l[?2004h> (function () {
+[?2004l[?2004h>   'use strict';
+[?2004l[?2004h> 
+[?2004l[?2004h>   // Range slider display
+[?2004l[?2004h>   var rangeInput = document.getElementById('hyperparam-range');
+[?2004l[?2004h>   var rangeDisplay = document.getElementById('range-display');
+[?2004l[?2004h>   if (rangeInput && rangeDisplay) {
+[?2004l[?2004h>     rangeInput.addEventListener('input', function () {
+[?2004l[?2004h>       rangeDisplay.textContent = parseFloat(this.value).toFixed(2);
+[?2004l[?2004h>     });
+[?2004l[?2004h>   }
+[?2004l[?2004h> 
+[?2004l[?2004h>   // Prediction form
+[?2004l[?2004h>   var form = document.getElementById('predict-form');
+[?2004l[?2004h>   var spinner = document.getElementById('spinner');
+[?2004l[?2004h>   var resultDiv = document.getElementById('prediction-result');
+[?2004l[?2004h>   var errorDiv = document.getElementById('error-msg');
+[?2004l[?2004h> 
+[?2004l[?2004h>   form.addEventListener('submit', function (e) {
+[?2004l[?2004h>     e.preventDefault();
+[?2004l[?2004h> 
+[?2004l[?2004h>     // Clear previous results
+[?2004l[?2004h>     resultDiv.textContent = '';
+[?2004l[?2004h>     errorDiv.textContent = '';
+[?2004l[?2004h> 
+[?2004l[?2004h>     // Parse features
+[?2004l[?2004h>     var raw = document.getElementById('features-input').value.trim();
+[?2004l[?2004h>     if (!raw) {
+[?2004l[?2004h>       errorDiv.textContent = 'Please enter features.';
+[?2004l[?2004h>       return;
+[?2004l[?2004h>     }
+[?2004l[?2004h>     var features = raw.split(',').map(function (s) {
+[?2004l[?2004h>       return parseFloat(s.trim());
+[?2004l[?2004h>     });
+[?2004l[?2004h> 
+[?2004l[?2004h>     for (var i = 0; i < features.length; i++) {
+[?2004l[?2004h>       if (isNaN(features[i])) {
+[?2004l[?2004h>         errorDiv.textContent = 'All features must be valid numbers.';
+[?2004l[?2004h>         return;
+[?2004l[?2004h>       }
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     // Show spinner
+[?2004l[?2004h>     spinner.classList.add('loading');
+[?2004l[?2004h> 
+[?2004l[?2004h>     fetch('/api/v1/predict', {
+[?2004l[?2004h>       method: 'POST',
+[?2004l[?2004h>       headers: { 'Content-Type': 'application/json' },
+[?2004l[?2004h>       body: JSON.stringify({ features: features })
+[?2004l[?2004h>     })
+[?2004l[?2004h>     .then(function (response) {
+[?2004l[?2004h>       if (!response.ok) {
+[?2004l[?2004h>         return response.json().then(function (d) {
+[?2004l[?2004h>           throw new Error(d.error || 'Request failed');
+[?2004l[?2004h>         });
+[?2004l[?2004h>       }
+[?2004l[?2004h>       return response.json();
+[?2004l[?2004h>     })
+[?2004l[?2004h>     .then(function (data) {
+[?2004l[?2004h>       spinner.classList.remove('loading');
+[?2004l[?2004h>       resultDiv.textContent = 'Prediction: ' + data.prediction;
+[?2004l[?2004h>     })
+[?2004l[?2004h>     .catch(function (err) {
+[?2004l[?2004h>       spinner.classList.remove('loading');
+[?2004l[?2004h>       errorDiv.textContent = 'Error: ' + err.message;
+[?2004l[?2004h>     });
+[?2004l[?2004h>   });
+[?2004l[?2004h> 
+[?2004l[?2004h>   // Simple chart drawing on canvas
+[?2004l[?2004h>   var canvas = document.getElementById('chart-canvas');
+[?2004l[?2004h>   if (canvas && canvas.getContext) {
+[?2004l[?2004h>     var ctx = canvas.getContext('2d');
+[?2004l[?2004h>     var w = canvas.width;
+[?2004l[?2004h>     var h = canvas.height;
+[?2004l[?2004h>     // Draw axes
+[?2004l[?2004h>     ctx.strokeStyle = '#64748b';
+[?2004l[?2004h>     ctx.lineWidth = 1.5;
+[?2004l[?2004h>     ctx.beginPath();
+[?2004l[?2004h>     ctx.moveTo(40, 10);
+[?2004l[?2004h>     ctx.lineTo(40, h - 30);
+[?2004l[?2004h>     ctx.lineTo(w - 10, h - 30);
+[?2004l[?2004h>     ctx.stroke();
+[?2004l[?2004h>     // Draw sample bars
+[?2004l[?2004h>     var bars = [60, 120, 90, 150, 80, 130];
+[?2004l[?2004h>     var barW = (w - 80) / bars.length - 8;
+[?2004l[?2004h>     var colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+[?2004l[?2004h>     for (var b = 0; b < bars.length; b++) {
+[?2004l[?2004h>       ctx.fillStyle = colors[b % colors.length];
+[?2004l[?2004h>       var x = 50 + b * (barW + 8);
+[?2004l[?2004h>       var barH = bars[b];
+[?2004l[?2004h>       ctx.fillRect(x, h - 30 - barH, barW, barH);
+[?2004l[?2004h>     }
+[?2004l[?2004h>   }
+[?2004l[?2004h> })();
+[?2004l[?2004h> JSEOF
+[?2004l[?2004hroot@18536abd51d4:/app/workspace# python3 -c "import sys; sys.path.insert(0, '/app/workspace/src'); from api import app; print('Import OK')"
+[?2004lImport OK
+[?2004hroot@18536abd51d4:/app/workspace# cd /app/workspace/src && python3 -c "
+[?2004l[?2004h> import json
+[?2004l[?2004h> from api import app
+[?2004l[?2004h> 
+[?2004l[?2004h> client = app.test_client()
+[?2004l[?2004h> 
+[?2004l[?2004h> # Test 1: JSON upload
+[?2004l[?2004h> print('=== Test 1: JSON Upload ===')
+[?2004l[?2004h> resp = client.post('/api/v1/data/upload',
+[?2004l[?2004h>     data=json.dumps([{'A': 1, 'B': None}, {'A': 2, 'B': 4}]),
+[?2004l[?2004h>     content_type='application/json')
+[?2004l[?2004h> print(f'Status: {resp.status_code}')
+[?2004l[?2004h> print(f'Body: {resp.get_json()}')
+[?2004l[?2004h> 
+[?2004l[?2004h> # Test 2: Get processed data
+[?2004l[?2004h> print('\n=== Test 2: Get Processed ===')
+[?2004l[?2004h> resp = client.get('/api/v1/data/processed')
+[?2004l[?2004h> print(f'Status: {resp.status_code}')
+[?2004l[?2004h> print(f'Body: {resp.get_json()}')
+[?2004l[?2004h> 
+[?2004l[?2004h> # Test 3: CSV upload with valid header
+[?2004l[?2004h> print('\n=== Test 3: CSV Upload (valid) ===')
+[?2004l[?2004h> resp = client.post('/api/v1/data/upload',
+[?2004l[?2004h>     data='name,age\nalice,30\nbob,25\n',
+[?2004l[?2004h>     content_type='text/csv')
+[?2004l[?2004h> print(f'Status: {resp.status_code}')
+[?2004l[?2004h> print(f'Body: {resp.get_json()}')
+[?2004l[?2004h> 
+[?2004l[?2004h> # Test 4: CSV with no header (should 400)
+[?2004l[?2004h> print('\n=== Test 4: CSV Upload (no header) ===')
+[?2004l[?2004h> resp = client.post('/api/v1/data/upload',
+[?2004l[?2004h>     data='1,2\n3,4\n',
+[?2004l[?2004h>     content_type='text/csv')
+[?2004l[?2004h> print(f'Status: {resp.status_code}')
+[?2004l[?2004h> print(f'Body: {resp.get_json()}')
+[?2004l[?2004h> 
+[?2004l[?2004h> # Test 5: Unsupported content type (415)
+[?2004l[?2004h> print('\n=== Test 5: Unsupported content type ===')
+[?2004l[?2004h> resp = client.post('/api/v1/data/upload',
+[?2004l[?2004h>     data='hello',
+[?2004l[?2004h>     content_type='text/plain')
+[?2004l[?2004h> print(f'Status: {resp.status_code}')
+[?2004l[?2004h> print(f'Body: {resp.get_json()}')
+[?2004l[?2004h> 
+[?2004l[?2004h> # Test 6: Predict
+[?2004l[?2004h> print('\n=== Test 6: Predict ===')
+[?2004l[?2004h> resp = client.post('/api/v1/predict',
+[?2004l[?2004h>     data=json.dumps({'features': [1, 2, 3]}),
+[?2004l[?2004h>     content_type='application/json')
+[?2004l[?2004h> print(f'Status: {resp.status_code}')
+[?2004l[?2004h> print(f'Body: {resp.get_json()}')
+[?2004l[?2004h> 
+[?2004l[?2004h> # Test 7: Predict determinism
+[?2004l[?2004h> print('\n=== Test 7: Predict determinism ===')
+[?2004l[?2004h> resp2 = client.post('/api/v1/predict',
+[?2004l[?2004h>     data=json.dumps({'features': [1, 2, 3]}),
+[?2004l[?2004h>     content_type='application/json')
+[?2004l[?2004h> print(f'Same result: {resp.get_json() == resp2.get_json()}')
+[?2004l[?2004h> 
+[?2004l[?2004h> # Test 8: Empty JSON (400)
+[?2004l[?2004h> print('\n=== Test 8: Empty JSON ===')
+[?2004l[?2004h> resp = client.post('/api/v1/data/upload',
+[?2004l[?2004h>     data=json.dumps([]),
+[?2004l[?2004h>     content_type='application/json')
+[?2004l[?2004h> print(f'Status: {resp.status_code}')
+[?2004l[?2004h> print(f'Body: {resp.get_json()}')
+[?2004l[?2004h> 
+[?2004l[?2004h> print('\nAll tests passed!')
+[?2004l[?2004h> "
+[?2004l=== Test 1: JSON Upload ===
+Status: 200
+Body: {'columns': ['A', 'B'], 'message': 'Data uploaded and processed successfully', 'rows': 2}
+
+=== Test 2: Get Processed ===
+Status: 200
+Body: [{'A': -1.0, 'B': 0.0}, {'A': 1.0, 'B': 0.0}]
+
+=== Test 3: CSV Upload (valid) ===
+Status: 200
+Body: {'columns': ['age', 'name_alice', 'name_bob'], 'message': 'Data uploaded and processed successfully', 'rows': 2}
+
+=== Test 4: CSV Upload (no header) ===
+Status: 400
+Body: {'error': 'CSV appears to have no header row'}
+
+=== Test 5: Unsupported content type ===
+Status: 415
+Body: {'error': 'Unsupported content type'}
+
+=== Test 6: Predict ===
+Status: 200
+Body: {'prediction': 13.9092}
+
+=== Test 7: Predict determinism ===
+Same result: True
+
+=== Test 8: Empty JSON ===
+Status: 400
+Body: {'error': 'Empty dataset'}
+
+All tests passed!
+[?2004hroot@18536abd51d4:/app/workspace/src# find /app/workspace -type f | sort
+[?2004l/app/workspace/src/__pycache__/api.cpython-310.pyc
+/app/workspace/src/api.py
+/app/workspace/src/static/js/app.js
+/app/workspace/src/templates/index.html
+[?2004hroot@18536abd51d4:/app/workspace/src# wc -l /app/workspace/src/api.py /app/workspace/src/templates/index.html /app/workspace/src/static/js/app.js
+[?2004l  184 /app/workspace/src/api.py
+  145 /app/workspace/src/templates/index.html
+   94 /app/workspace/src/static/js/app.js
+  423 total
+[?2004hroot@18536abd51d4:/app/workspace/src# 

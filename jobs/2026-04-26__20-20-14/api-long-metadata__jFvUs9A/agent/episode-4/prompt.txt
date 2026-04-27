@@ -1,0 +1,63 @@
+New Terminal Output:
+
+INFO:     Finished server process [630]
+cd /app/workspace/src && uvicorn api:app --host 0.0.0.0 --port 9999 &
+[1] 670
+root@d6a8b0842045:/app/workspace/src# INFO:     Started server process [671]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:9999 (Press CTRL+C to quit)
+python3 -c "
+> import urllib.request, json
+> from urllib.request import Request
+>
+> # Test /extract with multipart
+> import io
+> boundary = 'TESTBOUNDARY'
+> with open('/tmp/test.pdf', 'rb') as f:
+>     pdf_data = f.read()
+> body = (
+>     '--' + boundary + '\r\n'
+>     'Content-Disposition: form-data; name=\"file\"; filename=\"test.pdf\"\r\n'
+>     'Content-Type: application/pdf\r\n\r\n'
+> ).encode() + pdf_data + ('\r\n--' + boundary + '--\r\n').encode()
+> req = Request('http://localhost:9999/extract', data=body, method='POST')
+> req.add_header('Content-Type', 'multipart/form-data; boundary=' + boundary)
+> resp = urllib.request.urlopen(req)
+> result = json.loads(resp.read())
+> print('Extract response:', json.dumps(result, indent=2))
+> print()
+> print('Keys:', sorted(result.keys()))
+> print('Types:', {k: type(v).__name__ for k,v in result.items()})
+>
+> # Test /static/index.html
+> resp2 = urllib.request.urlopen('http://localhost:9999/static/index.html')
+> print()
+> print('Static status:', resp2.status)
+> print('Static content starts with:', resp2.read(50).decode())
+> "
+INFO:     127.0.0.1:39106 - "POST /extract HTTP/1.1" 200 OK
+Extract response: {
+  "author": "Test Author",
+  "title": "Test Document",
+  "topics": [],
+  "total_chunks": 1,
+  "filename": "test.pdf",
+  "total_words": 0
+}
+
+Keys: ['author', 'filename', 'title', 'topics', 'total_chunks', 'total_words']
+Types: {'author': 'str', 'title': 'str', 'topics': 'list', 'total_chunks': 'int', 'filename': 'str', 'total_words': 'int'}
+INFO:     127.0.0.1:39110 - "GET /static/index.html HTTP/1.1" 200 OK
+
+Static status: 200
+Static content starts with: <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta ch
+root@d6a8b0842045:/app/workspace/src# kill %1 2>/dev/null; wait 2>/dev/null
+root@d6a8b0842045:/app/workspace/src# INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [671]
+
