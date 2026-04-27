@@ -1,0 +1,30 @@
+New Terminal Output:
+
+root@d6a8b0842045:/app/workspace/src# cd /app/workspace/src && python3 -c "
+> from PyPDF2 import PdfWriter
+> from PyPDF2.generic import NameObject, TextStringObject
+> w = PdfWriter()
+> w.add_blank_page(width=612, height=792)
+> w.add_metadata({'/Author': 'Test Author', '/Title': 'Test Document'})
+> with open('/tmp/test.pdf', 'wb') as f:
+>     w.write(f)
+> print('Test PDF created')
+> "
+Test PDF created
+root@d6a8b0842045:/app/workspace/src# cd /app/workspace/src && uvicorn api:app --host 0.0.0.0 --port 9999 &
+[1] 629
+root@d6a8b0842045:/app/workspace/src# INFO:     Started server process [630]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:9999 (Press CTRL+C to quit)
+curl -s -X POST http://localhost:9999/extract -F file=@/tmp/test.pdf | python3 -m json.tool
+bash: curl: command not found
+Expecting value: line 1 column 1 (char 0)
+root@d6a8b0842045:/app/workspace/src# curl -s -o /dev/null -w '%{http_code}' http://localhost:9999/static/index.html
+bash: curl: command not found
+root@d6a8b0842045:/app/workspace/src# kill %1 2>/dev/null; wait 2>/dev/null
+root@d6a8b0842045:/app/workspace/src# INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [630]
+

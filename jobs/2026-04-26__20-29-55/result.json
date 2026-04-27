@@ -1,0 +1,27 @@
+{
+    "id": "c07ff382-3498-466c-b9c0-084faeeeb906",
+    "started_at": "2026-04-26T20:29:55.907456",
+    "finished_at": "2026-04-26T20:30:33.037679",
+    "n_total_trials": 1,
+    "stats": {
+        "n_trials": 1,
+        "n_errors": 1,
+        "evals": {
+            "oracle__adhoc": {
+                "n_trials": 0,
+                "n_errors": 1,
+                "metrics": [
+                    {
+                        "mean": 0.0
+                    }
+                ],
+                "reward_stats": {},
+                "exception_stats": {
+                    "RewardFileNotFoundError": [
+                        "ml-model-mgmt__o9AKccy"
+                    ]
+                }
+            }
+        }
+    }
+}

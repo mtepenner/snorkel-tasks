@@ -1,0 +1,199 @@
+New Terminal Output:
+
+root@d6a8b0842045:/app/workspace# cat > /app/workspace/src/api.py << 'PYEOF'
+> import re
+> from collections import Counter
+> from fastapi import FastAPI, File, UploadFile
+> from fastapi.staticfiles import StaticFiles
+> from PyPDF2 import PdfReader
+> import io
+> import os
+>
+> app = FastAPI()
+>
+> # Mount static files
+no> app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
+>
+> STOP_WORDS = {
+rd[:6>     "the", "be", "to", "of", "and", "a", "in", "that", "have", "i",
+>     "it", "for", "not", "on", "with", "he", "as", "you", "do", "at",
+>     "this", "but", "his", "by", "from", "they", "we", "say", "her",
+>     "she", "or", "an", "will", "my", "one", "all", "would", "there",
+>     "their", "what", "so", "up", "out", "if", "about", "who", "get",
+>     "which", "go", "me", "when", "make", "can", "like", "time", "no",
+>     "just", "him", "know", "take", "people", "into", "year", "your",
+>     "good", "some", "could", "them", "see", "other", "than", "then",
+>     "now", "look", "only", "come", "its", "over", "think", "also",
+>     "back", "after", "use", "two", "how", "our", "work", "first",
+>     "well", "way", "even", "new", "want", "because", "any", "these",
+>     "give", "day", "most", "us", "is", "are", "was", "were", "been",
+>     "being", "has", "had", "did", "does", "doing", "am", "may", "might",
+>     "shall", "should", "must", "need", "ought", "dare", "used",
+>     "such", "very", "much", "more", "many", "each", "every", "own",
+>     "same", "both", "few", "still", "those", "through", "between",
+>     "where", "here", "while", "during", "before", "since", "until",
+>     "too", "quite", "rather", "already", "yet", "again", "often",
+>     "never", "always", "sometimes", "however", "therefore", "thus",
+>     "hence", "also", "else", "further", "then", "once", "twice",
+>     "per", "via", "etc", "ie", "eg", "page", "de", "le", "la",
+>     "et", "en", "un", "une", "les", "des", "du", "au", "se", "ce",
+>     "est", "il", "pas", "ne", "que", "qui", "dans", "pour", "sur",
+>     "son", "sa", "ses", "avec", "plus", "tout", "fait", "mais",
+>     "been", "being", "below", "above", "down", "off", "don", "doesn",
+>     "didn", "won", "wouldn", "shouldn", "couldn", "wasn", "weren",
+>     "hasn", "hadn", "isn", "aren", "ain", "nor", "couldn", "didn",
+>     "doesn", "hadn", "hasn", "haven", "isn", "ll", "re", "ve",
+>     "wasn", "weren", "won", "wouldn", "shouldn", "mustn", "needn",
+>     "shan", "aren", "don", "let", "may", "said", "also", "upon",
+>     "using", "without", "within", "among", "along", "across",
+>     "around", "though", "although", "whether", "another", "man",
+>     "set", "put", "end", "got", "made", "went", "going", "thing",
+>     "things", "something", "nothing", "everything", "anything",
+>     "able", "cannot", "really", "right", "left", "part", "number",
+>     "long", "great", "little", "old", "big", "small", "high", "low",
+>     "large", "called", "came", "under", "next", "last", "keep",
+>     "found", "hand", "place", "point", "away", "turn", "might",
+>     "world", "home", "still", "kind", "head", "began", "far",
+>     "near", "state", "three", "four", "five", "six", "seven",
+>     "eight", "nine", "ten", "hundred", "thousand", "million",
+>     "become", "became", "taken", "given", "known", "seen", "done",
+>     "gone", "told", "ask", "asked", "tell", "find", "run", "help",
+>     "show", "try", "start", "began", "begin", "began", "seem",
+>     "seemed", "move", "live", "play", "read", "write", "written",
+>     "include", "including", "included", "based", "form", "case",
+>     "second", "third", "general", "particular", "open", "close",
+>     "different", "important", "possible", "certain", "others",
+>     "example", "information", "following", "according", "often",
+>     "order", "line", "name", "area", "group", "may", "shall",
+> }
+>
+>
+> def extract_topics(text: str, min_topics: int = 3, max_topics: int = 10) -> list:
+>     """Extract meaningful keyword topics from text via frequency analysis."""
+>     words = re.findall(r"[a-zA-Z]+", text.lower())
+>     # Filter: not a stop word, length >= 4
+>     filtered = [w for w in words if w not in STOP_WORDS and len(w) >= 4]
+>     if not filtered:
+>         # fallback: relax length constraint
+>         filtered = [w for w in words if w not in STOP_WORDS and len(w) >= 3]
+>     counts = Counter(filtered)
+>     # Take the most common, capped at max_topics
+>     top = counts.most_common(max_topics * 3)
+>     # Deduplicate stems loosely: if one word starts with another shorter word, keep the shorter
+>     selected = []
+>     seen_stems = set()
+>     for word, freq in top:
+>         stem = word[:6]
+>         if stem not in seen_stems:
+>             seen_stems.add(stem)
+>             selected.append(word)
+>         if len(selected) >= max_topics:
+>             break
+>     # Ensure minimum
+>     if len(selected) < min_topics:
+>         # Pad from remaining words
+>         for word, freq in top:
+>             if word not in selected:
+>                 selected.append(word)
+>             if len(selected) >= min_topics:
+>                 break
+>     return selected[:max_topics]
+>
+>
+> @app.post("/extract")
+> async def extract(file: UploadFile = File(...)):
+>     contents = await file.read()
+>     reader = PdfReader(io.BytesIO(contents))
+>
+>     # Metadata
+>     meta = reader.metadata
+>     author = "Unknown Author"
+>     title = "Untitled"
+>     if meta:
+>         if meta.author and str(meta.author).strip():
+>             author = str(meta.author).strip()
+>         if meta.title and str(meta.title).strip():
+>             title = str(meta.title).strip()
+>
+>     # Extract all text
+>     full_text = ""
+>     for page in reader.pages:
+>         page_text = page.extract_text()
+>         if page_text:
+>             full_text += page_text + " "
+>
+>     # Split into words and chunk
+>     words = full_text.split()
+>     total_words = len(words)
+>     chunk_size = 1000
+>     chunks = []
+>     for i in range(0, max(total_words, 1), chunk_size):
+>         chunk = words[i:i + chunk_size]
+>         if chunk:
+>             chunks.append(" ".join(chunk))
+>     total_chunks = len(chunks) if chunks else 1
+>
+>     # Topics
+>     topics = extract_topics(full_text)
+>
+>     return {
+>         "author": author,
+>         "title": title,
+>         "topics": topics,
+>         "total_chunks": total_chunks,
+>         "filename": file.filename,
+>         "total_words": total_words,
+>     }
+> PYEOF
+root@d6a8b0842045:/app/workspace# cat > /app/workspace/src/static/index.html << 'HTMLEOF'
+> <!DOCTYPE html>
+> <html lang="en">
+> <head>
+>   <meta charset="UTF-8">
+>   <title>PDF Extractor Check</title>
+>   <style>
+>     body { font-family: monospace; margin: 2em; }
+>     pre { background: #eee; padding: 1em; white-space: pre-wrap; }
+>   </style>
+> </head>
+> <body>
+>   <h1>PDF Extractor Manual Check</h1>
+>   <input type="file" id="filePicker" accept=".pdf" />
+>   <button id="submitBtn">Extract</button>
+>   <h2>Result:</h2>
+>   <pre id="output">No result yet.</pre>
+>   <script>
+>     document.getElementById('submitBtn').addEventListener('click', async () => {
+>       const fileInput = document.getElementById('filePicker');
+>       if (!fileInput.files.length) { alert('Pick a PDF first'); return; }
+>       const formData = new FormData();
+>       formData.append('file', fileInput.files[0]);
+>       const output = document.getElementById('output');
+>       output.textContent = 'Processing...';
+>       try {
+>         const resp = await fetch('/extract', { method: 'POST', body: formData });
+>         const json = await resp.json();
+>         output.textContent = JSON.stringify(json, null, 2);
+>       } catch (err) {
+>         output.textContent = 'Error: ' + err.message;
+>       }
+>     });
+>   </script>
+> </body>
+> </html>
+> HTMLEOF
+root@d6a8b0842045:/app/workspace# cat /app/workspace/src/api.py | head -5
+import re
+from collections import Counter
+from fastapi import FastAPI, File, UploadFile
+from fastapi.staticfiles import StaticFiles
+from PyPDF2 import PdfReader
+root@d6a8b0842045:/app/workspace# cat /app/workspace/src/static/index.html | head -5
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Extractor Check</title>
+root@d6a8b0842045:/app/workspace# cd /app/workspace/src && python -c "from api import app; print('Import OK:', app)" 2>&1
+Import OK: <fastapi.applications.FastAPI object at 0x7e82085ba770>
+root@d6a8b0842045:/app/workspace/src#

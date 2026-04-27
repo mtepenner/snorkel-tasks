@@ -1,0 +1,18 @@
+{
+  "analysis": "Files are created and the server starts fine. curl is not available so I need to use Python to test the endpoints.",
+  "plan": "Use Python's requests or urllib to test the /extract endpoint and the /static/index.html endpoint.",
+  "commands": [
+    {
+      "keystrokes": "cd /app/workspace/src && uvicorn api:app --host 0.0.0.0 --port 9999 &\n",
+      "duration": 2.0
+    },
+    {
+      "keystrokes": "python3 -c \"\nimport urllib.request, json\nfrom urllib.request import Request\n\n# Test /extract with multipart\nimport io\nboundary = 'TESTBOUNDARY'\nwith open('/tmp/test.pdf', 'rb') as f:\n    pdf_data = f.read()\nbody = (\n    '--' + boundary + '\\r\\n'\n    'Content-Disposition: form-data; name=\\\"file\\\"; filename=\\\"test.pdf\\\"\\r\\n'\n    'Content-Type: application/pdf\\r\\n\\r\\n'\n).encode() + pdf_data + ('\\r\\n--' + boundary + '--\\r\\n').encode()\nreq = Request('http://localhost:9999/extract', data=body, method='POST')\nreq.add_header('Content-Type', 'multipart/form-data; boundary=' + boundary)\nresp = urllib.request.urlopen(req)\nresult = json.loads(resp.read())\nprint('Extract response:', json.dumps(result, indent=2))\nprint()\nprint('Keys:', sorted(result.keys()))\nprint('Types:', {k: type(v).__name__ for k,v in result.items()})\n\n# Test /static/index.html\nresp2 = urllib.request.urlopen('http://localhost:9999/static/index.html')\nprint()\nprint('Static status:', resp2.status)\nprint('Static content starts with:', resp2.read(50).decode())\n\"\n",
+      "duration": 5.0
+    },
+    {
+      "keystrokes": "kill %1 2>/dev/null; wait 2>/dev/null\n",
+      "duration": 1.0
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+Traceback (most recent call last):
+  File "/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/harbor/trial/trial.py", line 503, in run
+    await self._run_verification()
+  File "/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/harbor/trial/trial.py", line 280, in _run_verification
+    await self._verify_with_retry()
+  File "/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/asyncio/__init__.py", line 193, in async_wrapped
+    return await copy(fn, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/asyncio/__init__.py", line 112, in __call__
+    do = await self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/asyncio/__init__.py", line 157, in iter
+    result = await action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/_utils.py", line 111, in inner
+    return call(*args, **kwargs)
+  File "/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/__init__.py", line 393, in <lambda>
+    self._add_action_func(lambda rs: rs.outcome.result())
+                                     ~~~~~~~~~~~~~~~~~^^
+  File "/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/concurrent/futures/_base.py", line 443, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/concurrent/futures/_base.py", line 395, in __get_result
+    raise self._exception
+  File "/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/asyncio/__init__.py", line 116, in __call__
+    result = await fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/harbor/trial/trial.py", line 298, in _verify_with_retry
+    self.result.verifier_result = await asyncio.wait_for(
+                                  ^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+    )
+    ^
+  File "/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/asyncio/tasks.py", line 488, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/harbor/verifier/verifier.py", line 144, in verify
+    raise RewardFileNotFoundError(
+    ...<3 lines>...
+    )
+harbor.verifier.verifier.RewardFileNotFoundError: No reward file found at jobs/2026-04-26__20-29-55/ml-model-mgmt__o9AKccy/verifier/reward.txt or jobs/2026-04-26__20-29-55/ml-model-mgmt__o9AKccy/verifier/reward.json

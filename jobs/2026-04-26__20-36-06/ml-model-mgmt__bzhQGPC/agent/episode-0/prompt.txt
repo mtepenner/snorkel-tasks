@@ -1,0 +1,141 @@
+You are an AI assistant tasked with solving command-line tasks in a Linux environment. You will be given a task description and the output from previously executed commands. Your goal is to solve the task by providing batches of shell commands.
+
+Format your response as JSON with the following structure:
+
+{
+  "analysis": "Analyze the current state based on the terminal output provided. What do you see? What has been accomplished? What still needs to be done?",
+  "plan": "Describe your plan for the next steps. What commands will you run and why? Be specific about what you expect each command to accomplish.",
+  "commands": [
+    {
+      "keystrokes": "ls -la\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "cd project\n",
+      "duration": 0.1
+    }
+  ],
+  "task_complete": true
+}
+
+Required fields:
+- "analysis": Your analysis of the current situation
+- "plan": Your plan for the next steps
+- "commands": Array of command objects to execute
+
+Optional fields:
+- "task_complete": Boolean indicating if the task is complete (defaults to false if not present)
+
+Command object structure:
+- "keystrokes": String containing the exact keystrokes to send to the terminal (required)
+- "duration": Number of seconds to wait for the command to complete before the next command will be executed (defaults to 1.0 if not present)
+
+IMPORTANT: The text inside "keystrokes" will be used completely verbatim as keystrokes. Write commands exactly as you want them sent to the terminal:
+- You must end every command with a newline (\n) or it will not execute.
+- For special key sequences, use tmux-style escape sequences:
+  - C-c for Ctrl+C
+  - C-d for Ctrl+D
+
+The "duration" attribute specifies the number of seconds to wait for the command to complete (default: 1.0) before the next command will be executed. On immediate tasks (e.g., cd, ls, echo, cat) set a duration of 0.1 seconds. On commands (e.g., gcc, find, rustc) set a duration of 1.0 seconds. On slow commands (e.g., make, python3 [long running script], wget [file]) set an appropriate duration as you determine necessary.
+
+It is better to set a smaller duration than a longer duration. It is always possible to wait again if the prior output has not finished, by running {"keystrokes": "", "duration": 10.0} on subsequent requests to wait longer. Never wait longer than 60 seconds; prefer to poll to see intermediate result status.
+
+Important notes:
+- Each command's keystrokes are sent exactly as written to the terminal
+- Do not include extra whitespace before or after the keystrokes unless it's part of the intended command
+- Extra text before or after the JSON will generate warnings but be tolerated
+- The JSON must be valid - use proper escaping for quotes and special characters within strings
+- Commands array can be empty if you want to wait without taking action
+
+Task Description:
+# [ML-404] model mgmt api + dashboard still not shippable
+
+Need the Flask stub at `/app/workspace/src/api.py` finished today. Please do not freestyle extra routes or alternate payload shapes because the checks downstream are already wired.
+
+## Milestone 1 - Data Preprocessing API
+
+For `api.py`:
+* **POST `/api/v1/data/upload`** has to accept exactly two upload shapes:
+  1. JSON array of objects like `[{"A": 1, "B": null}, {"A": 2, "B": 4}]`
+  2. Raw CSV text with a real header row
+* CSV rule is not optional: if the first row is actually data and looks headerless, reject it with **400** instead of letting pandas pretend it found headers. Example: `1,2\n3,4\n` is bad input and should not be accepted as a valid header row.
+* Validation rules:
+  * return **400** for malformed or empty input
+  * return **415** for unsupported content types
+  * bad input must never bubble into a **500**
+* After a successful upload, run the preprocessing pipeline:
+  * impute missing numeric values with the column mean
+  * z-score normalize numeric columns so the mean is roughly 0 and std dev is roughly 1
+  * one-hot encode categorical/string columns and drop the original string columns afterward
+* **GET `/api/v1/data/processed`** must return the processed dataset as one flat JSON array of objects
+
+## Milestone 2 - Frontend Dashboard
+
+For the UI:
+* put a responsive page at `/app/workspace/src/templates/index.html`
+* JS can live in `/app/workspace/src/static/js/app.js` or inline, whatever is faster
+* the page must have a nav/sidebar area containing the exact words `data`, `model`, and `inference`
+* build one model configuration form and put both of these controls inside that form:
+  * a `<select>` with at least two options
+  * an `<input type="range">` slider for hyperparameters
+* add a chart area using either `<canvas>` or `<svg>`
+* include a viewport meta tag so it works on mobile without breaking layout
+
+Need this out by EOD.
+
+## Milestone 3 - Inference Flow
+
+Add `POST /api/v1/predict` in `/app/workspace/src/api.py`. It must accept `{"features": [1, 2, 3]}` and return `{"prediction": <number>}`. The prediction has to be derived from the submitted features, and it also has to be deterministic for the same feature list. Do not use randomness, clock time, or request state.
+
+Wire the frontend form to call `/api/v1/predict` exactly with the user-provided input. The frontend implementation must:
+* call `e.preventDefault()` so the form does not trigger a full page reload
+* show a spinner or visible `loading` indicator while the request is in flight
+* write the returned prediction into the DOM using `innerHTML` or `textContent`
+* use `.catch()` or equivalent `try`/`catch` handling for request failures
+
+
+
+
+Current terminal state:
+Current Terminal Screen:
+root@18536abd51d4:/app/workspace#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

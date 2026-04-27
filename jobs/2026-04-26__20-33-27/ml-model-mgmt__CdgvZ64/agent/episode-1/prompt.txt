@@ -1,0 +1,41 @@
+New Terminal Output:
+root@93bccacddc27:/app/workspace# ls -ლა
+ls: invalid option -- ''
+Try 'ls --help' for more information.
+root@93bccacddc27:/app/workspace# find /app/workspace/src -maxdepth 3 -type f -print
+/app/workspace/src/api.py
+root@93bccacddc27:/app/workspace# sed -n '1,200p' /app/workspace/src/api.py
+from flask import Flask
+
+app = Flask(__name__)
+
+# TODO: Implement Milestone 1, 2, and 3 endpoints here.
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+root@93bccacddc27:/app/workspace# find /app/workspace/src/templates -maxdepth 2 -type f -print
+find: ‘/app/workspace/src/templates’: No such file or directory
+root@93bccacddc27:/app/workspace# if [ -f /app/workspace/src/templates/index.html ]; then sed -n '1,200p' /app/workspace/src/templates/index.html; fi
+root@93bccacddc27:/app/workspace# find /app/workspace/src/static -maxdepth 4 -type f -print
+find: ‘/app/workspace/src/static’: No such file or directory
+root@93bccacddc27:/app/workspace#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

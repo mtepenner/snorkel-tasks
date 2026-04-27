@@ -1,0 +1,308 @@
+New Terminal Output:
+
+root@18536abd51d4:/app/workspace# mkdir -p /app/workspace/src/templates /app/workspace/src/static/js
+root@18536abd51d4:/app/workspace# cat > /app/workspace/src/api.py << 'PYEOF'
+> import math
+> import io
+> import csv
+es> from flask import Flask, request, jsonify, render_template
+> import pandas as pd
+> import numpy as np
+d_>
+> app = Flask(__name__)
+>
+> # In-memory store for processed data
+> _processed_df = None
+>
+>
+> def _is_headerless_csv(first_row_values):
+>     """Return True if every cell in the first row looks numeric (i.e. no real header)."""
+>     for v in first_row_values:
+>         v = v.strip()
+>         if not v:
+0>             # empty cell in header is suspicious but let's treat as non-numeric
+>             return False
+>         try:
+>             float(v)
+>         except ValueError:
+>             return False
+>     return True
+>
+>
+> def _preprocess(df):
+>     """Impute, z-score normalize numerics, one-hot encode categoricals."""
+>     df = df.copy()
+>
+on(force=False, silent=False)
+    except Exception:
+        return jsonify({"error": "Malformed JSON"}), 400
+
+    if data is None:
+   >     # Identify numeric and categorical columns
+>     numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+>     categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+>
+>     # Impute missing numeric values with column mean
+>     for col in numeric_cols:
+>         col_mean = df[col].mean()
+>         if pd.isna(col_mean):
+>             col_mean = 0.0
+>         df[col] = df[col].fillna(col_mean)
+>
+e>     # Z-score normalize numeric columns
+>     for col in numeric_cols:
+>         std = df[col].std(ddof=0)
+>         mean = df[col].mean()
+>         if std == 0 or pd.isna(std):
+>             df[col] = 0.0
+>         else:
+>             df[col] = (df[col] - mean) / std
+>
+>     # One-hot encode categorical columns
+>     if categorical_cols:
+>         df = pd.get_dummies(df, columns=categorical_cols)
+>         # Ensure all one-hot columns are numeric (they should be bool/int)
+>         for col in df.columns:
+>             if df[col].dtype == bool:
+>                 df[col] = df[col].astype(int)
+>
+>     return df
+>
+>
+> @app.route('/')
+> def index():
+>     return render_template('index.html')
+>
+>
+> @app.route('/api/v1/data/upload', methods=['POST'])
+> def upload_data():
+>     global _processed_df
+>
+>     content_type = request.content_type or ''
+>
+>     try:
+>         if 'application/json' in content_type:
+>             # JSON array of objects
+>             try:
+>                 data = request.get_json(force=False, silent=False)
+>             except Exception:
+>                 return jsonify({"error": "Malformed JSON"}), 400
+>
+>             if data is None:
+>                 return jsonify({"error": "Malformed or empty JSON"}), 400
+>
+>             if not isinstance(data, list):
+>                 return jsonify({"error": "Expected a JSON array of objects"}), 400
+>
+>             if len(data) == 0:
+>                 return jsonify({"error": "Empty dataset"}), 400
+>
+>             # Each element should be a dict
+>             for item in data:
+>                 if not isinstance(item, dict):
+>                     return jsonify({"error": "Each element must be a JSON object"}), 400
+>
+>             df = pd.DataFrame(data)
+>
+>         elif 'text/csv' in content_type:
+>             raw = request.get_data(as_text=True)
+>             if not raw or not raw.strip():
+>                 return jsonify({"error": "Empty CSV"}), 400
+>
+>             # Check if first row is headerless (all numeric)
+>             lines = raw.strip().split('\n')
+>             if len(lines) < 1:
+>                 return jsonify({"error": "Empty CSV"}), 400
+>
+>             # Parse first row
+>             reader = csv.reader(io.StringIO(lines[0]))
+>             first_row = next(reader, None)
+>             if first_row is None or len(first_row) == 0:
+>                 return jsonify({"error": "Empty CSV"}), 400
+>
+>             if _is_headerless_csv(first_row):
+>                 return jsonify({"error": "CSV appears to have no header row"}), 400
+>
+>             # Need at least a header + one data row
+>             if len(lines) < 2:
+>                 return jsonify({"error": "CSV has header but no data rows"}), 400
+>
+>             df = pd.read_csv(io.StringIO(raw))
+>
+>             if df.empty:
+>                 return jsonify({"error": "Empty dataset after parsing"}), 400
+>
+>         else:
+>             return jsonify({"error": "Unsupported content type"}), 415
+>
+>         # Preprocess
+>         _processed_df = _preprocess(df)
+>
+>         return jsonify({
+>             "message": "Data uploaded and processed successfully",
+>             "rows": len(_processed_df),
+>             "columns": list(_processed_df.columns)
+>         }), 200
+>
+>     except Exception as e:
+>         return jsonify({"error": "Bad input: " + str(e)}), 400
+>
+>
+> @app.route('/api/v1/data/processed', methods=['GET'])
+> def get_
+[... output limited to 10000 bytes; 70 interior bytes omitted ...]
+h: 100%; min-width: unset;
+>         flex-direction: row; flex-wrap: wrap;
+>         padding: 0.8rem;
+>       }
+>       nav h2 { width: 100%; }
+>     }
+>   </style>
+> </head>
+> <body>
+>   <nav>
+>     <h2>ML Platform</h2>
+>     <a href="#data">data</a>
+>     <a href="#model">model</a>
+>     <a href="#inference">inference</a>
+>   </nav>
+>   <div class="main">
+>     <div class="card" id="data">
+>       <h3>Data Upload</h3>
+>       <p>Use the API endpoint <code>POST /api/v1/data/upload</code> to upload data.</p>
+>     </div>
+>
+>     <div class="card" id="model">
+>       <h3>Model Configuration</h3>
+>       <form id="predict-form">
+>         <label for="model-select">Algorithm</label>
+>         <select id="model-select" name="algorithm">
+>           <option value="linear_regression">Linear Regression</option>
+>           <option value="random_forest">Random Forest</option>
+>           <option value="gradient_boosting">Gradient Boosting</option>
+>         </select>
+>
+>         <label for="hyperparam-range">Learning Rate: <span id="range-display">0.50</span></label>
+>         <input type="range" id="hyperparam-range" name="learning_rate"
+>                min="0" max="1" step="0.01" value="0.50">
+>
+>         <label for="features-input">Features (comma-separated numbers)</label>
+>         <input type="text" id="features-input" name="features" placeholder="e.g. 1, 2, 3">
+>
+>         <button type="submit">Predict</button>
+>         <span class="spinner" id="spinner"></span>
+>
+>         <div id="prediction-result"></div>
+>         <div id="error-msg"></div>
+>       </form>
+>     </div>
+>
+>     <div class="card" id="inference">
+>       <h3>Visualization</h3>
+>       <div class="chart-area">
+>         <canvas id="chart-canvas" width="580" height="280"></canvas>
+>       </div>
+>     </div>
+>   </div>
+>
+>   <script src="/static/js/app.js"></script>
+> </body>
+> </html>
+> HTMLEOF
+root@18536abd51d4:/app/workspace# cat > /app/workspace/src/static/js/app.js << 'JSEOF'
+> (function () {
+>   'use strict';
+>
+>   // Range slider display
+>   var rangeInput = document.getElementById('hyperparam-range');
+>   var rangeDisplay = document.getElementById('range-display');
+>   if (rangeInput && rangeDisplay) {
+>     rangeInput.addEventListener('input', function () {
+>       rangeDisplay.textContent = parseFloat(this.value).toFixed(2);
+>     });
+>   }
+>
+>   // Prediction form
+>   var form = document.getElementById('predict-form');
+>   var spinner = document.getElementById('spinner');
+>   var resultDiv = document.getElementById('prediction-result');
+>   var errorDiv = document.getElementById('error-msg');
+>
+>   form.addEventListener('submit', function (e) {
+>     e.preventDefault();
+>
+>     // Clear previous results
+>     resultDiv.textContent = '';
+>     errorDiv.textContent = '';
+>
+>     // Parse features
+>     var raw = document.getElementById('features-input').value.trim();
+>     if (!raw) {
+>       errorDiv.textContent = 'Please enter features.';
+>       return;
+>     }
+>     var features = raw.split(',').map(function (s) {
+>       return parseFloat(s.trim());
+>     });
+>
+>     for (var i = 0; i < features.length; i++) {
+>       if (isNaN(features[i])) {
+>         errorDiv.textContent = 'All features must be valid numbers.';
+>         return;
+>       }
+>     }
+>
+>     // Show spinner
+>     spinner.classList.add('loading');
+>
+>     fetch('/api/v1/predict', {
+>       method: 'POST',
+>       headers: { 'Content-Type': 'application/json' },
+>       body: JSON.stringify({ features: features })
+>     })
+>     .then(function (response) {
+>       if (!response.ok) {
+>         return response.json().then(function (d) {
+>           throw new Error(d.error || 'Request failed');
+>         });
+>       }
+>       return response.json();
+>     })
+>     .then(function (data) {
+>       spinner.classList.remove('loading');
+>       resultDiv.textContent = 'Prediction: ' + data.prediction;
+>     })
+>     .catch(function (err) {
+>       spinner.classList.remove('loading');
+>       errorDiv.textContent = 'Error: ' + err.message;
+>     });
+>   });
+>
+>   // Simple chart drawing on canvas
+>   var canvas = document.getElementById('chart-canvas');
+>   if (canvas && canvas.getContext) {
+>     var ctx = canvas.getContext('2d');
+>     var w = canvas.width;
+>     var h = canvas.height;
+>     // Draw axes
+>     ctx.strokeStyle = '#64748b';
+>     ctx.lineWidth = 1.5;
+>     ctx.beginPath();
+>     ctx.moveTo(40, 10);
+>     ctx.lineTo(40, h - 30);
+>     ctx.lineTo(w - 10, h - 30);
+>     ctx.stroke();
+>     // Draw sample bars
+>     var bars = [60, 120, 90, 150, 80, 130];
+>     var barW = (w - 80) / bars.length - 8;
+>     var colors = ['#2563eb', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+>     for (var b = 0; b < bars.length; b++) {
+>       ctx.fillStyle = colors[b % colors.length];
+>       var x = 50 + b * (barW + 8);
+>       var barH = bars[b];
+>       ctx.fillRect(x, h - 30 - barH, barW, barH);
+>     }
+>   }
+> })();
+> JSEOF
+root@18536abd51d4:/app/workspace#

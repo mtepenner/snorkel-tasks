@@ -1,0 +1,29 @@
+{
+    "id": "0d22d7fb-e2c9-48ec-a0a4-5fbb726df7d3",
+    "started_at": "2026-04-26T20:36:06.129245",
+    "finished_at": "2026-04-26T20:38:31.195648",
+    "n_total_trials": 1,
+    "stats": {
+        "n_trials": 1,
+        "n_errors": 0,
+        "evals": {
+            "terminus-2__@anthropic-claude-opus-4-6__adhoc": {
+                "n_trials": 1,
+                "n_errors": 0,
+                "metrics": [
+                    {
+                        "mean": 1.0
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "1.0": [
+                            "ml-model-mgmt__bzhQGPC"
+                        ]
+                    }
+                },
+                "exception_stats": {}
+            }
+        }
+    }
+}
