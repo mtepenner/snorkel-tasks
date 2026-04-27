@@ -1,0 +1,83 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 7,
+            "passed": 7,
+            "failed": 0,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1777259984.3540616,
+            "stop": 1777259985.1062064
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_required_files_exist",
+                "status": "passed",
+                "duration": 0.0003993140001057327,
+                "start": 1777259984.9834194,
+                "stop": 1777259984.9845142,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_api_source_uses_required_frameworks",
+                "status": "passed",
+                "duration": 0.00040559500007475435,
+                "start": 1777259984.9846857,
+                "stop": 1777259984.9856966,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_static_ui_accessible_and_functional",
+                "status": "passed",
+                "duration": 0.003723613999909503,
+                "start": 1777259984.985814,
+                "stop": 1777259984.9901507,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_extract_rejects_get_requests",
+                "status": "passed",
+                "duration": 0.0018955290001940739,
+                "start": 1777259984.9903164,
+                "stop": 1777259984.992718,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_extraction_fallback_and_chunking",
+                "status": "passed",
+                "duration": 0.03579338499991991,
+                "start": 1777259984.992867,
+                "stop": 1777259985.029375,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_chunk_boundary_uses_1000_word_cap",
+                "status": "passed",
+                "duration": 0.032203195000192864,
+                "start": 1777259985.0337477,
+                "stop": 1777259985.0664792,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_extraction_positive_metadata",
+                "status": "passed",
+                "duration": 0.03663872400011314,
+                "start": 1777259985.0666635,
+                "stop": 1777259985.1040058,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

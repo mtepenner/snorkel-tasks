@@ -1,0 +1,158 @@
+Current terminal state:
+New Terminal Output:
+
+root@cb15951f44b6:/app/workspace# apply_patch <<'PATCH'
+> *** Begin Patch
+> *** Add File: src/analyzer.py
+> +#!/usr/bin/env python3
+> +"""Climate Data Analyzer
+_clean_records(CSV_PATH, r> +
+> +Reads:
+> +  - /app/workspace/data/climate.csv
+> +  - /app/workspace/data/metadata.json
+> +
+> +Writes (post-2020 data only):
+> +  - /app/workspace/data/cleaned.json
+> +  - /app/workspace/data/trends.json
+
++if __name__ == "_> +  - /app/workspace/output/climate_graph.gv
+Patch
+PATCH
+> +  - /app/workspace/output/climate_graph.png
+> +"""
+> +
+> +from __future__ import annotations
+> +
+> +import csv
+> +import json
+> +import os
+> +import subprocess
+> +from collections import defaultdict
+> +from typing import Any, Dict, List
+> +
+> +
+> +BASE_DIR = "/app/workspace"
+> +DATA_DIR = os.path.join(BASE_DIR, "data")
+> +OUT_DIR = os.path.join(BASE_DIR, "output")
+> +
+> +CSV_PATH = os.path.join(DATA_DIR, "climate.csv")
+> +METADATA_PATH = os.path.join(DATA_DIR, "metadata.json")
+> +
+> +CLEANED_PATH = os.path.join(DATA_DIR, "cleaned.json")
+> +TRENDS_PATH = os.path.join(DATA_DIR, "trends.json")
+> +
+> +DOT_PATH = os.path.join(OUT_DIR, "climate_graph.gv")
+> +PNG_PATH = os.path.join(OUT_DIR, "climate_graph.png")
+> +
+> +
+> +def load_region_mapping(path: str) -> Dict[str, str]:
+> +    with open(path, "r", encoding="utf-8") as f:
+> +        data = json.load(f)
+> +    # Ensure string keys/values without hardcoding any regions.
+> +    return {str(k): str(v) for k, v in data.items()}
+> +
+> +
+> +def read_and_clean_records(csv_path: str, region_map: Dict[str, str]) -> List[Dict[str, Any]]:
+> +    cleaned: List[Dict[str, Any]] = []
+> +    with open(csv_path, "r", encoding="utf-8", newline="") as f:
+> +        reader = csv.DictReader(f)
+> +        for row in reader:
+> +            region_id = str(row.get("region_id", "")).strip()
+> +            year = int(str(row.get("year", "")).strip())
+> +
+> +            # Strict rule: exclude anything before 2021 from outputs/averages/graph.
+> +            if year < 2021:
+> +                continue
+> +
+> +            temp = float(str(row.get("temperature", "")).strip())
+> +            region = region_map.get(region_id)
+> +            if region is None:
+> +                # Dynamic mapping required; if mapping missing, skip bad/unmappable row.
+> +                continue
+> +
+> +            cleaned.append({"region": region, "temperature": temp, "year": year})
+> +    return cleaned
+> +
+> +
+> +def compute_trends(cleaned: List[Dict[str, Any]]) -> Dict[str, float]:
+> +    sums: Dict[str, float] = defaultdict(float)
+> +    counts: Dict[str, int] = defaultdict(int)
+> +    for rec in cleaned:
+> +        region = rec["region"]
+> +        sums[region] += float(rec["temperature"])
+> +        counts[region] += 1
+> +    return {region: (sums[region] / counts[region]) for region in sums}
+> +
+> +
+> +def write_json(path: str, obj: Any) -> None:
+> +    with open(path, "w", encoding="utf-8") as f:
+> +        json.dump(obj, f, ensure_ascii=False, indent=2)
+> +        f.write("\n")
+> +
+> +
+> +def _dot_escape(s: str) -> str:
+> +    return s.replace("\\", "\\\\").replace('"', '\\"')
+> +
+> +
+> +def write_graph(dot_path: str, png_path: str, trends: Dict[str, float]) -> None:
+> +    # Simple digraph: region -> mean temperature node.
+> +    lines: List[str] = []
+> +    lines.append("digraph ClimateTrends {")
+> +    lines.append("  rankdir=LR;")
+> +    lines.append("  node [shape=box, style=rounded];")
+> +
+> +    # Create a temperature node per region to keep edges unambiguous.
+> +    for region, mean_temp in sorted(trends.items(), key=lambda x: x[0]):
+> +        region_node = f'"{_dot_escape(region)}"'
+> +        temp_label = f"{mean_temp:.2f}"  # label shown in graph
+> +        temp_node_name = f"mean:{region}"  # internal node id
+> +        temp_node = f'"{_dot_escape(temp_node_name)}"'
+> +        lines.append(f"  {region_node} [shape=ellipse];")
+> +        lines.append(f"  {temp_node} [label=\"Mean {temp_label}°C\", shape=box];")
+> +        lines.append(f"  {region_node} -> {temp_node};")
+> +
+> +    lines.append("}")
+> +    os.makedirs(os.path.dirname(dot_path), exist_ok=True)
+> +    with open(dot_path, "w", encoding="utf-8") as f:
+> +        f.write("\n".join(lines))
+> +        f.write("\n")
+> +
+> +    # Render PNG using system graphviz.
+> +    subprocess.run(["dot", "-Tpng", dot_path, "-o", png_path], check=True)
+> +
+> +
+> +def main() -> None:
+> +    os.makedirs(OUT_DIR, exist_ok=True)
+> +
+> +    region_map = load_region_mapping(METADATA_PATH)
+> +    cleaned = read_and_clean_records(CSV_PATH, region_map)
+> +    trends = compute_trends(cleaned)
+> +
+> +    write_json(CLEANED_PATH, cleaned)
+> +    write_json(TRENDS_PATH, trends)
+> +    write_graph(DOT_PATH, PNG_PATH, trends)
+> +
+> +
+> +if __name__ == "__main__":
+> +    main()
+> +
+> *** End Patch
+> PATCH
+bash: apply_patch: command not found
+root@cb15951f44b6:/app/workspace# python3 src/analyzer.py
+python3: can't open file '/app/workspace/src/analyzer.py': [Errno 2] No such file or directory
+root@cb15951f44b6:/app/workspace# ls -la data/cleaned.json data/trends.json output/climate_graph.gv output/climate_graph.png
+ls: cannot access 'data/cleaned.json': No such file or directory
+ls: cannot access 'data/trends.json': No such file or directory
+ls: cannot access 'output/climate_graph.gv': No such file or directory
+ls: cannot access 'output/climate_graph.png': No such file or directory
+root@cb15951f44b6:/app/workspace# cat data/cleaned.json
+cat: data/cleaned.json: No such file or directory
+root@cb15951f44b6:/app/workspace# cat data/trends.json
+cat: data/trends.json: No such file or directory
+root@cb15951f44b6:/app/workspace# sed -n '1,200p' output/climate_graph.gv
+sed: can't read output/climate_graph.gv: No such file or directory
+root@cb15951f44b6:/app/workspace#
+
+
+Are you sure you want to mark the task as complete? This will trigger your solution to be graded and you won't be able to make any further corrections. If so, include "task_complete": true in your JSON response again.

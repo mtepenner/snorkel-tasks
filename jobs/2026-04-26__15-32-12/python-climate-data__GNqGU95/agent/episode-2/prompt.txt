@@ -1,0 +1,30 @@
+New Terminal Output:
+
+root@ab385bf0f4c5:/app/workspace# mkdir -p /app/workspace/src /app/workspace/output
+root@ab385bf0f4c5:/app/workspace# pip install graphviz 2>/dev/null | tail -3
+Requirement already satisfied: graphviz in /usr/local/lib/python3.10/site-packages (0.20.1)
+root@ab385bf0f4c5:/app/workspace# which dot 2>/dev/null || apt-get install -y graphviz 2>/dev/null | tail -5
+/usr/bin/dot
+root@ab385bf0f4c5:/app/workspace#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

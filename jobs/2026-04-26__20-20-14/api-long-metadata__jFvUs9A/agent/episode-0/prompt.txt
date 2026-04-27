@@ -1,0 +1,110 @@
+You are an AI assistant tasked with solving command-line tasks in a Linux environment. You will be given a task description and the output from previously executed commands. Your goal is to solve the task by providing batches of shell commands.
+
+Format your response as JSON with the following structure:
+
+{
+  "analysis": "Analyze the current state based on the terminal output provided. What do you see? What has been accomplished? What still needs to be done?",
+  "plan": "Describe your plan for the next steps. What commands will you run and why? Be specific about what you expect each command to accomplish.",
+  "commands": [
+    {
+      "keystrokes": "ls -la\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "cd project\n",
+      "duration": 0.1
+    }
+  ],
+  "task_complete": true
+}
+
+Required fields:
+- "analysis": Your analysis of the current situation
+- "plan": Your plan for the next steps
+- "commands": Array of command objects to execute
+
+Optional fields:
+- "task_complete": Boolean indicating if the task is complete (defaults to false if not present)
+
+Command object structure:
+- "keystrokes": String containing the exact keystrokes to send to the terminal (required)
+- "duration": Number of seconds to wait for the command to complete before the next command will be executed (defaults to 1.0 if not present)
+
+IMPORTANT: The text inside "keystrokes" will be used completely verbatim as keystrokes. Write commands exactly as you want them sent to the terminal:
+- You must end every command with a newline (\n) or it will not execute.
+- For special key sequences, use tmux-style escape sequences:
+  - C-c for Ctrl+C
+  - C-d for Ctrl+D
+
+The "duration" attribute specifies the number of seconds to wait for the command to complete (default: 1.0) before the next command will be executed. On immediate tasks (e.g., cd, ls, echo, cat) set a duration of 0.1 seconds. On commands (e.g., gcc, find, rustc) set a duration of 1.0 seconds. On slow commands (e.g., make, python3 [long running script], wget [file]) set an appropriate duration as you determine necessary.
+
+It is better to set a smaller duration than a longer duration. It is always possible to wait again if the prior output has not finished, by running {"keystrokes": "", "duration": 10.0} on subsequent requests to wait longer. Never wait longer than 60 seconds; prefer to poll to see intermediate result status.
+
+Important notes:
+- Each command's keystrokes are sent exactly as written to the terminal
+- Do not include extra whitespace before or after the keystrokes unless it's part of the intended command
+- Extra text before or after the JSON will generate warnings but be tolerated
+- The JSON must be valid - use proper escaping for quotes and special characters within strings
+- Commands array can be empty if you want to wait without taking action
+
+Task Description:
+# [DOC-192] PDF extractor is eating prod
+
+Need this patched today. Support is already yelling because big PDFs keep blowing up the extractor and I do not have time for a cleanup pass after this.
+
+Build the API in `/app/workspace/src/api.py`. FastAPI app instance has to be exactly named `app` because the runner calls `uvicorn api:app` and I am not changing that now. Use `PyPDF2.PdfReader` only, no alternate PDF library, no extra dependency surprise.
+
+The endpoint is `POST /extract` only. It must take `multipart/form-data` with the upload field named `file`. Pull `author` and `title` from PDF metadata directly, and if either one is missing use exactly `"Unknown Author"` and `"Untitled"`.
+
+For the document body, actually parse the PDF text, split it into chunks capped at 1000 words each, and derive `topics` from the parsed content. I need 3 to 10 meaningful non-empty keyword strings, not filler, not obvious stop-words, and they need to reflect the document instead of generic junk.
+
+Return one flat JSON object and do not rename anything because downstream is brittle. The response must contain these exact keys and types: `author` (str), `title` (str), `topics` (list[str]), `total_chunks` (int), `filename` (str, exactly the original uploaded filename), `total_words` (int).
+
+Also drop a throwaway manual check page at `/app/workspace/src/static/index.html`. Mount that directory at `/static` using `StaticFiles` so `/static/index.html` really loads. The page can be ugly, I do not care. It just needs a file picker, a fetch/XHR call to `/extract`, and the raw JSON rendered on screen so I can sanity check the numbers.
+
+Please do not get cute with extra routes, alternate shapes, or helper files I did not ask for. I need this exact contract working today.
+
+
+Current terminal state:
+Current Terminal Screen:
+root@d6a8b0842045:/app/workspace#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

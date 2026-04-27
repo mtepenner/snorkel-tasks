@@ -1,0 +1,284 @@
+New Terminal Output:
+
+root@4de46265a4e6:/app/workspace# ls -la
+total 16
+drwxr-xr-x 1 root root 4096 Apr 27 03:18 .
+drwxr-xr-x 1 root root 4096 Apr 26 21:55 ..
+drwxr-xr-x 4 root root 4096 Apr 27 03:18 src
+root@4de46265a4e6:/app/workspace# ls -la /app/workspace/src /app/workspace/src/static
+/app/workspace/src:
+total 24
+drwxr-xr-x 4 root root 4096 Apr 27 03:18 .
+drwxr-xr-x 1 root root 4096 Apr 27 03:18 ..
+drwxr-xr-x 2 root root 4096 Apr 27 03:18 __pycache__
+-rw-r--r-- 1 root root 5198 Apr 27 03:18 api.py
+drwxr-xr-x 2 root root 4096 Apr 27 03:18 static
+
+/app/workspace/src/static:
+total 12
+drwxr-xr-x 2 root root 4096 Apr 27 03:18 .
+drwxr-xr-x 4 root root 4096 Apr 27 03:18 ..
+-rw-r--r-- 1 root root 2082 Apr 27 03:18 index.html
+root@4de46265a4e6:/app/workspace# python3 -m py_compile /app/workspace/src/api.py
+root@4de46265a4e6:/app/workspace# nl -ba /app/workspace/src/api.py | sed -n '1,220p'
+     1  from __future__ import annotations
+     2
+     3  import re
+     4  from collections import Counter
+     5  from typing import List
+     6
+     7  from fastapi import FastAPI, File, UploadFile
+     8  from fastapi.responses import JSONResponse
+     9  from fastapi.staticfiles import StaticFiles
+    10
+    11  from PyPDF2 import PdfReader
+    12
+    13
+    14  app = FastAPI()
+    15
+    16  # Serve the manual check page
+    17  app.mount(
+    18      "/static",
+    19      StaticFiles(directory="/app/workspace/src/static", html=False),
+    20      name="static",
+    21  )
+    22
+    23
+    24  _STOPWORDS = {
+    25      "a","about","above","after","again","against","all","am","an","and","any","are","as","at",
+    26      "be","because","been","before","being","below","between","both","but","by",
+    27      "can","could",
+    28      "did","do","does","doing","down","during",
+    29      "each",
+    30      "few","for","from","further",
+    31      "had","has","have","having","he","her","here","hers","herself","him","himself","his","how",
+    32      "i","if","in","into","is","it","its","itself",
+    33      "just",
+    34      "me","more","most","my","myself",
+    35      "no","nor","not","now",
+    36      "of","off","on","once","only","or","other","our","ours","ourselves","out","over","own",
+    37      "s","same","she","should","so","some","such",
+    38      "t","than","that","the","their","theirs","them","themselves","then","there","these","they",
+    39      "this","those","through","to","too",
+    40      "under","until","up",
+    41      "very",
+    42      "was","we","were","what","when","where","which","while","who","whom","why","will","with",
+    43      "you","your","yours","yourself","yourselves",
+    44      # common PDF/boilerplate-ish
+    45      "page","pages","copyright","www","http","https","com","org","net",
+    46  }
+    47
+    48
+    49  def _normalize_words(text: str) -> List[str]:
+    50      # Keep words with letters/numbers and internal apostrophes/hyphens, drop punctuation.
+    51      # Also exclude pure numbers and very short tokens.
+    52      raw = re.findall(r"[A-Za-z][A-Za-z0-9'\-]{1,}", text)
+    53      words: List[str] = []
+    54      for w in raw:
+    55          wl = w.lower().strip("-'\"")
+    56          if len(wl) < 3:
+    57              continue
+    58          if wl in _STOPWORDS:
+    59              continue
+    60          if wl.isdigit():
+    61              continue
+    62          # Drop tokens that are mostly numeric like "abc123"? keep if has >=2 letters.
+    63          letters = sum(ch.isalpha() for ch in wl)
+    64          if letters < 2:
+    65              continue
+    66          words.append(wl)
+    67      return words
+    68
+    69
+    70  def _extract_topics(text: str) -> List[str]:
+    71      words = _normalize_words(text)
+    72      if not words:
+    73          return []
+    74
+    75      counts = Counter(words)
+    76
+    77      # Prefer informative terms: longer words get a slight boost.
+    78      scored = []
+    79      for w, c in counts.items():
+    80          score = c * (1.0 + min(len(w), 12) / 24.0)
+    81          scored.append((score, w))
+    82
+    83      scored.sort(reverse=True)
+    84
+    85      topics: List[str] = []
+    86      used = set()
+    87      for _, w in scored:
+    88          if w in used:
+    89              continue
+    90          # avoid near-duplicates by prefix (simple heuristic)
+    91          if any(w.startswith(t) or t.startswith(w) for t in used):
+    92              continue
+    93          used.add(w)
+    94          topics.append(w)
+    95          if len(topics) >= 10:
+    96              break
+    97
+    98      # Ensure at least 3 if possible
+    99      return topics[: max(3, min(10, len(topics)))]
+   100
+   101
+   102  def _chunk_words(words: List[str], chunk_size: int = 1000) -> int:
+   103      if not words:
+   104          return 0
+   105      return (len(words) + chunk_size - 1) // chunk_size
+   106
+   107
+   108  @app.post("/extract")
+   109  async def extract(file: UploadFile = File(...)):
+  
+[... output limited to 10000 bytes; 70 interior bytes omitted ...]
+space/src/static", html=False),
+>     name="static",
+> )
+>
+>
+l> _STOPWORDS = {
+e.filename or ">     "a","about","above","after","again","against","all","am","an","and","any","are","as","at",
+>     "be","because","been","before","being","below","between","both","but","by",
+>     "can","could",
+>     "did","do","does","doing","down","during",
+>     "each",
+>     "few","for","from","further",
+>     "had","has","have","having","he","her","here","hers","herself","him","himself","his","how",
+>     "i","if","in","into","is","it","its","itself",
+>     "just",
+>     "me","more","most","my","myself",
+>     "no","nor","not","now",
+>     "of","off","on","once","only","or","other","our","ours","ourselves","out","over","own",
+>     "s","same","she","should","so","some","such",
+>     "t","than","that","the","their","theirs","them","themselves","then","there","these","they",
+>     "this","those","through","to","too",
+>     "under","until","up",
+>     "very",
+>     "was","we","were","what","when","where","which","while","who","whom","why","will","with",
+>     "you","your","yours","yourself","yourselves",
+>     # common PDF/boilerplate-ish
+>     "page","pages","copyright","www","http","https","com","org","net",
+> }
+>
+>
+> def _normalize_words(text: str) -> List[str]:
+>     raw = re.findall(r"[A-Za-z][A-Za-z0-9'\-]{1,}", text)
+>     words: List[str] = []
+>     for w in raw:
+>         wl = w.lower().strip("-'\"")
+>         if len(wl) < 3:
+>             continue
+>         if wl in _STOPWORDS:
+>             continue
+>         if wl.isdigit():
+>             continue
+>         letters = sum(ch.isalpha() for ch in wl)
+>         if letters < 2:
+>             continue
+>         words.append(wl)
+>     return words
+>
+>
+> def _extract_topics(text: str) -> List[str]:
+>     words = _normalize_words(text)
+>     if not words:
+>         return []
+>
+>     counts = Counter(words)
+>
+>     scored = []
+>     for w, c in counts.items():
+>         score = c * (1.0 + min(len(w), 12) / 24.0)
+>         scored.append((score, w))
+>
+>     scored.sort(reverse=True)
+>
+>     topics: List[str] = []
+>     used: set[str] = set()
+>     for _, w in scored:
+>         if w in used:
+>             continue
+>         if any(w.startswith(t) or t.startswith(w) for t in used):
+>             continue
+>         used.add(w)
+>         topics.append(w)
+>         if len(topics) >= 10:
+>             break
+>
+>     # return up to 10; caller will ensure 3..10 when possible
+>     return topics
+>
+>
+> def _chunk_count(total_words: int, chunk_size: int = 1000) -> int:
+>     if total_words <= 0:
+>         return 0
+>     return (total_words + chunk_size - 1) // chunk_size
+>
+>
+> @app.post("/extract")
+> async def extract(file: UploadFile = File(...)):
+>     data = await file.read()
+>
+>     try:
+>         reader = PdfReader(io.BytesIO(data))
+>     except Exception as e:
+>         return JSONResponse(status_code=400, content={"detail": f"Invalid PDF: {e}"})
+>
+>     author = "Unknown Author"
+>     title = "Untitled"
+>
+>     try:
+>         md = reader.metadata
+>         if md is not None:
+>             a = getattr(md, "author", None)
+>             t = getattr(md, "title", None)
+>             if not a and hasattr(md, "get"):
+>                 a = md.get("/Author")
+>             if not t and hasattr(md, "get"):
+>                 t = md.get("/Title")
+>             if isinstance(a, str) and a.strip():
+>                 author = a.strip()
+>             if isinstance(t, str) and t.strip():
+>                 title = t.strip()
+>     except Exception:
+>         pass
+>
+>     parts: List[str] = []
+>     for p in reader.pages:
+>         try:
+>             txt = p.extract_text() or ""
+>         except Exception:
+>             txt = ""
+>         if txt:
+>             parts.append(txt)
+>
+>     full_text = "\n".join(parts).strip()
+>
+>     word_list = re.findall(r"\b\w+\b", full_text)
+>     total_words = len(word_list)
+>     total_chunks = _chunk_count(total_words, 1000)
+>
+>     topics = [t for t in _extract_topics(full_text) if isinstance(t, str) and t.strip()]
+>     if full_text:
+>         topics = topics[:10]
+>         if len(topics) < 3:
+>             # if we have text but low signal, still return what we found (non-empty)
+>             pass
+>     else:
+>         topics = []
+>
+>     return {
+>         "author": author,
+>         "title": title,
+>         "topics": topics,
+>         "total_chunks": int(total_chunks),
+>         "filename": file.filename or "",
+>         "total_words": int(total_words),
+>     }
+> PY
+root@4de46265a4e6:/app/workspace# python3 -m py_compile /app/workspace/src/api.py
+root@4de46265a4e6:/app/workspace# python3 -c "import importlib.util; spec=importlib.util.spec_from_file_location('api','/app/workspace/src/api.py'); m=importlib
+.util.module_from_spec(spec); spec.loader.exec_module(m); print('routes:', [getattr(r,'path',None) for r in m.app.router.routes])"
+routes: ['/openapi.json', '/docs', '/docs/oauth2-redirect', '/redoc', '/static', '/extract']
+root@4de46265a4e6:/app/workspace#

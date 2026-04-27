@@ -1,0 +1,185 @@
+New Terminal Output:
+root@d9becfbee008:/app# ls -la
+total 8
+drwxr-xr-x 2 root root 4096 Apr 23 06:49 .
+drwxr-xr-x 1 root root 4096 Apr 26 22:49 ..
+root@d9becfbee008:/app# find /app -maxdepth 4 -type d -print
+/app
+root@d9becfbee008:/app# mkdir -p /app/workspace/src/templates /app/workspace/data/input
+root@d9becfbee008:/app# cat > /app/workspace/src/app.py <<'PY'
+> import os
+> import json
+> import sqlite3
+> import traceback
+> from datetime import datetime, timezone
+>
+> from flask import Flask, Response, jsonify, render_template, send_file
+>
+> import csv
+>
+> app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "templates"))
+>
+> BASE_DIR = "/app/workspace"
+> DATA_DIR = os.path.join(BASE_DIR, "data")
+> INPUT_DIR = os.path.join(DATA_DIR, "input")
+> OUTPUT_JSON = os.path.join(DATA_DIR, "output.json")
+> DB_PATH = os.path.join(DATA_DIR, "etl.db")
+> LOG_PATH = os.path.join(DATA_DIR, "etl.log")
+>
+>
+> def _ts() -> str:
+>     return datetime.now(timezone.utc).isoformat()
+>
+>
+> def _append_log(line: str) -> None:
+>     os.makedirs(DATA_DIR, exist_ok=True)
+>     with open(LOG_PATH, "a", encoding="utf-8") as f:
+>         f.write(f"[{_ts()}] {line}\n")
+>
+>
+> def run_etl() -> dict:
+>     """Read CSVs -> write output.json -> insert into sqlite -> log."""
+>     os.makedirs(INPUT_DIR, exist_ok=True)
+>     os.makedirs(DATA_DIR, exist_ok=True)
+>
+>     records = []
+>     for name in sorted(os.listdir(INPUT_DIR)):
+>         if not name.lower().endswith(".csv"):
+>             continue
+>         path = os.path.join(INPUT_DIR, name)
+>         with open(path, "r", encoding="utf-8", newline="") as f:
+>             reader = csv.DictReader(f)
+>             for row in reader:
+>                 # Preserve original columns; ensure values are strings (or empty string)
+>                 obj = {}
+>                 for k, v in row.items():
+>                     obj[k] = "" if v is None else str(v)
+>                 records.append(obj)
+>
+>     # Write JSON array
+>     with open(OUTPUT_JSON, "w", encoding="utf-8") as out:
+>         json.dump(records, out)
+>
+>     # Insert into DB
+>     conn = sqlite3.connect(DB_PATH)
+>     try:
+>         cur = conn.cursor()
+>         cur.execute("CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY, data TEXT)")
+>         for obj in records:
+>             cur.execute("INSERT INTO records (data) VALUES (?)", (json.dumps(obj),))
+>         conn.commit()
+>     finally:
+>         conn.close()
+>
+>     return {"inserted": len(records)}
+>
+>
+> @app.get("/")
+> def index():
+>     return render_template("index.html")
+>
+>
+> @app.post("/trigger")
+> def trigger():
+>     try:
+>         result = run_etl()
+>         _append_log(f"SUCCESS inserted={result.get('inserted', 0)}")
+>         return jsonify({"status": "ok", **result})
+>     except Exception as e:
+>         _append_log(f"ERROR {type(e).__name__}: {e}")
+>         _append_log(traceback.format_exc().rstrip())
+>         return jsonify({"status": "error", "error": str(e)}), 500
+>
+>
+> @app.get("/logs")
+> def logs():
+>     os.makedirs(DATA_DIR, exist_ok=True)
+>     if not os.path.exists(LOG_PATH):
+>         return Response("", mimetype="text/plain")
+>     with open(LOG_PATH, "r", encoding="utf-8") as f:
+>         return Response(f.read(), mimetype="text/plain")
+>
+>
+> @app.get("/download")
+> def download():
+>     # Serve output.json (even if empty/nonexistent, return 404)
+>     return send_file(OUTPUT_JSON, mimetype="application/json", as_attachment=True, download_name="output.json")
+>
+>
+> if __name__ == "__main__":
+>     # Run on required host/port
+>     app.run(host="0.0.0.0", port=5000)
+> PY
+root@d9becfbee008:/app# cat > /app/workspace/src/templates/index.html <<'HTML'
+> <!doctype html>
+> <html lang="en">
+>   <head>
+>     <meta charset="utf-8" />
+>     <meta name="viewport" content="width=device-width, initial-scale=1" />
+>     <title>ETL Dashboard</title>
+>     <style>
+>       body { font-family: Arial, sans-serif; margin: 24px; }
+>       #triggerBtn { padding: 10px 16px; }
+>       pre { background: #111; color: #eee; padding: 12px; overflow: auto; max-height: 50vh; }
+>       .row { margin: 12px 0; }
+>     </style>
+>   </head>
+>   <body>
+>     <h1>ETL Dashboard</h1>
+>
+>     <div class="row">
+>       <button id="triggerBtn" type="button">Trigger ETL</button>
+>       <a href="/download" style="margin-left: 12px;">Download output.json</a>
+>     </div>
+>
+>     <h2>Logs</h2>
+>     <pre id="logBox"></pre>
+>
+>     <script>
+>       async function loadLogs() {
+>         const res = await fetch('/logs');
+>         const txt = await res.text();
+>         document.getElementById('logBox').textContent = txt;
+>       }
+>
+>       window.addEventListener('DOMContentLoaded', () => {
+>         loadLogs();
+>
+>         const btn = document.getElementById('triggerBtn');
+>         btn.addEventListener('click', async () => {
+>           btn.disabled = true;
+>           try {
+>             const res = await fetch('/trigger', { method: 'POST' });
+>             await res.json().catch(() => null);
+>             await loadLogs();
+>           } finally {
+>             btn.disabled = false;
+>           }
+>         });
+>       });
+>     </script>
+>   </body>
+> </html>
+> HTML
+root@d9becfbee008:/app# python3 -m py_compile /app/workspace/src/app.py
+root@d9becfbee008:/app# ls -la /app/workspace/src /app/workspace/src/templates /app/workspace/data
+/app/workspace/data:
+total 12
+drwxr-xr-x 3 root root 4096 Apr 26 22:49 .
+drwxr-xr-x 4 root root 4096 Apr 26 22:49 ..
+drwxr-xr-x 2 root root 4096 Apr 26 22:49 input
+
+/app/workspace/src:
+total 20
+drwxr-xr-x 4 root root 4096 Apr 26 22:49 .
+drwxr-xr-x 4 root root 4096 Apr 26 22:49 ..
+drwxr-xr-x 2 root root 4096 Apr 26 22:49 __pycache__
+-rw-r--r-- 1 root root 3069 Apr 26 22:49 app.py
+drwxr-xr-x 2 root root 4096 Apr 26 22:49 templates
+
+/app/workspace/src/templates:
+total 12
+drwxr-xr-x 2 root root 4096 Apr 26 22:49 .
+drwxr-xr-x 4 root root 4096 Apr 26 22:49 ..
+-rw-r--r-- 1 root root 1406 Apr 26 22:49 index.html
+root@d9becfbee008:/app#

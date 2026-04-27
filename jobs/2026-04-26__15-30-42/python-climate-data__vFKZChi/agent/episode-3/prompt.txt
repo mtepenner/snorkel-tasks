@@ -1,0 +1,169 @@
+New Terminal Output:
+
+root@cb15951f44b6:/app/workspace# cat > src/analyzer.py <<'PY'
+> #!/usr/bin/env python3
+> """Climate Data Analyzer
+>
+> Reads:
+>   - /app/workspace/data/climate.csv
+>   - /app/workspace/data/metadata.json
+>
+> Writes (post-2020 data only):
+>   - /app/workspace/data/cleaned.json
+>   - /app/workspace/data/trends.json
+>   - /app/workspace/output/climate_graph.gv
+>   - /app/workspace/output/climate_graph.png
+>
+> Rules:
+>   - Region mapping must be dynamic (driven by metadata.json; no hardcoding).
+>   - Any record with year < 2021 is invalid and must be excluded from all outputs,
+>     averages, and graph nodes/edges.
+> """
+>
+> from __future__ import annotations
+>
+> import csv
+> import json
+> import os
+> import subprocess
+> from collections import defaultdict
+> from typing import Any, Dict, List
+>
+>
+> BASE_DIR = "/app/workspace"
+> DATA_DIR = os.path.join(BASE_DIR, "data")
+> OUT_DIR = os.path.join(BASE_DIR, "output")
+>
+> CSV_PATH = os.path.join(DATA_DIR, "climate.csv")
+> METADATA_PATH = os.path.join(DATA_DIR, "metadata.json")
+>
+> CLEANED_PATH = os.path.join(DATA_DIR, "cleaned.json")
+> TRENDS_PATH = os.path.join(DATA_DIR, "trends.json")
+>
+> DOT_PATH = os.path.join(OUT_DIR, "climate_graph.gv")
+> PNG_PATH = os.path.join(OUT_DIR, "climate_graph.png")
+>
+>
+> def load_region_mapping(path: str) -> Dict[str, str]:
+>     with open(path, "r", encoding="utf-8") as f:
+>         data = json.load(f)
+>     return {str(k): str(v) for k, v in data.items()}
+>
+>
+> def read_and_clean_records(csv_path: str, region_map: Dict[str, str]) -> List[Dict[str, Any]]:
+>     cleaned: List[Dict[str, Any]] = []
+>     with open(csv_path, "r", encoding="utf-8", newline="") as f:
+>         reader = csv.DictReader(f)
+>         for row in reader:
+>             region_id = str(row.get("region_id", "")).strip()
+>             year = int(str(row.get("year", "")).strip())
+>
+>             if year < 2021:
+>                 continue
+>
+>             temperature = float(str(row.get("temperature", "")).strip())
+>             region = region_map.get(region_id)
+>             if region is None:
+>                 # If metadata doesn't define this region_id, skip.
+>                 continue
+>
+>             cleaned.append({"region": region, "temperature": temperature, "year": year})
+>     return cleaned
+>
+>
+> def compute_trends(cleaned: List[Dict[str, Any]]) -> Dict[str, float]:
+>     sums: Dict[str, float] = defaultdict(float)
+>     counts: Dict[str, int] = defaultdict(int)
+>     for rec in cleaned:
+>         r = rec["region"]
+>         sums[r] += float(rec["temperature"])
+>         counts[r] += 1
+>     return {r: (sums[r] / counts[r]) for r in sums}
+>
+>
+> def write_json(path: str, obj: Any) -> None:
+>     with open(path, "w", encoding="utf-8") as f:
+>         json.dump(obj, f, ensure_ascii=False, indent=2)
+>         f.write("\n")
+>
+>
+> def _dot_escape(s: str) -> str:
+>     return s.replace("\\", "\\\\").replace('"', '\\"')
+>
+>
+> def write_graph(dot_path: str, png_path: str, trends: Dict[str, float]) -> None:
+>     lines: List[str] = []
+>     lines.append("digraph ClimateTrends {")
+>     lines.append("  rankdir=LR;")
+>     lines.append("  node [style=rounded];")
+>
+>     for region, mean_temp in sorted(trends.items(), key=lambda x: x[0]):
+>         region_node = f'"{_dot_escape(region)}"'
+>         temp_node_id = f"mean:{region}"
+>         temp_node = f'"{_dot_escape(temp_node_id)}"'
+>         lines.append(f"  {region_node} [shape=ellipse];")
+>         lines.append(f"  {temp_node} [shape=box, label=\"Mean {mean_temp:.2f}°C\"]; ")
+>         lines.append(f"  {region_node} -> {temp_node};")
+>
+>     lines.append("}")
+>
+>     os.makedirs(os.path.dirname(dot_path), exist_ok=True)
+>     with open(dot_path, "w", encoding="utf-8") as f:
+>         f.write("\n".join(lines))
+>         f.write("\n")
+>
+>     subprocess.run(["dot", "-Tpng", dot_path, "-o", png_path], check=True)
+>
+>
+> def main() -> None:
+>     os.makedirs(OUT_DIR, exist_ok=True)
+>
+>     region_map = load_region_mapping(METADATA_PATH)
+>     cleaned = read_and_clean_records(CSV_PATH, region_map)
+>     trends = compute_trends(cleaned)
+>
+>     write_json(CLEANED_PATH, cleaned)
+>     write_json(TRENDS_PATH, trends)
+>     write_graph(DOT_PATH, PNG_PATH, trends)
+>
+>
+> if __name__ == "__main__":
+>     main()
+> PY
+root@cb15951f44b6:/app/workspace# chmod +x src/analyzer.py
+root@cb15951f44b6:/app/workspace# python3 src/analyzer.py
+root@cb15951f44b6:/app/workspace# ls -la data/cleaned.json data/trends.json output/climate_graph.gv output/climate_graph.png
+-rw-r--r-- 1 root root   160 Apr 26 22:31 data/cleaned.json
+-rw-r--r-- 1 root root    46 Apr 26 22:31 data/trends.json
+-rw-r--r-- 1 root root   312 Apr 26 22:31 output/climate_graph.gv
+-rw-r--r-- 1 root root 17704 Apr 26 22:31 output/climate_graph.png
+root@cb15951f44b6:/app/workspace# cat data/cleaned.json
+[
+  {
+    "region": "North America",
+    "temperature": 15.0,
+    "year": 2021
+  },
+  {
+    "region": "Europe",
+    "temperature": 22.5,
+    "year": 2021
+  }
+]
+root@cb15951f44b6:/app/workspace# cat data/trends.json
+{
+  "North America": 15.0,
+  "Europe": 22.5
+}
+root@cb15951f44b6:/app/workspace# sed -n '1,200p' output/climate_graph.gv
+digraph ClimateTrends {
+  rankdir=LR;
+  node [style=rounded];
+  "Europe" [shape=ellipse];
+  "mean:Europe" [shape=box, label="Mean 22.50°C"];
+  "Europe" -> "mean:Europe";
+  "North America" [shape=ellipse];
+  "mean:North America" [shape=box, label="Mean 15.00°C"];
+  "North America" -> "mean:North America";
+}
+root@cb15951f44b6:/app/workspace#

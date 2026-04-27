@@ -1,0 +1,41 @@
+New Terminal Output:
+root@d6a8b0842045:/app/workspace# ls -la /app/workspace/src/ 2>/dev/null; pip list 2>/dev/null | grep -iE 'fastapi|uvicorn|pypdf|multipart'
+fastapi           0.115.5
+PyPDF2            3.0.1
+python-multipart  0.0.20
+uvicorn           0.32.1
+root@d6a8b0842045:/app/workspace# mkdir -p /app/workspace/src/static
+root@d6a8b0842045:/app/workspace# pip install fastapi uvicorn PyPDF2 python-multipart 2>&1 | tail -5
+Requirement already satisfied: idna>=2.8 in /usr/local/lib/python3.10/site-packages (from anyio<5,>=3.4.0->starlette<0.42.0,>=0.40.0->fastapi) (3.13)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a v
+irtual environment instead: https://pip.pypa.io/warnings/venv
+
+[notice] A new release of pip is available: 23.0.1 -> 26.1
+[notice] To update, run: pip install --upgrade pip
+root@d6a8b0842045:/app/workspace#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

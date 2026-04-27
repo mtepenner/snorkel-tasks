@@ -1,0 +1,29 @@
+{
+    "id": "e5191204-5064-4eea-9cbe-915c346ef600",
+    "started_at": "2026-04-26T20:17:01.517204",
+    "finished_at": "2026-04-26T20:17:26.578959",
+    "n_total_trials": 1,
+    "stats": {
+        "n_trials": 1,
+        "n_errors": 0,
+        "evals": {
+            "oracle__adhoc": {
+                "n_trials": 1,
+                "n_errors": 0,
+                "metrics": [
+                    {
+                        "mean": 1.0
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "1.0": [
+                            "api-long-metadata__xXzGBZW"
+                        ]
+                    }
+                },
+                "exception_stats": {}
+            }
+        }
+    }
+}

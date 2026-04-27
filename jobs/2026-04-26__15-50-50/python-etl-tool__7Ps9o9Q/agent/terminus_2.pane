@@ -1,0 +1,387 @@
+[?2004hroot@3cec0162b557:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@3cec0162b557:/app# clear
+[?2004l[H[J[3J[?2004hroot@3cec0162b557:/app# find /app/workspace -type f 2>/dev/null; echo '---'; ls /app/workspace/data/input/ 2>/dev/null
+[?2004l---
+[?2004hroot@3cec0162b557:/app# mkdir -p /app/workspace/src/templates /app/workspace/data/input /app/workspace/data
+[?2004l[?2004hroot@3cec0162b557:/app# cat > /app/workspace/src/app.py << 'PYEOF'
+[?2004l[?2004h> import os
+[?2004l[?2004h> import csv
+[?2004l[?2004h> import json
+[?2004l[?2004h> import sqlite3
+[?2004l[?2004h> from datetime import datetime
+[?2004l[?2004h> from flask import Flask, render_template, jsonify, send_file, Response
+[?2004l[?2004h> 
+[?2004l[?2004h> app = Flask(__name__)
+[?2004l):
+    return send_file(OUTPUT_JSON, as_attachment=True)
+
+
+if __name__ == '__main__':
+    os.makedirs(INPUT_DIR, exist_ok=True)
+    app.run(host='0.0.0.0', port=5000)
+PYEOF
+[?2004h> 
+[?2004l[?2004h> DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
+[?2004l[?2004h> INPUT_DIR = os.path.join(DATA_DIR, 'input')
+[?2004l[?2004h> OUTPUT_JSON = os.path.join(DATA_DIR, 'output.json')
+[?2004l[?2004h> DB_PATH = os.path.join(DATA_DIR, 'etl.db')
+[?2004l[?2004h> LOG_PATH = os.path.join(DATA_DIR, 'etl.log')
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> def run_etl():
+[?2004l[?2004h>     """Run the ETL pipeline: read CSVs -> write output.json -> insert into DB -> append to log."""
+[?2004l[?2004h>     try:
+[?2004l[?2004h>         # Read all CSV files from input directory
+[?2004l[?2004h>         all_records = []
+[?2004l[?2004h>         if os.path.isdir(INPUT_DIR):
+[?2004l[?2004h>             for filename in sorted(os.listdir(INPUT_DIR)):
+[?2004l[?2004h>                 if filename.lower().endswith('.csv'):
+[?2004l[?2004h>                     filepath = os.path.join(INPUT_DIR, filename)
+[?2004l[?2004h>                     with open(filepath, 'r', newline='', encoding='utf-8') as f:
+[?2004l[?2004h>                         reader = csv.DictReader(f)
+[?2004l[?2004h>                         for row in reader:
+[?2004l[?2004h>                             # Preserve all original columns, convert all values to strings
+[?2004l[?2004h>                             record = {k: str(v) for k, v in row.items()}
+[?2004l[?2004h>                             all_records.append(record)
+[?2004l[?2004h> 
+[?2004l[?2004h>         # Write output.json
+[?2004l[?2004h>         with open(OUTPUT_JSON, 'w', encoding='utf-8') as f:
+[?2004l[?2004h>             json.dump(all_records, f, indent=2)
+[?2004l[?2004h> 
+[?2004l[?2004h>         # Insert into SQLite DB
+[?2004l[?2004h>         conn = sqlite3.connect(DB_PATH)
+[?2004l[?2004h>         cursor = conn.cursor()
+[?2004l[?2004h>         cursor.execute('CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY, data TEXT)')
+[?2004l[?2004h>         # Clear existing records before inserting
+[?2004l[?2004h>         cursor.execute('DELETE FROM records')
+[?2004l[?2004h>         for record in all_records:
+[?2004l[?2004h>             cursor.execute('INSERT INTO records (data) VALUES (?)', (json.dumps(record),))
+[?2004l[?2004h>         conn.commit()
+[?2004l[?2004h>         conn.close()
+[?2004l[?2004h> 
+[?2004l[?2004h>         # Append success log entry
+[?2004l[?2004h>         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+[?2004l[?2004h>         log_entry = f"[{timestamp}] SUCCESS: ETL pipeline completed. {len(all_records)} records processed.\n"
+[?2004l[?2004h>         with open(LOG_PATH, 'a', encoding='utf-8') as f:
+[?2004l[?2004h>             f.write(log_entry)
+[?2004l[?2004h> 
+[?2004l[?2004h>         return {'status': 'success', 'records': len(all_records)}
+[?2004l[?2004h> 
+[?2004l[?2004h>     except Exception as e:
+[?2004l[?2004h>         # Append error log entry
+[?2004l[?2004h>         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+[?2004l[?2004h>         log_entry = f"[{timestamp}] ERROR: {str(e)}\n"
+[?2004l[?2004h>         with open(LOG_PATH, 'a', encoding='utf-8') as f:
+[?2004l[?2004h>             f.write(log_entry)
+[?2004l[?2004h> 
+[?2004l[?2004h>         return {'status': 'error', 'message': str(e)}
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.route('/')
+[?2004l[?2004h> def index():
+[?2004l[?2004h>     return render_template('index.html')
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.route('/trigger', methods=['POST'])
+[?2004l[?2004h> def trigger():
+[?2004l[?2004h>     result = run_etl()
+[?2004l[?2004h>     return jsonify(result)
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.route('/logs')
+[?2004l[?2004h> def logs():
+[?2004l[?2004h>     if os.path.exists(LOG_PATH):
+[?2004l[?2004h>         with open(LOG_PATH, 'r', encoding='utf-8') as f:
+[?2004l[?2004h>             content = f.read()
+[?2004l[?2004h>         return Response(content, mimetype='text/plain')
+[?2004l[?2004h>     return Response('', mimetype='text/plain')
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.route('/download')
+[?2004l[?2004h> def download():
+[?2004l[?2004h>     return send_file(OUTPUT_JSON, as_attachment=True)
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> if __name__ == '__main__':
+[?2004l[?2004h>     os.makedirs(INPUT_DIR, exist_ok=True)
+[?2004l[?2004h>     app.run(host='0.0.0.0', port=5000)
+[?2004l[?2004h> PYEOF
+[?2004l[?2004hroot@3cec0162b557:/app# cat > /app/workspace/src/templates/index.html << 'HTMLEOF'
+[?2004l[?2004h> <!DOCTYPE html>
+[?2004l[?2004h> <html lang="en">
+[?2004l[?2004h> <head>
+[?2004l[?2004h>     <meta charset="UTF-8">
+[?2004l[?2004h>     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+[?2004l[?2004h>     <title>ETL Dashboard</title>
+[?2004l[?2004h> </head>
+[?2004l[?2004h> <body>
+[?2004l[?2004h>     <h1>ETL Dashboard</h1>
+[?2004l[?2004h> 
+[?2004l[?2004h>     <button id="trigger-btn" onclick="triggerETL()">Run ETL Pipeline</button>
+[?2004l[?2004h> 
+[?2004l[?2004h>     <h2>Logs</h2>
+[?2004l[?2004h>     <pre id="logs"></pre>
+[?2004l[?2004h> 
+[?2004l[?2004h>     <h2>Download</h2>
+[?2004l[?2004h>     <a href="/download">Download output.json</a>
+[?2004l[?2004h> 
+[?2004l[?2004h>     <script>
+[?2004l[?2004h>         function triggerETL() {
+[?2004l[?2004h>             var btn = document.getElementById('trigger-btn');
+[?2004l[?2004h>             btn.disabled = true;
+[?2004l[?2004h>             fetch('/trigger', { method: 'POST' })
+[?2004l[?2004h>                 .then(function(response) { return response.json(); })
+[?2004l[?2004h>                 .then(function(data) {
+[?2004l[?2004h>                     btn.disabled = false;
+[?2004l[?2004h>                     fetchLogs();
+[?2004l[?2004h>                 })
+[?2004l[?2004h>                 .catch(function(err) {
+[?2004l[?2004h>                     btn.disabled = false;
+[?2004l[?2004h>                     fetchLogs();
+[?2004l[?2004h>                 });
+[?2004l[?2004h>         }
+[?2004l[?2004h> 
+[?2004l[?2004h>         function fetchLogs() {
+[?2004l[?2004h>             fetch('/logs')
+[?2004l[?2004h>                 .then(function(response) { return response.text(); })
+[?2004l[?2004h>                 .then(function(text) {
+[?2004l[?2004h>                     document.getElementById('logs').textContent = text;
+[?2004l[?2004h>                 });
+[?2004l[?2004h>         }
+[?2004l[?2004h> 
+[?2004l[?2004h>         window.onload = function() {
+[?2004l[?2004h>             fetchLogs();
+[?2004l[?2004h>         };
+[?2004l[?2004h>     </script>
+[?2004l[?2004h> </body>
+[?2004l[?2004h> </html>
+[?2004l[?2004h> HTMLEOF
+[?2004l[?2004hroot@3cec0162b557:/app# pip install flask 2>&1 | tail -5
+[?2004lRequirement already satisfied: werkzeug>=3.1.0 in /usr/local/lib/python3.13/site-packages (from flask) (3.1.8)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 26.0.1 -> 26.1
+[notice] To update, run: pip install --upgrade pip
+[?2004hroot@3cec0162b557:/app# python3 -c "import ast; ast.parse(open('/app/workspace/src/app.py').read()); print('app.py syntax OK')"
+[?2004lapp.py syntax OK
+[?2004hroot@3cec0162b557:/app# cat /app/workspace/src/app.py
+[?2004limport os
+import csv
+import json
+import sqlite3
+from datetime import datetime
+from flask import Flask, render_template, jsonify, send_file, Response
+
+app = Flask(__name__)
+
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
+INPUT_DIR = os.path.join(DATA_DIR, 'input')
+OUTPUT_JSON = os.path.join(DATA_DIR, 'output.json')
+DB_PATH = os.path.join(DATA_DIR, 'etl.db')
+LOG_PATH = os.path.join(DATA_DIR, 'etl.log')
+
+
+def run_etl():
+    """Run the ETL pipeline: read CSVs -> write output.json -> insert into DB -> append to log."""
+    try:
+        # Read all CSV files from input directory
+        all_records = []
+        if os.path.isdir(INPUT_DIR):
+            for filename in sorted(os.listdir(INPUT_DIR)):
+                if filename.lower().endswith('.csv'):
+                    filepath = os.path.join(INPUT_DIR, filename)
+                    with open(filepath, 'r', newline='', encoding='utf-8') as f:
+                        reader = csv.DictReader(f)
+                        for row in reader:
+                            # Preserve all original columns, convert all values to strings
+                            record = {k: str(v) for k, v in row.items()}
+                            all_records.append(record)
+
+        # Write output.json
+        with open(OUTPUT_JSON, 'w', encoding='utf-8') as f:
+            json.dump(all_records, f, indent=2)
+
+        # Insert into SQLite DB
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY, data TEXT)')
+        # Clear existing records before inserting
+        cursor.execute('DELETE FROM records')
+        for record in all_records:
+            cursor.execute('INSERT INTO records (data) VALUES (?)', (json.dumps(record),))
+        conn.commit()
+        conn.close()
+
+        # Append success log entry
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        log_entry = f"[{timestamp}] SUCCESS: ETL pipeline completed. {len(all_records)} records processed.\n"
+        with open(LOG_PATH, 'a', encoding='utf-8') as f:
+            f.write(log_entry)
+
+        return {'status': 'success', 'records': len(all_records)}
+
+    except Exception as e:
+        # Append error log entry
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        log_entry = f"[{timestamp}] ERROR: {str(e)}\n"
+        with open(LOG_PATH, 'a', encoding='utf-8') as f:
+            f.write(log_entry)
+
+        return {'status': 'error', 'message': str(e)}
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/trigger', methods=['POST'])
+def trigger():
+    result = run_etl()
+    return jsonify(result)
+
+
+@app.route('/logs')
+def logs():
+    if os.path.exists(LOG_PATH):
+        with open(LOG_PATH, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return Response(content, mimetype='text/plain')
+    return Response('', mimetype='text/plain')
+
+
+@app.route('/download')
+def download():
+    return send_file(OUTPUT_JSON, as_attachment=True)
+
+
+if __name__ == '__main__':
+    os.makedirs(INPUT_DIR, exist_ok=True)
+    app.run(host='0.0.0.0', port=5000)
+[?2004hroot@3cec0162b557:/app# cat /app/workspace/src/templates/index.html
+[?2004l<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETL Dashboard</title>
+</head>
+<body>
+    <h1>ETL Dashboard</h1>
+
+    <button id="trigger-btn" onclick="triggerETL()">Run ETL Pipeline</button>
+
+    <h2>Logs</h2>
+    <pre id="logs"></pre>
+
+    <h2>Download</h2>
+    <a href="/download">Download output.json</a>
+
+    <script>
+        function triggerETL() {
+            var btn = document.getElementById('trigger-btn');
+            btn.disabled = true;
+            fetch('/trigger', { method: 'POST' })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    btn.disabled = false;
+                    fetchLogs();
+                })
+                .catch(function(err) {
+                    btn.disabled = false;
+                    fetchLogs();
+                });
+        }
+
+        function fetchLogs() {
+            fetch('/logs')
+                .then(function(response) { return response.text(); })
+                .then(function(text) {
+                    document.getElementById('logs').textContent = text;
+                });
+        }
+
+        window.onload = function() {
+            fetchLogs();
+        };
+    </script>
+</body>
+</html>
+[?2004hroot@3cec0162b557:/app# cd /app/workspace/src && python3 app.py &
+[?2004l[1] 630
+[?2004hroot@3cec0162b557:/app#  * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.0.2:5000
+[33mPress CTRL+C to quit[0m
+curl -s http://localhost:5000/ | head -20
+[?2004lbash: curl: command not found
+[?2004hroot@3cec0162b557:/app# curl -s -X POST http://localhost:5000/trigger
+[?2004lbash: curl: command not found
+[?2004hroot@3cec0162b557:/app# curl -s http://localhost:5000/logs
+[?2004lbash: curl: command not found
+[?2004hroot@3cec0162b557:/app# curl -s http://localhost:5000/download
+[?2004lbash: curl: command not found
+[?2004hroot@3cec0162b557:/app# cat /app/workspace/data/etl.log
+[?2004lcat: /app/workspace/data/etl.log: No such file or directory
+[?2004hroot@3cec0162b557:/app# cat /app/workspace/data/output.json
+[?2004lcat: /app/workspace/data/output.json: No such file or directory
+[?2004hroot@3cec0162b557:/app# sqlite3 /app/workspace/data/etl.db '.schema records'
+[?2004lbash: sqlite3: command not found
+[?2004hroot@3cec0162b557:/app# kill %1 2>/dev/null; wait 2>/dev/null
+[?2004l[?2004hroot@3cec0162b557:/app# cd /app/workspace/src && python3 app.py &
+[?2004l[1] 708
+[?2004hroot@3cec0162b557:/app#  * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.0.2:5000
+[33mPress CTRL+C to quit[0m
+python3 -c "
+[?2004l[?2004h> import urllib.request, json
+[?2004l[?2004h> # Test GET /
+[?2004l[?2004h> resp = urllib.request.urlopen('http://localhost:5000/')
+[?2004l[?2004h> print('GET / status:', resp.status)
+[?2004l[?2004h> html = resp.read().decode()
+[?2004l[?2004h> print('Has trigger-btn:', 'trigger-btn' in html)
+[?2004l[?2004h> print('Has pre#logs:', 'id=\"logs\"' in html)
+[?2004l[?2004h> print('Has /download link:', 'href=\"/download\"' in html)
+[?2004l[?2004h> "
+[?2004l127.0.0.1 - - [26/Apr/2026 22:52:09] "GET / HTTP/1.1" 200 -
+GET / status: 200
+Has trigger-btn: True
+Has pre#logs: True
+Has /download link: True
+[?2004hroot@3cec0162b557:/app# python3 -c "
+[?2004l[?2004h> import urllib.request
+[?2004l[?2004h> req = urllib.request.Request('http://localhost:5000/trigger', data=b'', method='POST')
+[?2004l[?2004h> resp = urllib.request.urlopen(req)
+[?2004l[?2004h> print('POST /trigger status:', resp.status)
+[?2004l[?2004h> print('Response:', resp.read().decode())
+[?2004l[?2004h> "
+[?2004l127.0.0.1 - - [26/Apr/2026 22:52:11] "POST /trigger HTTP/1.1" 200 -
+POST /trigger status: 200
+Response: {"records":0,"status":"success"}
+
+[?2004hroot@3cec0162b557:/app# python3 -c "
+[?2004l[?2004h> import urllib.request
+[?2004l[?2004h> resp = urllib.request.urlopen('http://localhost:5000/logs')
+[?2004l[?2004h> print('GET /logs status:', resp.status)
+[?2004l[?2004h> print(resp.read().decode())
+[?2004l[?2004h> "
+[?2004l127.0.0.1 - - [26/Apr/2026 22:52:13] "GET /logs HTTP/1.1" 200 -
+GET /logs status: 200
+[2026-04-26 22:52:11] SUCCESS: ETL pipeline completed. 0 records processed.
+
+[?2004hroot@3cec0162b557:/app# cat /app/workspace/data/etl.log
+[?2004l[2026-04-26 22:52:11] SUCCESS: ETL pipeline completed. 0 records processed.
+[?2004hroot@3cec0162b557:/app# cat /app/workspace/data/output.json
+[?2004l[][?2004hroot@3cec0162b557:/app# python3 -c "import sqlite3; conn=sqlite3.connect('/app/workspace/data/etl.db'); print(conn.execute('SELECT sql FROM sqlite_master WHERE name=\"records\"').fetchone()[0]); conn.close()"
+[?2004lCREATE TABLE records (id INTEGER PRIMARY KEY, data TEXT)
+[?2004hroot@3cec0162b557:/app# kill %1 2>/dev/null; wait 2>/dev/null
+[?2004l[?2004hroot@3cec0162b557:/app# 

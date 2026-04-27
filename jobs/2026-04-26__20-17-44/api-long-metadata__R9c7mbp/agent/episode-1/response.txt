@@ -1,0 +1,35 @@
+{
+  "analysis": "The project path /app/workspace/src did not exist initially but was created. static/index.html was created successfully. api.py was written but the terminal output during the heredoc shows obvious corruption/stray characters (e.g., \"full_text = ...>\" and \"-w> app.mount(\") indicating the file likely contains invalid lines or artifacts despite importing. Also `ls -la` was mistyped as `ls -লা` causing an error. We must inspect and clean api.py to ensure it contains exactly the intended code, no stray text, and meets contract. Also confirm directory layout (maybe the runner expects /app/workspace/src on PYTHONPATH).",
+  "plan": "Open /app/workspace/src/api.py to verify its exact contents and remove any corrupted lines. Rewrite api.py cleanly if needed. Then verify static mounting works and that only POST /extract exists. Finally do a quick uvicorn startup check (import path) and ensure /static/index.html is present.",
+  "commands": [
+    {
+      "keystrokes": "ls -la\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "ls -la /app/workspace/src /app/workspace/src/static\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "python3 -m py_compile /app/workspace/src/api.py\n",
+      "duration": 1.0
+    },
+    {
+      "keystrokes": "nl -ba /app/workspace/src/api.py | sed -n '1,220p'\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "cat > /app/workspace/src/api.py <<'PY'\nfrom __future__ import annotations\n\nimport io\nimport re\nfrom collections import Counter\nfrom typing import List\n\nfrom fastapi import FastAPI, File, UploadFile\nfrom fastapi.responses import JSONResponse\nfrom fastapi.staticfiles import StaticFiles\nfrom PyPDF2 import PdfReader\n\n\napp = FastAPI()\n\n# Mount manual check page directory\napp.mount(\n    \"/static\",\n    StaticFiles(directory=\"/app/workspace/src/static\", html=False),\n    name=\"static\",\n)\n\n\n_STOPWORDS = {\n    \"a\",\"about\",\"above\",\"after\",\"again\",\"against\",\"all\",\"am\",\"an\",\"and\",\"any\",\"are\",\"as\",\"at\",\n    \"be\",\"because\",\"been\",\"before\",\"being\",\"below\",\"between\",\"both\",\"but\",\"by\",\n    \"can\",\"could\",\n    \"did\",\"do\",\"does\",\"doing\",\"down\",\"during\",\n    \"each\",\n    \"few\",\"for\",\"from\",\"further\",\n    \"had\",\"has\",\"have\",\"having\",\"he\",\"her\",\"here\",\"hers\",\"herself\",\"him\",\"himself\",\"his\",\"how\",\n    \"i\",\"if\",\"in\",\"into\",\"is\",\"it\",\"its\",\"itself\",\n    \"just\",\n    \"me\",\"more\",\"most\",\"my\",\"myself\",\n    \"no\",\"nor\",\"not\",\"now\",\n    \"of\",\"off\",\"on\",\"once\",\"only\",\"or\",\"other\",\"our\",\"ours\",\"ourselves\",\"out\",\"over\",\"own\",\n    \"s\",\"same\",\"she\",\"should\",\"so\",\"some\",\"such\",\n    \"t\",\"than\",\"that\",\"the\",\"their\",\"theirs\",\"them\",\"themselves\",\"then\",\"there\",\"these\",\"they\",\n    \"this\",\"those\",\"through\",\"to\",\"too\",\n    \"under\",\"until\",\"up\",\n    \"very\",\n    \"was\",\"we\",\"were\",\"what\",\"when\",\"where\",\"which\",\"while\",\"who\",\"whom\",\"why\",\"will\",\"with\",\n    \"you\",\"your\",\"yours\",\"yourself\",\"yourselves\",\n    # common PDF/boilerplate-ish\n    \"page\",\"pages\",\"copyright\",\"www\",\"http\",\"https\",\"com\",\"org\",\"net\",\n}\n\n\ndef _normalize_words(text: str) -> List[str]:\n    raw = re.findall(r\"[A-Za-z][A-Za-z0-9'\\-]{1,}\", text)\n    words: List[str] = []\n    for w in raw:\n        wl = w.lower().strip(\"-'\\\"\")\n        if len(wl) < 3:\n            continue\n        if wl in _STOPWORDS:\n            continue\n        if wl.isdigit():\n            continue\n        letters = sum(ch.isalpha() for ch in wl)\n        if letters < 2:\n            continue\n        words.append(wl)\n    return words\n\n\ndef _extract_topics(text: str) -> List[str]:\n    words = _normalize_words(text)\n    if not words:\n        return []\n\n    counts = Counter(words)\n\n    scored = []\n    for w, c in counts.items():\n        score = c * (1.0 + min(len(w), 12) / 24.0)\n        scored.append((score, w))\n\n    scored.sort(reverse=True)\n\n    topics: List[str] = []\n    used: set[str] = set()\n    for _, w in scored:\n        if w in used:\n            continue\n        if any(w.startswith(t) or t.startswith(w) for t in used):\n            continue\n        used.add(w)\n        topics.append(w)\n        if len(topics) >= 10:\n            break\n\n    # return up to 10; caller will ensure 3..10 when possible\n    return topics\n\n\ndef _chunk_count(total_words: int, chunk_size: int = 1000) -> int:\n    if total_words <= 0:\n        return 0\n    return (total_words + chunk_size - 1) // chunk_size\n\n\n@app.post(\"/extract\")\nasync def extract(file: UploadFile = File(...)):\n    data = await file.read()\n\n    try:\n        reader = PdfReader(io.BytesIO(data))\n    except Exception as e:\n        return JSONResponse(status_code=400, content={\"detail\": f\"Invalid PDF: {e}\"})\n\n    author = \"Unknown Author\"\n    title = \"Untitled\"\n\n    try:\n        md = reader.metadata\n        if md is not None:\n            a = getattr(md, \"author\", None)\n            t = getattr(md, \"title\", None)\n            if not a and hasattr(md, \"get\"):\n                a = md.get(\"/Author\")\n            if not t and hasattr(md, \"get\"):\n                t = md.get(\"/Title\")\n            if isinstance(a, str) and a.strip():\n                author = a.strip()\n            if isinstance(t, str) and t.strip():\n                title = t.strip()\n    except Exception:\n        pass\n\n    parts: List[str] = []\n    for p in reader.pages:\n        try:\n            txt = p.extract_text() or \"\"\n        except Exception:\n            txt = \"\"\n        if txt:\n            parts.append(txt)\n\n    full_text = \"\\n\".join(parts).strip()\n\n    word_list = re.findall(r\"\\b\\w+\\b\", full_text)\n    total_words = len(word_list)\n    total_chunks = _chunk_count(total_words, 1000)\n\n    topics = [t for t in _extract_topics(full_text) if isinstance(t, str) and t.strip()]\n    if full_text:\n        topics = topics[:10]\n        if len(topics) < 3:\n            # if we have text but low signal, still return what we found (non-empty)\n            pass\n    else:\n        topics = []\n\n    return {\n        \"author\": author,\n        \"title\": title,\n        \"topics\": topics,\n        \"total_chunks\": int(total_chunks),\n        \"filename\": file.filename or \"\",\n        \"total_words\": int(total_words),\n    }\nPY\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "python3 -m py_compile /app/workspace/src/api.py\n",
+      "duration": 1.0
+    },
+    {
+      "keystrokes": "python3 -c \"import importlib.util; spec=importlib.util.spec_from_file_location('api','/app/workspace/src/api.py'); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m); print('routes:', [getattr(r,'path',None) for r in m.app.router.routes])\"\n",
+      "duration": 1.0
+    }
+  ],
+  "task_complete": false
+}

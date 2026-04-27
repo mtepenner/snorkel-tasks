@@ -1,0 +1,29 @@
+{
+    "id": "7decf132-883a-41f7-abf3-854cdfdddcce",
+    "started_at": "2026-04-26T15:30:16.668278",
+    "finished_at": "2026-04-26T15:30:31.291932",
+    "n_total_trials": 1,
+    "stats": {
+        "n_trials": 1,
+        "n_errors": 0,
+        "evals": {
+            "oracle__adhoc": {
+                "n_trials": 1,
+                "n_errors": 0,
+                "metrics": [
+                    {
+                        "mean": 1.0
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "1.0": [
+                            "python-climate-data__i2Z8RzM"
+                        ]
+                    }
+                },
+                "exception_stats": {}
+            }
+        }
+    }
+}

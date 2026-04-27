@@ -1,0 +1,83 @@
+New Terminal Output:
+
+root@ab385bf0f4c5:/app/workspace# cat > /app/workspace/src/analyzer.py << 'PYEOF'
+> import csv
+> import json
+> import os
+> import graphviz
+>
+> # Paths
+> BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+> CSV_PATH = os.path.join(BASE, "data", "climate.csv")
+> META_PATH = os.path.join(BASE, "data", "metadata.json")
+> CLEANED_PATH = os.path.join(BASE, "data", "cleaned.json")
+> TRENDS_PATH = os.path.join(BASE, "data", "trends.json")
+> OUTPUT_DIR = os.path.join(BASE, "output")
+>
+> # Load metadata (region_id -> region name mapping)
+> with open(META_PATH, "r") as f:
+>     metadata = json.load(f)
+>
+> # Read and filter CSV (exclude anything before 2021)
+> records = []
+> with open(CSV_PATH, "r") as f:
+>     reader = csv.DictReader(f)
+>     for row in reader:
+>         year = int(row["year"])
+>         if year < 2021:
+>             continue
+>         region_id = str(row["region_id"])
+>         region_name = metadata[region_id]
+>         temperature = float(row["temperature"])
+>         records.append({
+>             "region": region_name,
+>             "temperature": temperature,
+>             "year": year
+>         })
+>
+> # Write cleaned.json
+> with open(CLEANED_PATH, "w") as f:
+>     json.dump(records, f, indent=2)
+> print(f"Wrote {CLEANED_PATH} ({len(records)} records)")
+>
+> # Compute average temperatures per region
+> from collections import defaultdict
+> temp_sums = defaultdict(float)
+> temp_counts = defaultdict(int)
+> for rec in records:
+>     temp_sums[rec["region"]] += rec["temperature"]
+>     temp_counts[rec["region"]] += 1
+>
+> trends = {}
+> for region in temp_sums:
+>     trends[region] = temp_sums[region] / temp_counts[region]
+>
+> # Write trends.json
+> with open(TRENDS_PATH, "w") as f:
+>     json.dump(trends, f, indent=2)
+> print(f"Wrote {TRENDS_PATH}")
+>
+> # Generate Graphviz directed graph
+> os.makedirs(OUTPUT_DIR, exist_ok=True)
+> dot = graphviz.Digraph("climate_graph", format="png")
+> dot.attr(rankdir="LR")
+>
+> for region, avg_temp in trends.items():
+>     avg_label = f"{avg_temp:.1f}°C"
+>     dot.node(region, region)
+>     dot.node(avg_label, avg_label)
+>     dot.edge(region, avg_label)
+>
+> # Render to output/climate_graph.png (also saves .gv source)
+> gv_path = os.path.join(OUTPUT_DIR, "climate_graph")
+> dot.render(gv_path, cleanup=False)
+> print(f"Wrote {gv_path}.gv and {gv_path}.png")
+>
+> print("Done!")
+> PYEOF
+root@ab385bf0f4c5:/app/workspace# python3 /app/workspace/src/analyzer.py
+Wrote /app/workspace/data/cleaned.json (2 records)
+Wrote /app/workspace/data/trends.json
+Wrote /app/workspace/output/climate_graph.gv and /app/workspace/output/climate_graph.png
+Done!
+root@ab385bf0f4c5:/app/workspace#

@@ -1,0 +1,17 @@
+[?2004hroot@d6a8b0842045:/app/workspace# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@d6a8b0842045:/app/workspace# clear
+[?2004l[H[J[3J[?2004hroot@d6a8b0842045:/app/workspace# ls -la /app/workspace/src/ 2>/dev/null; pip list 2>/dev/null | grep -iE 'fastapi|uvicorn|pypdf|multipart'
+[?2004lfastapi           0.115.5
+PyPDF2            3.0.1
+python-multipart  0.0.20
+uvicorn           0.32.1
+[?2004hroot@d6a8b0842045:/app/workspace# mkdir -p /app/workspace/src/static
+[?2004l[?2004hroot@d6a8b0842045:/app/workspace# pip install fastapi uvicorn PyPDF2 python-multipart 2>&1 | tail -5
+[?2004lRequirement already satisfied: idna>=2.8 in /usr/local/lib/python3.10/site-packages (from anyio<5,>=3.4.0->starlette<0.42.0,>=0.40.0->fastapi) (3.13)
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+
+[notice] A new release of pip is available: 23.0.1 -> 26.1
+[notice] To update, run: pip install --upgrade pip
+[?2004hroot@d6a8b0842045:/app/workspace# 

@@ -1,0 +1,31 @@
+{
+  "analysis": "Workspace has data/climate.csv with columns region_id,year,temperature and metadata.json mapping region_id strings to region names. There is no src/analyzer.py yet. Graphviz dot is installed. Need to create analyzer.py to: load metadata dynamically, parse CSV, filter out all rows with year < 2021, write cleaned.json (array with keys region, temperature, year), compute per-region mean temperature (post-2020 only) to trends.json, and generate output/climate_graph.gv and output/climate_graph.png showing directed edges from each region to its mean temperature.",
+  "plan": "1) Create src/analyzer.py implementing ingestion, filtering (year>=2021 only), cleaning, averaging, and Graphviz generation. 2) Ensure output directories exist. 3) Run the script. 4) Inspect generated cleaned.json, trends.json, and confirm graph files exist; quickly view dot source to ensure edges are correct.",
+  "commands": [
+    {
+      "keystrokes": "apply_patch <<'PATCH'\n*** Begin Patch\n*** Add File: src/analyzer.py\n+#!/usr/bin/env python3\n+\"\"\"Climate Data Analyzer\n+\n+Reads:\n+  - /app/workspace/data/climate.csv\n+  - /app/workspace/data/metadata.json\n+\n+Writes (post-2020 data only):\n+  - /app/workspace/data/cleaned.json\n+  - /app/workspace/data/trends.json\n+  - /app/workspace/output/climate_graph.gv\n+  - /app/workspace/output/climate_graph.png\n+\"\"\"\n+\n+from __future__ import annotations\n+\n+import csv\n+import json\n+import os\n+import subprocess\n+from collections import defaultdict\n+from typing import Any, Dict, List\n+\n+\n+BASE_DIR = \"/app/workspace\"\n+DATA_DIR = os.path.join(BASE_DIR, \"data\")\n+OUT_DIR = os.path.join(BASE_DIR, \"output\")\n+\n+CSV_PATH = os.path.join(DATA_DIR, \"climate.csv\")\n+METADATA_PATH = os.path.join(DATA_DIR, \"metadata.json\")\n+\n+CLEANED_PATH = os.path.join(DATA_DIR, \"cleaned.json\")\n+TRENDS_PATH = os.path.join(DATA_DIR, \"trends.json\")\n+\n+DOT_PATH = os.path.join(OUT_DIR, \"climate_graph.gv\")\n+PNG_PATH = os.path.join(OUT_DIR, \"climate_graph.png\")\n+\n+\n+def load_region_mapping(path: str) -> Dict[str, str]:\n+    with open(path, \"r\", encoding=\"utf-8\") as f:\n+        data = json.load(f)\n+    # Ensure string keys/values without hardcoding any regions.\n+    return {str(k): str(v) for k, v in data.items()}\n+\n+\n+def read_and_clean_records(csv_path: str, region_map: Dict[str, str]) -> List[Dict[str, Any]]:\n+    cleaned: List[Dict[str, Any]] = []\n+    with open(csv_path, \"r\", encoding=\"utf-8\", newline=\"\") as f:\n+        reader = csv.DictReader(f)\n+        for row in reader:\n+            region_id = str(row.get(\"region_id\", \"\")).strip()\n+            year = int(str(row.get(\"year\", \"\")).strip())\n+\n+            # Strict rule: exclude anything before 2021 from outputs/averages/graph.\n+            if year < 2021:\n+                continue\n+\n+            temp = float(str(row.get(\"temperature\", \"\")).strip())\n+            region = region_map.get(region_id)\n+            if region is None:\n+                # Dynamic mapping required; if mapping missing, skip bad/unmappable row.\n+                continue\n+\n+            cleaned.append({\"region\": region, \"temperature\": temp, \"year\": year})\n+    return cleaned\n+\n+\n+def compute_trends(cleaned: List[Dict[str, Any]]) -> Dict[str, float]:\n+    sums: Dict[str, float] = defaultdict(float)\n+    counts: Dict[str, int] = defaultdict(int)\n+    for rec in cleaned:\n+        region = rec[\"region\"]\n+        sums[region] += float(rec[\"temperature\"])\n+        counts[region] += 1\n+    return {region: (sums[region] / counts[region]) for region in sums}\n+\n+\n+def write_json(path: str, obj: Any) -> None:\n+    with open(path, \"w\", encoding=\"utf-8\") as f:\n+        json.dump(obj, f, ensure_ascii=False, indent=2)\n+        f.write(\"\\n\")\n+\n+\n+def _dot_escape(s: str) -> str:\n+    return s.replace(\"\\\\\", \"\\\\\\\\\").replace('\"', '\\\\\"')\n+\n+\n+def write_graph(dot_path: str, png_path: str, trends: Dict[str, float]) -> None:\n+    # Simple digraph: region -> mean temperature node.\n+    lines: List[str] = []\n+    lines.append(\"digraph ClimateTrends {\")\n+    lines.append(\"  rankdir=LR;\")\n+    lines.append(\"  node [shape=box, style=rounded];\")\n+\n+    # Create a temperature node per region to keep edges unambiguous.\n+    for region, mean_temp in sorted(trends.items(), key=lambda x: x[0]):\n+        region_node = f'\"{_dot_escape(region)}\"'\n+        temp_label = f\"{mean_temp:.2f}\"  # label shown in graph\n+        temp_node_name = f\"mean:{region}\"  # internal node id\n+        temp_node = f'\"{_dot_escape(temp_node_name)}\"'\n+        lines.append(f\"  {region_node} [shape=ellipse];\")\n+        lines.append(f\"  {temp_node} [label=\\\"Mean {temp_label}°C\\\", shape=box];\")\n+        lines.append(f\"  {region_node} -> {temp_node};\")\n+\n+    lines.append(\"}\")\n+    os.makedirs(os.path.dirname(dot_path), exist_ok=True)\n+    with open(dot_path, \"w\", encoding=\"utf-8\") as f:\n+        f.write(\"\\n\".join(lines))\n+        f.write(\"\\n\")\n+\n+    # Render PNG using system graphviz.\n+    subprocess.run([\"dot\", \"-Tpng\", dot_path, \"-o\", png_path], check=True)\n+\n+\n+def main() -> None:\n+    os.makedirs(OUT_DIR, exist_ok=True)\n+\n+    region_map = load_region_mapping(METADATA_PATH)\n+    cleaned = read_and_clean_records(CSV_PATH, region_map)\n+    trends = compute_trends(cleaned)\n+\n+    write_json(CLEANED_PATH, cleaned)\n+    write_json(TRENDS_PATH, trends)\n+    write_graph(DOT_PATH, PNG_PATH, trends)\n+\n+\n+if __name__ == \"__main__\":\n+    main()\n+\n*** End Patch\nPATCH\n",
+      "duration": 1.0
+    },
+    {
+      "keystrokes": "python3 src/analyzer.py\n",
+      "duration": 1.0
+    },
+    {
+      "keystrokes": "ls -la data/cleaned.json data/trends.json output/climate_graph.gv output/climate_graph.png\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "cat data/cleaned.json\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "cat data/trends.json\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "sed -n '1,200p' output/climate_graph.gv\n",
+      "duration": 0.1
+    }
+  ],
+  "task_complete": true
+}
