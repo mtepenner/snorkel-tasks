@@ -1,3 +1,5 @@
-focus on the backend processing first. create the flask app in /app/workspace/src/app.py running on port 5000 (host 0.0.0.0). need POST /trigger to run the actual etl. it has to read the csvs from /app/workspace/data/input/, preserve all columns, dump the json array to /app/workspace/data/output.json, and insert into the db at /app/workspace/data/etl.db. use the schema CREATE TABLE records (id INTEGER PRIMARY KEY, data TEXT). 
+# Backend ETL Processing
 
-set up GET /logs and GET /download routes too. make sure the script appends timestamped success/error states to /app/workspace/data/etl.log every run.
+Need the backend done first. Create the Flask app in `/app/workspace/src/app.py`, bind it to `0.0.0.0:5000`, and make `POST /trigger` run the real ETL. It has to read the CSVs from `/app/workspace/data/input/`, preserve every column, write the JSON array to `/app/workspace/data/output.json`, and insert records into `/app/workspace/data/etl.db` using the exact schema `CREATE TABLE records (id INTEGER PRIMARY KEY, data TEXT)`.
+
+Also wire up `GET /logs` and `GET /download`. Every ETL run has to append a timestamped success or error entry to `/app/workspace/data/etl.log`.

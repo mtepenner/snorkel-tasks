@@ -1,31 +1,37 @@
-# [ETL-31] Build ETL Dashboard
+# [ETL-31] ETL dashboard is still busted
 
-**Description:**
-Hey, I need a Python/Flask ETL web dashboard built out. Our data team is complaining they can't trigger the processing pipeline, monitor logs, or download results from their browser. Need this fixed ASAP.
+Need the Python/Flask dashboard wired up now because the data team cannot trigger ETL, check logs, or pull the output file from the browser. Keep it simple and do not improvise route names, file paths, or schema because downstream checks are already pinned to the contract below.
 
 ## Backend
-**AC:**
-* Create `/app/workspace/src/app.py`; run the Flask app on host `0.0.0.0` at port `5000`.
-* Read all `.csv` files from `/app/workspace/data/input/`.
-  * MUST preserve all original columns.
-  * Aggregate every row into `/app/workspace/data/output.json` as a JSON array (where each element is an object whose keys are the CSV column names and whose values are the string values).
-* Insert each record into `/app/workspace/data/etl.db`. 
-  * Schema MUST be exactly: `CREATE TABLE records (id INTEGER PRIMARY KEY, data TEXT)`
-  * The `data` column has to store the JSON string for each row.
-* Append a timestamped success or error entry to `/app/workspace/data/etl.log` on every ETL run.
 
-**Endpoints:**
-* `GET /` — serve the frontend dashboard (render `templates/index.html`).
-* `POST /trigger` — run the ETL pipeline (read CSVs → write output.json → insert into DB → append to log).
-* `GET /logs` — return the full contents of `/app/workspace/data/etl.log`.
-* `GET /download` — serve `/app/workspace/data/output.json`.
+Need `/app/workspace/src/app.py` created and the Flask app has to run on host `0.0.0.0` and port `5000`.
+
+ETL behavior has to be exact:
+
+* Read every `.csv` file from `/app/workspace/data/input/`.
+* Preserve all original CSV columns.
+* Write `/app/workspace/data/output.json` as one flat JSON array where every element is an object keyed by the CSV column names and every stored value stays a string value from the CSV.
+* Insert every record into `/app/workspace/data/etl.db`.
+  * Schema MUST be exactly: `CREATE TABLE records (id INTEGER PRIMARY KEY, data TEXT)`
+  * The `data` column must store the JSON string for the full row.
+* Append a timestamped success or error line to `/app/workspace/data/etl.log` on every ETL run.
+
+Endpoints also have to be exact:
+
+* `GET /` serves the dashboard via `templates/index.html`.
+* `POST /trigger` runs the ETL pipeline end to end.
+* `GET /logs` returns the full contents of `/app/workspace/data/etl.log`.
+* `GET /download` serves `/app/workspace/data/output.json`.
 
 ## Frontend
-**AC:**
-* Place the UI exactly at `/app/workspace/src/templates/index.html`.
-* Include a button that sends a `POST` request to `/trigger`.
-  * **CRITICAL:** Use JS to disable the button while the request is running (`btn.disabled = true`), and re-enable it when it finishes. Otherwise, users span-click and we get concurrent runs. 
-* Add a `<pre>` block that automatically fetches `/logs` and throws it on the screen **on page load** (use `window.onload` or a `DOMContentLoaded` event listener).
-* Add a standard download link (`<a href="/download">`) for the output JSON file.
 
-Please don't over-engineer this, just make sure it meets the requirements so tests don't break. Thx!
+Put the UI exactly at `/app/workspace/src/templates/index.html`.
+
+Frontend requirements are not optional:
+
+* Include a button that sends a `POST` request to `/trigger`.
+* Disable that button while the request is running with JS and re-enable it when the request finishes. If the button stays active during the run, users spam it and we get overlapping ETL jobs.
+* Add a `<pre>` block that fetches `/logs` automatically on page load using `window.onload` or `DOMContentLoaded` and renders the returned text into the page.
+* Add a normal download link with `<a href="/download">` for the JSON output.
+
+Do not overbuild this. Just hit the contract exactly and keep the browser flow working.
