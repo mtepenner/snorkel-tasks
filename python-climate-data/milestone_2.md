@@ -1,1 +1,3 @@
-Calculate the mean temperature for each region and output it as a flat JSON dictionary. The keys should be the dynamic region names and the values the parsed float averages.
+# Trends Output
+
+Need `/app/workspace/data/trends.json` next. Keep it flat: dynamic region name keys only, float mean temperature values only, and compute it strictly from the post-2020 rows.

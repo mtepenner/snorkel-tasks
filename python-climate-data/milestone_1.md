@@ -1,1 +1,3 @@
-Generate the cleaned data json array based on the dynamic regions from the metadata json. Drop any records before 2021 and strictly cast the types for region, year, and temperature.
+# Cleaned Output
+
+Need `/app/workspace/data/cleaned.json` rebuilt from the CSV plus metadata right now. Map regions dynamically, drop anything before 2021, and make every object use exactly `region` string, `temperature` float, and `year` int.

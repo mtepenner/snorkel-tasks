@@ -71,16 +71,19 @@ def test_milestone_3_anti_cheat_and_edges():
             1. Bare unquoted word:    north_america -> 16_00
             2. Quoted plain label:    "north america" -> "16.00"
             3. Quoted compound ID:    "region:north america" [label="north america"]; "mean:north america" [label="16.00"]
+            4. Bare decimal numeric ID: europe -> 22.5
             """
             # Only extract node labels from non-edge lines to prevent edge attributes
             # (e.g. -> "dst" [label="x"]) from overwriting node attribute declarations.
             node_lines = '\n'.join(line for line in dot.splitlines() if '->' not in line)
 
+            token_pattern = r'"(?:[^"\\]|\\.)*"|[A-Za-z_]\w*|-?\d+(?:\.\d+)?'
+
             # Build a map: node_id_token -> label text
-            # Captures both bare identifiers (\w+) and quoted strings ("...")
+            # Captures quoted strings, bare identifiers, and bare decimal numeric IDs.
             node_labels = {}
             for m in re.finditer(
-                r'("(?:[^"\\]|\\.)*"|\w+)\s*\[[^\]]*label\s*=\s*"([^"]*)"',
+                rf'({token_pattern})\s*\[[^\]]*label\s*=\s*"([^"]*)"',
                 node_lines
             ):
                 node_labels[m.group(1).strip('"')] = m.group(2)
@@ -95,7 +98,7 @@ def test_milestone_3_anti_cheat_and_edges():
             # Build the set of directed edges (src_token -> dst_token)
             edges = set()
             for m in re.finditer(
-                r'("(?:[^"\\]|\\.)*"|\w+)\s*->\s*("(?:[^"\\]|\\.)*"|\w+)',
+                rf'({token_pattern})\s*->\s*({token_pattern})',
                 dot
             ):
                 src = m.group(1).strip('"')
