@@ -85,11 +85,11 @@ E2E_EXIT=0
 npm run test || UNIT_EXIT=$?
 npm run test:e2e || E2E_EXIT=$?
 
+set +e
 mkdir -p /logs/verifier
-if [ "$UNIT_EXIT" -eq 0 ] && [ "$E2E_EXIT" -eq 0 ]; then
+[ "$UNIT_EXIT" -eq 0 ] && [ "$E2E_EXIT" -eq 0 ]
+if [ $? -eq 0 ]; then
   echo 1 > /logs/verifier/reward.txt
 else
   echo 0 > /logs/verifier/reward.txt
 fi
-
-[ "$UNIT_EXIT" -eq 0 ] && [ "$E2E_EXIT" -eq 0 ]
