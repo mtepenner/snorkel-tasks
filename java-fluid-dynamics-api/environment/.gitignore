@@ -1,0 +1,5 @@
+# Ignore compiled Java classes and Python caches
+*.class
+__pycache__/
+*.pyc
+data/*.json
