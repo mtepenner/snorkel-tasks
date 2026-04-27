@@ -18,7 +18,9 @@ Need this quickly. The engineers are doing repeated manual flow checks whenever 
 * Return JSON with `velocity_profile` and `pressure_profile` across the grid.
 * Both arrays MUST contain exactly `grid_points` number of values.
 * Physics check: Pressure MUST drop along the pipe.
+* Physics check: Velocity MUST be higher at the inlet than at the outlet (i.e., `velocity_profile[0] > velocity_profile[-1]`).
 * Sanity check: Different inputs MUST produce genuinely different profiles.
+* Physics check: Higher viscosity MUST result in a lower Reynolds number and lower mean velocity. Higher inlet velocity MUST result in a higher Reynolds number and higher mean velocity.
 
 Get this unblocked so the team can automate their checks. Thx.
 
@@ -36,8 +38,8 @@ Post-processing split (Python):
 - add `/app/workspace/src/postprocess.py`
 - Java service calls script after each simulation
 - script reads raw simulation JSON
-- script computes: `mean_velocity`, `velocity_stddev`, `pressure_drop`, `dominant_regime`
-- script writes analysis to `/app/workspace/data/latest_analysis.json`
+- script computes: `mean_velocity`, `velocity_stddev`, `pressure_drop`, `dominant_regime` (must be exactly one of: `"laminar"`, `"transitional"`, or `"turbulent"`)
+- script writes analysis to `/app/workspace/data/latest_analysis.json` and MUST also print the JSON to `stdout`
 - same analysis must be returned in API response under `analysis`
 
 Extra endpoints:
