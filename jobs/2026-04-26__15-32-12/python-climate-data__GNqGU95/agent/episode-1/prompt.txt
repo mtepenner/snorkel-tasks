@@ -1,0 +1,41 @@
+New Terminal Output:
+root@ab385bf0f4c5:/app/workspace# find /app/workspace -type f | head -30
+/app/workspace/data/metadata.json
+/app/workspace/data/climate.csv
+root@ab385bf0f4c5:/app/workspace# cat /app/workspace/data/climate.csv
+region_id,year,temperature
+1,2020,14.5
+1,2021,15.0
+2,2020,22.1
+2,2021,22.5
+root@ab385bf0f4c5:/app/workspace# cat /app/workspace/data/metadata.json
+{"1": "North America", "2": "Europe"}
+root@ab385bf0f4c5:/app/workspace# ls /app/workspace/src/ 2>/dev/null; ls /app/workspace/output/ 2>/dev/null
+root@ab385bf0f4c5:/app/workspace#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,86 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 7,
+            "passed": 6,
+            "failed": 1,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1777259779.7203057,
+            "stop": 1777259780.741515
+        },
+        "tests": [
+            {
+                "name": "test_outputs.py::test_required_files_exist",
+                "status": "passed",
+                "duration": 0.0003941920000443133,
+                "start": 1777259780.5636854,
+                "stop": 1777259780.5646696,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_api_source_uses_required_frameworks",
+                "status": "passed",
+                "duration": 0.0008921689999397131,
+                "start": 1777259780.5648248,
+                "stop": 1777259780.5662944,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_static_ui_accessible_and_functional",
+                "status": "passed",
+                "duration": 0.004297571999927641,
+                "start": 1777259780.566423,
+                "stop": 1777259780.5710533,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_extract_rejects_get_requests",
+                "status": "passed",
+                "duration": 0.0018433469999763474,
+                "start": 1777259780.571184,
+                "stop": 1777259780.57336,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_extraction_fallback_and_chunking",
+                "status": "passed",
+                "duration": 0.04100043200003256,
+                "start": 1777259780.573691,
+                "stop": 1777259780.615169,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            },
+            {
+                "name": "test_outputs.py::test_chunk_boundary_uses_1000_word_cap",
+                "status": "failed",
+                "raw_status": "call_failed",
+                "duration": 0.0014787329999990106,
+                "start": 1777259780.6169024,
+                "stop": 1777259780.7074032,
+                "retries": 0,
+                "file_path": "test_outputs.py",
+                "trace": "def test_chunk_boundary_uses_1000_word_cap():\n        \"\"\"6. A PDF just over the boundary must require exactly two chunks.\"\"\"\n        pdf_path = \"/tmp/boundary_test.pdf\"\n>       create_boundary_pdf(pdf_path, word_count=1001)\n\n/tests/test_outputs.py:130: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n/tests/test_outputs.py:38: in create_boundary_pdf\n    pdf.multi_cell(0, 8, \" \".join(words[start:start + 40]))\n/root/.cache/uv/archive-v0/8x8NAZCpTjWExZjggoavg/lib/python3.13/site-packages/fpdf/fpdf.py:221: in wrapper\n    return fn(self, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n/root/.cache/uv/archive-v0/8x8NAZCpTjWExZjggoavg/lib/python3.13/site-packages/fpdf/deprecation.py:32: in wrapper\n    return fn(self, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^\n/root/.cache/uv/archive-v0/8x8NAZCpTjWExZjggoavg/lib/python3.13/site-packages/fpdf/fpdf.py:4172: in multi_cell\n    text_line = multi_line_break.get_line()\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n\nself = <fpdf.line_break.MultiLineBreak object at 0x746781332e90>\n\n    def get_line(self):\n        first_char = True  # \"Tw\" ignores the first character in a text object.\n        idx_last_forced_break = self.idx_last_forced_break\n        self.idx_last_forced_break = None\n    \n        if self.fragment_index == len(self.fragments):\n            return None\n    \n        current_font_height = 0\n    \n        max_width = self.get_width(current_font_height)\n        # The full max width will be passed on via TextLine to FPDF._render_styled_text_line().\n        current_line = CurrentLine(\n            max_width=max_width,\n            print_sh=self.print_sh,\n            indent=self.first_line_indent if self._is_first_line else 0,\n        )\n        # For line wrapping we need to use the reduced width.\n        for margin in self.margins:\n            max_width -= margin\n        if self._is_first_line:\n            max_width -= self.first_line_indent\n    \n        if self.skip_leading_spaces:\n            # write_html() with TextColumns uses this, since it can't know in\n            # advance where the lines will be broken.\n            while self.fragment_index < len(self.fragments):\n                if self.character_index >= len(\n                    self.fragments[self.fragment_index].characters\n                ):\n                    self.character_index = 0\n                    self.fragment_index += 1\n                    continue\n                character = self.fragments[self.fragment_index].characters[\n                    self.character_index\n                ]\n                if character == SPACE:\n                    self.character_index += 1\n                else:\n                    break\n    \n        while self.fragment_index < len(self.fragments):\n            current_fragment = self.fragments[self.fragment_index]\n    \n            if current_fragment.font_size > current_font_height:\n                current_font_height = current_fragment.font_size  # document units\n                max_width = self.get_width(current_font_height)\n                current_line.max_width = max_width\n                for margin in self.margins:\n                    max_width -= margin\n                if self._is_first_line:\n                    max_width -= self.first_line_indent\n    \n            if self.character_index >= len(current_fragment.characters):\n                self.character_index = 0\n                self.fragment_index += 1\n                continue\n    \n            character = current_fragment.characters[self.character_index]\n            character_width = current_fragment.get_character_width(\n                character, self.print_sh, initial_cs=not first_char\n            )\n            first_char = False\n    \n            if character in (NEWLINE, FORM_FEED):\n                self.character_index += 1\n                if not current_line.fragments:\n                    current_line.height = current_font_height * self.line_height\n                self._is_first_line = False\n                return current_line.manual_break(\n                    Align.L if self.align == Align.J else self.align,\n                    trailing_nl=character == NEWLINE,\n                    trailing_form_feed=character == FORM_FEED,\n                )\n            if current_line.width + character_width > max_width:\n                self._is_first_line = False\n                if (\n                    character in BREAKING_SPACE_SYMBOLS_STR\n                ):  # must come first, always drop a current space.\n                    self.character_index += 1\n                    return current_line.manual_break(self.align)\n                if self.wrapmode == WrapMode.CHAR:\n                    # If the line ends with one or more spaces, then we want to get\n                    # rid of them so it can be justified correctly.\n                    current_line.trim_trailing_spaces()\n                    return current_line.manual_break(self.align)\n                if current_line.automatic_break_possible():\n                    (\n                        self.fragment_index,\n                        self.character_index,\n                        line,\n                    ) = current_line.automatic_break(self.align)\n                    self.character_index += 1\n                    return line\n                if idx_last_forced_break == self.character_index:\n>                   raise FPDFException(\n                        \"Not enough horizontal space to render a single character\"\n                    )\nE                   fpdf.errors.FPDFException: Not enough horizontal space to render a single character\n\n/root/.cache/uv/archive-v0/8x8NAZCpTjWExZjggoavg/lib/python3.13/site-packages/fpdf/line_break.py:792: FPDFException",
+                "message": "The test failed in the call phase due to an exception"
+            },
+            {
+                "name": "test_outputs.py::test_extraction_positive_metadata",
+                "status": "passed",
+                "duration": 0.030543791000013698,
+                "start": 1777259780.707584,
+                "stop": 1777259780.7386785,
+                "retries": 0,
+                "file_path": "test_outputs.py"
+            }
+        ]
+    }
+}

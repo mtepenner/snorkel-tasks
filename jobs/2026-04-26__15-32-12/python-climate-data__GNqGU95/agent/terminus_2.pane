@@ -1,0 +1,242 @@
+[?2004hroot@ab385bf0f4c5:/app/workspace# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@ab385bf0f4c5:/app/workspace# clear
+[?2004l[H[J[3J[?2004hroot@ab385bf0f4c5:/app/workspace# find /app/workspace -type f | head -30
+[?2004l/app/workspace/data/metadata.json
+/app/workspace/data/climate.csv
+[?2004hroot@ab385bf0f4c5:/app/workspace# cat /app/workspace/data/climate.csv
+[?2004lregion_id,year,temperature
+1,2020,14.5
+1,2021,15.0
+2,2020,22.1
+2,2021,22.5
+[?2004hroot@ab385bf0f4c5:/app/workspace# cat /app/workspace/data/metadata.json
+[?2004l{"1": "North America", "2": "Europe"}
+[?2004hroot@ab385bf0f4c5:/app/workspace# ls /app/workspace/src/ 2>/dev/null; ls /app/workspace/output/ 2>/dev/null
+[?2004l[?2004hroot@ab385bf0f4c5:/app/workspace# mkdir -p /app/workspace/src /app/workspace/output
+[?2004l[?2004hroot@ab385bf0f4c5:/app/workspace# pip install graphviz 2>/dev/null | tail -3
+[?2004lRequirement already satisfied: graphviz in /usr/local/lib/python3.10/site-packages (0.20.1)
+[?2004hroot@ab385bf0f4c5:/app/workspace# which dot 2>/dev/null || apt-get install -y graphviz 2>/dev/null | tail -5
+[?2004l/usr/bin/dot
+[?2004hroot@ab385bf0f4c5:/app/workspace# cat > /app/workspace/src/analyzer.py << 'PYEOF'
+[?2004l[?2004h> import csv
+[?2004l[?2004h> import json
+[?2004l[?2004h> import os
+[?2004l[?2004h> import graphviz
+[?2004l[?2004h> 
+[?2004l[?2004h> # Paths
+[?2004l[?2004h> BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+[?2004l[?2004h> CSV_PATH = os.path.join(BASE, "data", "climate.csv")
+[?2004l[?2004h> META_PATH = os.path.join(BASE, "data", "metadata.json")
+[?2004l[?2004h> CLEANED_PATH = os.path.join(BASE, "data", "cleaned.json")
+[?2004l[?2004h> TRENDS_PATH = os.path.join(BASE, "data", "trends.json")
+[?2004l[?2004h> OUTPUT_DIR = os.path.join(BASE, "output")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Load metadata (region_id -> region name mapping)
+[?2004l[?2004h> with open(META_PATH, "r") as f:
+[?2004l[?2004h>     metadata = json.load(f)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Read and filter CSV (exclude anything before 2021)
+[?2004l[?2004h> records = []
+[?2004l[?2004h> with open(CSV_PATH, "r") as f:
+[?2004l[?2004h>     reader = csv.DictReader(f)
+[?2004l[?2004h>     for row in reader:
+[?2004l[?2004h>         year = int(row["year"])
+[?2004l[?2004h>         if year < 2021:
+[?2004l[?2004h>             continue
+[?2004l[?2004h>         region_id = str(row["region_id"])
+[?2004l[?2004h>         region_name = metadata[region_id]
+[?2004l[?2004h>         temperature = float(row["temperature"])
+[?2004l[?2004h>         records.append({
+[?2004l[?2004h>             "region": region_name,
+[?2004l[?2004h>             "temperature": temperature,
+[?2004l[?2004h>             "year": year
+[?2004l[?2004h>         })
+[?2004l[?2004h> 
+[?2004l[?2004h> # Write cleaned.json
+[?2004l[?2004h> with open(CLEANED_PATH, "w") as f:
+[?2004l[?2004h>     json.dump(records, f, indent=2)
+[?2004l[?2004h> print(f"Wrote {CLEANED_PATH} ({len(records)} records)")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Compute average temperatures per region
+[?2004l[?2004h> from collections import defaultdict
+[?2004l[?2004h> temp_sums = defaultdict(float)
+[?2004l[?2004h> temp_counts = defaultdict(int)
+[?2004l[?2004h> for rec in records:
+[?2004l[?2004h>     temp_sums[rec["region"]] += rec["temperature"]
+[?2004l[?2004h>     temp_counts[rec["region"]] += 1
+[?2004l[?2004h> 
+[?2004l[?2004h> trends = {}
+[?2004l[?2004h> for region in temp_sums:
+[?2004l[?2004h>     trends[region] = temp_sums[region] / temp_counts[region]
+[?2004l[?2004h> 
+[?2004l[?2004h> # Write trends.json
+[?2004l[?2004h> with open(TRENDS_PATH, "w") as f:
+[?2004l[?2004h>     json.dump(trends, f, indent=2)
+[?2004l[?2004h> print(f"Wrote {TRENDS_PATH}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Generate Graphviz directed graph
+[?2004l[?2004h> os.makedirs(OUTPUT_DIR, exist_ok=True)
+[?2004l[?2004h> dot = graphviz.Digraph("climate_graph", format="png")
+[?2004l[?2004h> dot.attr(rankdir="LR")
+[?2004l[?2004h> 
+[?2004l[?2004h> for region, avg_temp in trends.items():
+[?2004l[?2004h>     avg_label = f"{avg_temp:.1f}°C"
+[?2004l[?2004h>     dot.node(region, region)
+[?2004l[?2004h>     dot.node(avg_label, avg_label)
+[?2004l[?2004h>     dot.edge(region, avg_label)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Render to output/climate_graph.png (also saves .gv source)
+[?2004l[?2004h> gv_path = os.path.join(OUTPUT_DIR, "climate_graph")
+[?2004l[?2004h> dot.render(gv_path, cleanup=False)
+[?2004l[?2004h> print(f"Wrote {gv_path}.gv and {gv_path}.png")
+[?2004l[?2004h> 
+[?2004l[?2004h> print("Done!")
+[?2004l[?2004h> PYEOF
+[?2004l[?2004hroot@ab385bf0f4c5:/app/workspace# python3 /app/workspace/src/analyzer.py
+[?2004lWrote /app/workspace/data/cleaned.json (2 records)
+Wrote /app/workspace/data/trends.json
+Wrote /app/workspace/output/climate_graph.gv and /app/workspace/output/climate_graph.png
+Done!
+[?2004hroot@ab385bf0f4c5:/app/workspace# cat /app/workspace/data/cleaned.json
+[?2004l[
+  {
+    "region": "North America",
+    "temperature": 15.0,
+    "year": 2021
+  },
+  {
+    "region": "Europe",
+    "temperature": 22.5,
+    "year": 2021
+  }
+][?2004hroot@ab385bf0f4c5:/app/workspace# cat /app/workspace/data/trends.json
+[?2004l{
+  "North America": 15.0,
+  "Europe": 22.5
+}[?2004hroot@ab385bf0f4c5:/app/workspace# cat /app/workspace/output/climate_graph.gv
+[?2004lcat: /app/workspace/output/climate_graph.gv: No such file or directory
+[?2004hroot@ab385bf0f4c5:/app/workspace# file /app/workspace/output/climate_graph.png
+[?2004lbash: file: command not found
+[?2004hroot@ab385bf0f4c5:/app/workspace# ls -la /app/workspace/output/
+[?2004ltotal 36
+drwxr-xr-x 1 root root  4096 Apr 26 22:33 .
+drwxr-xr-x 1 root root  4096 Apr 26 04:22 ..
+-rw-r--r-- 1 root root   211 Apr 26 22:33 climate_graph
+-rw-r--r-- 1 root root 17461 Apr 26 22:33 climate_graph.png
+[?2004hroot@ab385bf0f4c5:/app/workspace# cat > /app/workspace/src/analyzer.py << 'PYEOF'
+[?2004l[?2004h> import csv
+[?2004l[?2004h> import json
+[?2004l[?2004h> import os
+[?2004l[?2004h> import graphviz
+[?2004l[?2004h> from collections import defaultdict
+[?2004l[?2004h> 
+[?2004l[?2004h> # Paths
+[?2004l[?2004h> BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+[?2004l[?2004h> CSV_PATH = os.path.join(BASE, "data", "climate.csv")
+[?2004l[?2004h> META_PATH = os.path.join(BASE, "data", "metadata.json")
+[?2004l[?2004h> CLEANED_PATH = os.path.join(BASE, "data", "cleaned.json")
+[?2004l[?2004h> TRENDS_PATH = os.path.join(BASE, "data", "trends.json")
+[?2004l[?2004h> OUTPUT_DIR = os.path.join(BASE, "output")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Load metadata (region_id -> region name mapping)
+[?2004l[?2004h> with open(META_PATH, "r") as f:
+[?2004l[?2004h>     metadata = json.load(f)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Read and filter CSV (exclude anything before 2021)
+[?2004l[?2004h> records = []
+[?2004l[?2004h> with open(CSV_PATH, "r") as f:
+[?2004l[?2004h>     reader = csv.DictReader(f)
+[?2004l[?2004h>     for row in reader:
+[?2004l[?2004h>         year = int(row["year"])
+[?2004l[?2004h>         if year < 2021:
+[?2004l[?2004h>             continue
+[?2004l[?2004h>         region_id = str(row["region_id"])
+[?2004l[?2004h>         region_name = metadata[region_id]
+[?2004l[?2004h>         temperature = float(row["temperature"])
+[?2004l[?2004h>         records.append({
+[?2004l[?2004h>             "region": region_name,
+[?2004l[?2004h>             "temperature": temperature,
+[?2004l[?2004h>             "year": year
+[?2004l[?2004h>         })
+[?2004l[?2004h> 
+[?2004l[?2004h> # Write cleaned.json
+[?2004l[?2004h> with open(CLEANED_PATH, "w") as f:
+[?2004l[?2004h>     json.dump(records, f, indent=2)
+[?2004l[?2004h> print(f"Wrote {CLEANED_PATH} ({len(records)} records)")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Compute average temperatures per region
+[?2004l[?2004h> temp_sums = defaultdict(float)
+[?2004l[?2004h> temp_counts = defaultdict(int)
+[?2004l[?2004h> for rec in records:
+[?2004l[?2004h>     temp_sums[rec["region"]] += rec["temperature"]
+[?2004l[?2004h>     temp_counts[rec["region"]] += 1
+[?2004l[?2004h> 
+[?2004l[?2004h> trends = {}
+[?2004l[?2004h> for region in temp_sums:
+[?2004l[?2004h>     trends[region] = temp_sums[region] / temp_counts[region]
+[?2004l[?2004h> 
+[?2004l[?2004h> # Write trends.json
+[?2004l[?2004h> with open(TRENDS_PATH, "w") as f:
+[?2004l[?2004h>     json.dump(trends, f, indent=2)
+[?2004l[?2004h> print(f"Wrote {TRENDS_PATH}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Generate Graphviz directed graph
+[?2004l[?2004h> os.makedirs(OUTPUT_DIR, exist_ok=True)
+[?2004l[?2004h> dot = graphviz.Digraph("climate_graph", format="png")
+[?2004l[?2004h> dot.attr(rankdir="LR")
+[?2004l[?2004h> 
+[?2004l[?2004h> for region, avg_temp in trends.items():
+[?2004l[?2004h>     avg_label = f"{avg_temp:.1f}\u00b0C"
+[?2004l[?2004h>     dot.node(region, region)
+[?2004l[?2004h>     dot.node(avg_label, avg_label)
+[?2004l[?2004h>     dot.edge(region, avg_label)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Save the .gv source file explicitly
+[?2004l[?2004h> gv_path = os.path.join(OUTPUT_DIR, "climate_graph.gv")
+[?2004l[?2004h> dot.save(gv_path)
+[?2004l[?2004h> print(f"Wrote {gv_path}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Render to output/climate_graph.png
+[?2004l[?2004h> png_path = dot.render(filename=os.path.join(OUTPUT_DIR, "climate_graph.gv"), cleanup=False)
+[?2004l[?2004h> print(f"Wrote {png_path}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Rename rendered file from climate_graph.gv.png to climate_graph.png
+[?2004l[?2004h> final_png = os.path.join(OUTPUT_DIR, "climate_graph.png")
+[?2004l[?2004h> if png_path != final_png:
+[?2004l[?2004h>     os.replace(png_path, final_png)
+[?2004l[?2004h> 
+[?2004l[?2004h> print("Done!")
+[?2004l[?2004h> PYEOF
+[?2004l[?2004hroot@ab385bf0f4c5:/app/workspace# python3 /app/workspace/src/analyzer.py
+[?2004lWrote /app/workspace/data/cleaned.json (2 records)
+Wrote /app/workspace/data/trends.json
+Wrote /app/workspace/output/climate_graph.gv
+Wrote /app/workspace/output/climate_graph.gv.png
+Done!
+[?2004hroot@ab385bf0f4c5:/app/workspace# ls -la /app/workspace/output/
+[?2004ltotal 40
+drwxr-xr-x 1 root root  4096 Apr 26 22:33 .
+drwxr-xr-x 1 root root  4096 Apr 26 04:22 ..
+-rw-r--r-- 1 root root   211 Apr 26 22:33 climate_graph
+-rw-r--r-- 1 root root   211 Apr 26 22:33 climate_graph.gv
+-rw-r--r-- 1 root root 17461 Apr 26 22:33 climate_graph.png
+[?2004hroot@ab385bf0f4c5:/app/workspace# cat /app/workspace/output/climate_graph.gv
+[?2004ldigraph climate_graph {
+	rankdir=LR
+	"North America" [label="North America"]
+	"15.0°C" [label="15.0°C"]
+	"North America" -> "15.0°C"
+	Europe [label=Europe]
+	"22.5°C" [label="22.5°C"]
+	Europe -> "22.5°C"
+}
+[?2004hroot@ab385bf0f4c5:/app/workspace# rm /app/workspace/output/climate_graph
+[?2004l[?2004hroot@ab385bf0f4c5:/app/workspace# ls -la /app/workspace/output/
+[?2004ltotal 36
+drwxr-xr-x 1 root root  4096 Apr 26 22:34 .
+drwxr-xr-x 1 root root  4096 Apr 26 04:22 ..
+-rw-r--r-- 1 root root   211 Apr 26 22:33 climate_graph.gv
+-rw-r--r-- 1 root root 17461 Apr 26 22:33 climate_graph.png
+[?2004hroot@ab385bf0f4c5:/app/workspace# 

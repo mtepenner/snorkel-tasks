@@ -1,0 +1,14 @@
+Current terminal state:
+New Terminal Output:
+
+root@ab385bf0f4c5:/app/workspace# rm /app/workspace/output/climate_graph
+root@ab385bf0f4c5:/app/workspace# ls -la /app/workspace/output/
+total 36
+drwxr-xr-x 1 root root  4096 Apr 26 22:34 .
+drwxr-xr-x 1 root root  4096 Apr 26 04:22 ..
+-rw-r--r-- 1 root root   211 Apr 26 22:33 climate_graph.gv
+-rw-r--r-- 1 root root 17461 Apr 26 22:33 climate_graph.png
+root@ab385bf0f4c5:/app/workspace#
+
+
+Are you sure you want to mark the task as complete? This will trigger your solution to be graded and you won't be able to make any further corrections. If so, include "task_complete": true in your JSON response again.

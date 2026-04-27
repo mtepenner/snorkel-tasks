@@ -1,0 +1,29 @@
+{
+    "id": "d2dac312-127f-4681-8599-f5276e3e5cdd",
+    "started_at": "2026-04-26T15:32:12.219839",
+    "finished_at": "2026-04-26T15:34:24.553852",
+    "n_total_trials": 1,
+    "stats": {
+        "n_trials": 1,
+        "n_errors": 0,
+        "evals": {
+            "terminus-2__@anthropic-claude-opus-4-6__adhoc": {
+                "n_trials": 1,
+                "n_errors": 0,
+                "metrics": [
+                    {
+                        "mean": 1.0
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "1.0": [
+                            "python-climate-data__GNqGU95"
+                        ]
+                    }
+                },
+                "exception_stats": {}
+            }
+        }
+    }
+}

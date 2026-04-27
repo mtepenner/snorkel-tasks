@@ -1,0 +1,244 @@
+[?2004hroot@d9becfbee008:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@d9becfbee008:/app# clear
+[?2004l[H[J[3J[?2004hroot@d9becfbee008:/app# ls -la
+[?2004ltotal 8
+drwxr-xr-x 2 root root 4096 Apr 23 06:49 .
+drwxr-xr-x 1 root root 4096 Apr 26 22:49 ..
+[?2004hroot@d9becfbee008:/app# find /app -maxdepth 4 -type d -print
+[?2004l/app
+[?2004hroot@d9becfbee008:/app# mkdir -p /app/workspace/src/templates /app/workspace/data/input
+[?2004l[?2004hroot@d9becfbee008:/app# cat > /app/workspace/src/app.py <<'PY'
+[?2004l[?2004h> import os
+[?2004l[?2004h> import json
+[?2004l[?2004h> import sqlite3
+[?2004l[?2004h> import traceback
+[?2004l[?2004h> from datetime import datetime, timezone
+[?2004l[?2004h> 
+[?2004l[?2004h> from flask import Flask, Response, jsonify, render_template, send_file
+[?2004l[?2004h> 
+[?2004l[?2004h> import csv
+[?2004l[?2004h> 
+[?2004l[?2004h> app = Flask(__name__, template_folder=os.path.join(os.path.dirname(__file__), "templates"))
+[?2004l[?2004h> 
+[?2004l[?2004h> BASE_DIR = "/app/workspace"
+[?2004l[?2004h> DATA_DIR = os.path.join(BASE_DIR, "data")
+[?2004l[?2004h> INPUT_DIR = os.path.join(DATA_DIR, "input")
+[?2004l[?2004h> OUTPUT_JSON = os.path.join(DATA_DIR, "output.json")
+[?2004l[?2004h> DB_PATH = os.path.join(DATA_DIR, "etl.db")
+[?2004l[?2004h> LOG_PATH = os.path.join(DATA_DIR, "etl.log")
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> def _ts() -> str:
+[?2004l[?2004h>     return datetime.now(timezone.utc).isoformat()
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> def _append_log(line: str) -> None:
+[?2004l[?2004h>     os.makedirs(DATA_DIR, exist_ok=True)
+[?2004l[?2004h>     with open(LOG_PATH, "a", encoding="utf-8") as f:
+[?2004l[?2004h>         f.write(f"[{_ts()}] {line}\n")
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> def run_etl() -> dict:
+[?2004l[?2004h>     """Read CSVs -> write output.json -> insert into sqlite -> log."""
+[?2004l[?2004h>     os.makedirs(INPUT_DIR, exist_ok=True)
+[?2004l[?2004h>     os.makedirs(DATA_DIR, exist_ok=True)
+[?2004l[?2004h> 
+[?2004l[?2004h>     records = []
+[?2004l[?2004h>     for name in sorted(os.listdir(INPUT_DIR)):
+[?2004l[?2004h>         if not name.lower().endswith(".csv"):
+[?2004l[?2004h>             continue
+[?2004l[?2004h>         path = os.path.join(INPUT_DIR, name)
+[?2004l[?2004h>         with open(path, "r", encoding="utf-8", newline="") as f:
+[?2004l[?2004h>             reader = csv.DictReader(f)
+[?2004l[?2004h>             for row in reader:
+[?2004l[?2004h>                 # Preserve original columns; ensure values are strings (or empty string)
+[?2004l[?2004h>                 obj = {}
+[?2004l[?2004h>                 for k, v in row.items():
+[?2004l[?2004h>                     obj[k] = "" if v is None else str(v)
+[?2004l[?2004h>                 records.append(obj)
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Write JSON array
+[?2004l[?2004h>     with open(OUTPUT_JSON, "w", encoding="utf-8") as out:
+[?2004l[?2004h>         json.dump(records, out)
+[?2004l[?2004h> 
+[?2004l[?2004h>     # Insert into DB
+[?2004l[?2004h>     conn = sqlite3.connect(DB_PATH)
+[?2004l[?2004h>     try:
+[?2004l[?2004h>         cur = conn.cursor()
+[?2004l[?2004h>         cur.execute("CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY, data TEXT)")
+[?2004l[?2004h>         for obj in records:
+[?2004l[?2004h>             cur.execute("INSERT INTO records (data) VALUES (?)", (json.dumps(obj),))
+[?2004l[?2004h>         conn.commit()
+[?2004l[?2004h>     finally:
+[?2004l[?2004h>         conn.close()
+[?2004l[?2004h> 
+[?2004l[?2004h>     return {"inserted": len(records)}
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.get("/")
+[?2004l[?2004h> def index():
+[?2004l[?2004h>     return render_template("index.html")
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.post("/trigger")
+[?2004l[?2004h> def trigger():
+[?2004l[?2004h>     try:
+[?2004l[?2004h>         result = run_etl()
+[?2004l[?2004h>         _append_log(f"SUCCESS inserted={result.get('inserted', 0)}")
+[?2004l[?2004h>         return jsonify({"status": "ok", **result})
+[?2004l[?2004h>     except Exception as e:
+[?2004l[?2004h>         _append_log(f"ERROR {type(e).__name__}: {e}")
+[?2004l[?2004h>         _append_log(traceback.format_exc().rstrip())
+[?2004l[?2004h>         return jsonify({"status": "error", "error": str(e)}), 500
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.get("/logs")
+[?2004l[?2004h> def logs():
+[?2004l[?2004h>     os.makedirs(DATA_DIR, exist_ok=True)
+[?2004l[?2004h>     if not os.path.exists(LOG_PATH):
+[?2004l[?2004h>         return Response("", mimetype="text/plain")
+[?2004l[?2004h>     with open(LOG_PATH, "r", encoding="utf-8") as f:
+[?2004l[?2004h>         return Response(f.read(), mimetype="text/plain")
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.get("/download")
+[?2004l[?2004h> def download():
+[?2004l[?2004h>     # Serve output.json (even if empty/nonexistent, return 404)
+[?2004l[?2004h>     return send_file(OUTPUT_JSON, mimetype="application/json", as_attachment=True, download_name="output.json")
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> if __name__ == "__main__":
+[?2004l[?2004h>     # Run on required host/port
+[?2004l[?2004h>     app.run(host="0.0.0.0", port=5000)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@d9becfbee008:/app# cat > /app/workspace/src/templates/index.html <<'HTML'
+[?2004l[?2004h> <!doctype html>
+[?2004l[?2004h> <html lang="en">
+[?2004l[?2004h>   <head>
+[?2004l[?2004h>     <meta charset="utf-8" />
+[?2004l[?2004h>     <meta name="viewport" content="width=device-width, initial-scale=1" />
+[?2004l[?2004h>     <title>ETL Dashboard</title>
+[?2004l[?2004h>     <style>
+[?2004l[?2004h>       body { font-family: Arial, sans-serif; margin: 24px; }
+[?2004l[?2004h>       #triggerBtn { padding: 10px 16px; }
+[?2004l[?2004h>       pre { background: #111; color: #eee; padding: 12px; overflow: auto; max-height: 50vh; }
+[?2004l[?2004h>       .row { margin: 12px 0; }
+[?2004l[?2004h>     </style>
+[?2004l[?2004h>   </head>
+[?2004l[?2004h>   <body>
+[?2004l[?2004h>     <h1>ETL Dashboard</h1>
+[?2004l[?2004h> 
+[?2004l[?2004h>     <div class="row">
+[?2004l[?2004h>       <button id="triggerBtn" type="button">Trigger ETL</button>
+[?2004l[?2004h>       <a href="/download" style="margin-left: 12px;">Download output.json</a>
+[?2004l[?2004h>     </div>
+[?2004l[?2004h> 
+[?2004l[?2004h>     <h2>Logs</h2>
+[?2004l[?2004h>     <pre id="logBox"></pre>
+[?2004l[?2004h> 
+[?2004l[?2004h>     <script>
+[?2004l[?2004h>       async function loadLogs() {
+[?2004l[?2004h>         const res = await fetch('/logs');
+[?2004l[?2004h>         const txt = await res.text();
+[?2004l[?2004h>         document.getElementById('logBox').textContent = txt;
+[?2004l[?2004h>       }
+[?2004l[?2004h> 
+[?2004l[?2004h>       window.addEventListener('DOMContentLoaded', () => {
+[?2004l[?2004h>         loadLogs();
+[?2004l[?2004h> 
+[?2004l[?2004h>         const btn = document.getElementById('triggerBtn');
+[?2004l[?2004h>         btn.addEventListener('click', async () => {
+[?2004l[?2004h>           btn.disabled = true;
+[?2004l[?2004h>           try {
+[?2004l[?2004h>             const res = await fetch('/trigger', { method: 'POST' });
+[?2004l[?2004h>             await res.json().catch(() => null);
+[?2004l[?2004h>             await loadLogs();
+[?2004l[?2004h>           } finally {
+[?2004l[?2004h>             btn.disabled = false;
+[?2004l[?2004h>           }
+[?2004l[?2004h>         });
+[?2004l[?2004h>       });
+[?2004l[?2004h>     </script>
+[?2004l[?2004h>   </body>
+[?2004l[?2004h> </html>
+[?2004l[?2004h> HTML
+[?2004l[?2004hroot@d9becfbee008:/app# python3 -m py_compile /app/workspace/src/app.py
+[?2004l[?2004hroot@d9becfbee008:/app# ls -la /app/workspace/src /app/workspace/src/templates /app/workspace/data
+[?2004l/app/workspace/data:
+total 12
+drwxr-xr-x 3 root root 4096 Apr 26 22:49 .
+drwxr-xr-x 4 root root 4096 Apr 26 22:49 ..
+drwxr-xr-x 2 root root 4096 Apr 26 22:49 input
+
+/app/workspace/src:
+total 20
+drwxr-xr-x 4 root root 4096 Apr 26 22:49 .
+drwxr-xr-x 4 root root 4096 Apr 26 22:49 ..
+drwxr-xr-x 2 root root 4096 Apr 26 22:49 __pycache__
+-rw-r--r-- 1 root root 3069 Apr 26 22:49 app.py
+drwxr-xr-x 2 root root 4096 Apr 26 22:49 templates
+
+/app/workspace/src/templates:
+total 12
+drwxr-xr-x 2 root root 4096 Apr 26 22:49 .
+drwxr-xr-x 4 root root 4096 Apr 26 22:49 ..
+-rw-r--r-- 1 root root 1406 Apr 26 22:49 index.html
+[?2004hroot@d9becfbee008:/app# cat > /app/workspace/data/input/sample.csv <<'CSV'
+[?2004l[?2004h> name,age,city
+[?2004l[?2004h> Alice,30,NYC
+[?2004l[?2004h> Bob,25,SF
+[?2004l[?2004h> CSV
+[?2004l[?2004hroot@d9becfbee008:/app# python3 -c "import sys; sys.path.insert(0, '/app/workspace/src'); import app; print(app.run_etl())"
+[?2004l{'inserted': 2}
+[?2004hroot@d9becfbee008:/app# cat /app/workspace/data/output.json
+[?2004l[{"name": "Alice", "age": "30", "city": "NYC"}, {"name": "Bob", "age": "25", "city": "SF"}][?2004hroot@d9becfbee008:/app# python3 - <<'PY'
+[?2004l[?2004h> import sqlite3
+[?2004l[?2004h> conn = sqlite3.connect('/app/workspace/data/etl.db')
+[?2004l[?2004h> cur = conn.cursor()
+[?2004l[?2004h> cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='records'")
+[?2004l[?2004h> print('schema:', cur.fetchone()[0])
+[?2004l[?2004h> cur.execute('SELECT COUNT(*) FROM records')
+[?2004l[?2004h> print('count:', cur.fetchone()[0])
+[?2004l[?2004h> cur.execute('SELECT id, data FROM records ORDER BY id LIMIT 2')
+[?2004l[?2004h> print('sample:', cur.fetchall())
+[?2004l[?2004h> conn.close()
+[?2004l[?2004h> PY
+[?2004lschema: CREATE TABLE records (id INTEGER PRIMARY KEY, data TEXT)
+count: 2
+sample: [(1, '{"name": "Alice", "age": "30", "city": "NYC"}'), (2, '{"name": "Bob", "age": "25", "city": "SF"}')]
+[?2004hroot@d9becfbee008:/app# tail -n 20 /app/workspace/data/etl.log
+[?2004ltail: cannot open '/app/workspace/data/etl.log' for reading: No such file or directory
+[?2004hroot@d9becfbee008:/app# python3 /app/workspace/src/app.py & sleep 1; curl -sS http://127.0.0.1:5000/logs | tail -n 5; curl -sS -I http://127.0.0.1:5000/download | head -n 5; pkill -f "/app/workspace/src/app.py" || true
+[?2004l[1] 655
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.0.2:5000
+[33mPress CTRL+C to quit[0m
+bash: curl: command not found
+bash: curl: command not found
+bash: pkill: command not found
+[?2004hroot@d9becfbee008:/app# perl -0777 -i -pe 's/def run_etl\(\) -> dict:\n    """Read CSVs -> write output\.json -> insert into sqlite -> log\."""\n    os\.makedirs\(INPUT_DIR, exist_ok=True\)\n    os\.makedirs\(DATA_DIR, exist_ok=True\)\n\n    records = \[\]\n    for name in sorted\(os\.listdir\(INPUT_DIR\)\):\n        if not name\.lower\(\)\.endswith\("\\.csv"\):\n            continue\n        path = os\.path\.join\(INPUT_DIR, name\)\n        with open\(path, "r", encoding="utf-8", newline=""\) as f:\n            reader = csv\.DictReader\(f\)\n            for row in reader:\n                # Preserve original columns; ensure values are strings \(or empty string\)\n                obj = \{\}\n                for k, v in row\.items\(\):\n                    obj\[k\] = "" if v is None else str\(v\)\n                records\.append\(obj\)\n\n    # Write JSON array\n    with open\(OUTPUT_JSON, "w", encoding="utf-8"\) as out:\n        json\.dump\(records, out\)\n\n    # Insert into DB\n    conn = sqlite3\.connect\(DB_PATH\)\n    try:\n        cur = conn\.cursor\(\)\n        cur\.execute\("CREATE TABLE IF NOT EXISTS records \(id INTEGER PRIMARY KEY, data TEXT\)"\)\n        for obj in records:\n            cur\.execute\("INSERT INTO records \(data\) VALUES \(\?\)", \(json\.dumps\(obj\),\)\)\n        conn\.commit\(\)\n    finally:\n        conn\.close\(\)\n\n    return \{"inserted": len\(records\)\}\n/def run_etl() -> dict:\n    """Read CSVs -> write output.json -> insert into sqlite -> append to log."""\n    try:\n        os.makedirs(INPUT_DIR, exist_ok=True)\n        os.makedirs(DATA_DIR, exist_ok=True)\n\n        records = []\n        for name in sorted(os.listdir(INPUT_DIR)):\n            if not name.lower().endswith(".csv"):\n                continue\n            path = os.path.join(INPUT_DIR, name)\n            with open(path, "r", encoding="utf-8", newline="") as f:\n                reader = csv.DictReader(f)\n                for row in reader:\n                    # Preserve original columns; ensure values are strings (or empty string)\n                    obj = {}\n                    for k, v in row.items():\n                        obj[k] = "" if v is None else str(v)\n                    records.append(obj)\n\n        # Write JSON array\n        with open(OUTPUT_JSON, "w", encoding="utf-8") as out:\n            json.dump(records, out)\n\n        # Insert into DB\n        conn = sqlite3.connect(DB_PATH)\n        try:\n            cur = conn.cursor()\n            cur.execute("CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY, data TEXT)")\n            for obj in records:\n                cur.execute("INSERT INTO records (data) VALUES (?)", (json.dumps(obj),))\n            conn.commit()\n        finally:\n            conn.close()\n\n        result = {"inserted": len(records)}\n        _append_log(f"SUCCESS inserted={result.get(\"inserted\", 0)}")\n        return result\n    except Exception as e:\n        _append_log(f"ERROR {type(e).__name__}: {e}")\n        _append_log(traceback.format_exc().rstrip())\n        raise\n/sm' /app/workspace/src/app.py
+[?2004l[?2004hroot@d9becfbee008:/app# perl -i -pe 's/\s*result = run_etl\(\)\n\s*_append_log\(f"SUCCESS inserted=\{result\.get\(\x22inserted\x22, 0\)\}"\)\n\s*return jsonify\(\{"status": "ok", \*\*result\}\)/        result = run_etl()\n        return jsonify({"status": "ok", **result})/g; s/\s*_append_log\(f"ERROR .*\n\s*_append_log\(traceback\.format_exc\(\)\.rstrip\(\)\)\n\s*return jsonify\(\{"status": "error", "error": str\(e\)\}\), 500/        return jsonify({"status": "error", "error": str(e)}), 500/g' /app/workspace/src/app.py
+[?2004l[?2004hroot@d9becfbee008:/app# python3 -m py_compile /app/workspace/src/app.py
+[?2004l[?2004hroot@d9becfbee008:/app# rm -f /app/workspace/data/etl.log
+[?2004l[?2004hroot@d9becfbee008:/app# python3 -c "import sys; sys.path.insert(0, '/app/workspace/src'); import app; print(app.run_etl())"
+[?2004l{'inserted': 2}
+[?2004hroot@d9becfbee008:/app# cat /app/workspace/data/etl.log
+[?2004lcat: /app/workspace/data/etl.log: No such file or directory
+[?2004hroot@d9becfbee008:/app# 127.0.0.1 - - [26/Apr/2026 22:50:33] "GET /logs HTTP/1.1" 200 -
+127.0.0.1 - - [26/Apr/2026 22:50:33] "POST /trigger HTTP/1.1" 200 -
+127.0.0.1 - - [26/Apr/2026 22:50:33] "POST /trigger HTTP/1.1" 200 -
+127.0.0.1 - - [26/Apr/2026 22:50:33] "GET /logs HTTP/1.1" 200 -
+127.0.0.1 - - [26/Apr/2026 22:50:33] "GET /download HTTP/1.1" 200 -
+127.0.0.1 - - [26/Apr/2026 22:50:33] "POST /trigger HTTP/1.1" 200 -
+127.0.0.1 - - [26/Apr/2026 22:50:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/Apr/2026 22:50:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/Apr/2026 22:50:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/Apr/2026 22:50:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/Apr/2026 22:50:34] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [26/Apr/2026 22:50:34] "GET / HTTP/1.1" 200 -

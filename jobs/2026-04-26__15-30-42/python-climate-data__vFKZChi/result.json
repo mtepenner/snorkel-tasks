@@ -1,0 +1,107 @@
+{
+    "id": "449ffd52-2226-4287-a287-d8ecb6c58984",
+    "task_name": "python-climate-data",
+    "trial_name": "python-climate-data__vFKZChi",
+    "trial_uri": "file:///mnt/c/Users/mtepe/Scripts/snorkel-ai/tasks/jobs/2026-04-26__15-30-42/python-climate-data__vFKZChi",
+    "task_id": {
+        "path": "/mnt/c/Users/mtepe/Scripts/snorkel-ai/tasks/python-climate-data"
+    },
+    "source": null,
+    "task_checksum": "94b8fac6e1e9965f647b78dfbd26ed2dbacc77b8df00ed73786b304671f68e54",
+    "config": {
+        "task": {
+            "path": "/mnt/c/Users/mtepe/Scripts/snorkel-ai/tasks/python-climate-data",
+            "git_url": null,
+            "git_commit_id": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "python-climate-data__vFKZChi",
+        "trials_dir": "jobs/2026-04-26__15-30-42",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "openai/@openai/gpt-5.2",
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {},
+            "env": {}
+        },
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": false,
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "630ae0e2-ec2e-4a80-af5d-ee6499653729"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "@openai/gpt-5.2",
+            "provider": "openai"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 26535,
+        "n_cache_tokens": 19456,
+        "n_output_tokens": 4229,
+        "cost_usd": 0.07499905,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 5,
+            "api_request_times_msec": [
+                6860.015153884888,
+                20447.83329963684,
+                17943.381786346436,
+                2511.4200115203857,
+                2145.3986167907715
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-04-26T22:30:42.467795Z",
+    "finished_at": "2026-04-26T22:32:03.914459Z",
+    "environment_setup": {
+        "started_at": "2026-04-26T22:30:42.572451Z",
+        "finished_at": "2026-04-26T22:30:46.115701Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-04-26T22:30:46.115725Z",
+        "finished_at": "2026-04-26T22:30:57.608509Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-04-26T22:30:57.608559Z",
+        "finished_at": "2026-04-26T22:31:56.132534Z"
+    },
+    "verifier": {
+        "started_at": "2026-04-26T22:31:56.132611Z",
+        "finished_at": "2026-04-26T22:32:01.657443Z"
+    }
+}

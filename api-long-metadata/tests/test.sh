@@ -1,31 +1,41 @@
 #!/bin/bash
 
-# Install uv dependencies
-apt-get update > /dev/null 2>&1
-apt-get install -y curl > /dev/null 2>&1
+# Bootstrap uv into the container without shelling out to curl.
+python3 -m pip install --no-cache-dir uv==0.7.13 > /dev/null 2>&1
 
-# Bootstrap uv into the container
-curl -LsSf https://astral.sh/uv/0.7.13/install.sh | sh > /dev/null 2>&1
-source $HOME/.local/bin/env
+server_ready() {
+  python3 - <<'PY'
+import sys
+import urllib.request
+
+try:
+    with urllib.request.urlopen("http://localhost:8000/static/index.html", timeout=1) as response:
+        raise SystemExit(0 if response.status == 200 else 1)
+except Exception:
+    raise SystemExit(1)
+PY
+}
 
 if [ "$PWD" = "/" ]; then
   echo "Error: No working directory set."
   exit 1
 fi
 
-# Start the API server (uvicorn is pre-installed in the Docker image)
-cd /app/workspace/src
-python3 -m uvicorn api:app --host 0.0.0.0 --port 8000 > /tmp/uvicorn.log 2>&1 &
-SERVER_PID=$!
-trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
+SERVER_PID=""
+trap 'if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; fi' EXIT
 
-# Poll until the server is accepting connections (max 15 seconds)
-for i in $(seq 1 15); do
-  sleep 1
-  curl -sf http://localhost:8000/static/index.html > /dev/null 2>&1 && break
-done
+if ! server_ready; then
+  cd /app/workspace/src
+  python3 -m uvicorn api:app --host 0.0.0.0 --port 8000 > /tmp/uvicorn.log 2>&1 &
+  SERVER_PID=$!
 
-cd -
+  for i in $(seq 1 15); do
+    sleep 1
+    server_ready && break
+  done
+
+  cd - > /dev/null
+fi
 
 # Run tests using pinned dependencies and the correct harness mount path
 uvx \

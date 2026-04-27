@@ -1,0 +1,172 @@
+Downloading cpython-3.13.5-linux-x86_64-gnu (download) (33.8MiB)
+ Downloading cpython-3.13.5-linux-x86_64-gnu (download)
+Downloading pygments (1.2MiB)
+Downloading fonttools (4.7MiB)
+Downloading pillow (6.8MiB)
+ Downloading pygments
+ Downloading fonttools
+ Downloading pillow
+Installed 15 packages in 15ms
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 7 items
+
+../../tests/test_outputs.py .....F.                                      [100%]
+
+=================================== FAILURES ===================================
+____________________ test_chunk_boundary_uses_1000_word_cap ____________________
+
+    def test_chunk_boundary_uses_1000_word_cap():
+        """6. A PDF just over the boundary must require exactly two chunks."""
+        pdf_path = "/tmp/boundary_test.pdf"
+>       create_boundary_pdf(pdf_path, word_count=1001)
+
+/tests/test_outputs.py:130: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/tests/test_outputs.py:38: in create_boundary_pdf
+    pdf.multi_cell(0, 8, " ".join(words[start:start + 40]))
+/root/.cache/uv/archive-v0/8x8NAZCpTjWExZjggoavg/lib/python3.13/site-packages/fpdf/fpdf.py:221: in wrapper
+    return fn(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.cache/uv/archive-v0/8x8NAZCpTjWExZjggoavg/lib/python3.13/site-packages/fpdf/deprecation.py:32: in wrapper
+    return fn(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.cache/uv/archive-v0/8x8NAZCpTjWExZjggoavg/lib/python3.13/site-packages/fpdf/fpdf.py:4172: in multi_cell
+    text_line = multi_line_break.get_line()
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = <fpdf.line_break.MultiLineBreak object at 0x746781332e90>
+
+    def get_line(self):
+        first_char = True  # "Tw" ignores the first character in a text object.
+        idx_last_forced_break = self.idx_last_forced_break
+        self.idx_last_forced_break = None
+    
+        if self.fragment_index == len(self.fragments):
+            return None
+    
+        current_font_height = 0
+    
+        max_width = self.get_width(current_font_height)
+        # The full max width will be passed on via TextLine to FPDF._render_styled_text_line().
+        current_line = CurrentLine(
+            max_width=max_width,
+            print_sh=self.print_sh,
+            indent=self.first_line_indent if self._is_first_line else 0,
+        )
+        # For line wrapping we need to use the reduced width.
+        for margin in self.margins:
+            max_width -= margin
+        if self._is_first_line:
+            max_width -= self.first_line_indent
+    
+        if self.skip_leading_spaces:
+            # write_html() with TextColumns uses this, since it can't know in
+            # advance where the lines will be broken.
+            while self.fragment_index < len(self.fragments):
+                if self.character_index >= len(
+                    self.fragments[self.fragment_index].characters
+                ):
+                    self.character_index = 0
+                    self.fragment_index += 1
+                    continue
+                character = self.fragments[self.fragment_index].characters[
+                    self.character_index
+                ]
+                if character == SPACE:
+                    self.character_index += 1
+                else:
+                    break
+    
+        while self.fragment_index < len(self.fragments):
+            current_fragment = self.fragments[self.fragment_index]
+    
+            if current_fragment.font_size > current_font_height:
+                current_font_height = current_fragment.font_size  # document units
+                max_width = self.get_width(current_font_height)
+                current_line.max_width = max_width
+                for margin in self.margins:
+                    max_width -= margin
+                if self._is_first_line:
+                    max_width -= self.first_line_indent
+    
+            if self.character_index >= len(current_fragment.characters):
+                self.character_index = 0
+                self.fragment_index += 1
+                continue
+    
+            character = current_fragment.characters[self.character_index]
+            character_width = current_fragment.get_character_width(
+                character, self.print_sh, initial_cs=not first_char
+            )
+            first_char = False
+    
+            if character in (NEWLINE, FORM_FEED):
+                self.character_index += 1
+                if not current_line.fragments:
+                    current_line.height = current_font_height * self.line_height
+                self._is_first_line = False
+                return current_line.manual_break(
+                    Align.L if self.align == Align.J else self.align,
+                    trailing_nl=character == NEWLINE,
+                    trailing_form_feed=character == FORM_FEED,
+                )
+            if current_line.width + character_width > max_width:
+                self._is_first_line = False
+                if (
+                    character in BREAKING_SPACE_SYMBOLS_STR
+                ):  # must come first, always drop a current space.
+                    self.character_index += 1
+                    return current_line.manual_break(self.align)
+                if self.wrapmode == WrapMode.CHAR:
+                    # If the line ends with one or more spaces, then we want to get
+                    # rid of them so it can be justified correctly.
+                    current_line.trim_trailing_spaces()
+                    return current_line.manual_break(self.align)
+                if current_line.automatic_break_possible():
+                    (
+                        self.fragment_index,
+                        self.character_index,
+                        line,
+                    ) = current_line.automatic_break(self.align)
+                    self.character_index += 1
+                    return line
+                if idx_last_forced_break == self.character_index:
+>                   raise FPDFException(
+                        "Not enough horizontal space to render a single character"
+                    )
+E                   fpdf.errors.FPDFException: Not enough horizontal space to render a single character
+
+/root/.cache/uv/archive-v0/8x8NAZCpTjWExZjggoavg/lib/python3.13/site-packages/fpdf/line_break.py:792: FPDFException
+=============================== warnings summary ===============================
+test_outputs.py::test_extraction_fallback_and_chunking
+test_outputs.py::test_extraction_positive_metadata
+  /tests/test_outputs.py:24: DeprecationWarning: Substituting font arial by core font helvetica - This is deprecated since v2.7.8, and will soon be removed
+    pdf.set_font("Arial", size=12)
+
+test_outputs.py: 598 warnings
+  /tests/test_outputs.py:27: DeprecationWarning: The parameter "txt" has been renamed to "text" in 2.7.6
+    pdf.cell(200, 10, txt=line, ln=True, align="L")
+
+test_outputs.py: 598 warnings
+  /tests/test_outputs.py:27: DeprecationWarning: The parameter "ln" is deprecated since v2.5.2. Instead of ln=True use new_x=XPos.LMARGIN, new_y=YPos.NEXT.
+    pdf.cell(200, 10, txt=line, ln=True, align="L")
+
+test_outputs.py::test_chunk_boundary_uses_1000_word_cap
+  /tests/test_outputs.py:35: DeprecationWarning: Substituting font arial by core font helvetica - This is deprecated since v2.7.8, and will soon be removed
+    pdf.set_font("Arial", size=12)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../../tests/test_outputs.py::test_required_files_exist
+PASSED ../../tests/test_outputs.py::test_api_source_uses_required_frameworks
+PASSED ../../tests/test_outputs.py::test_static_ui_accessible_and_functional
+PASSED ../../tests/test_outputs.py::test_extract_rejects_get_requests
+PASSED ../../tests/test_outputs.py::test_extraction_fallback_and_chunking
+PASSED ../../tests/test_outputs.py::test_extraction_positive_metadata
+FAILED ../../tests/test_outputs.py::test_chunk_boundary_uses_1000_word_cap - ...
+================== 1 failed, 6 passed, 1199 warnings in 1.02s ==================

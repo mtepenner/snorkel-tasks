@@ -1,0 +1,55 @@
+New Terminal Output:
+
+root@3cec0162b557:/app# cd /app/workspace/src && python3 app.py &
+[1] 708
+root@3cec0162b557:/app#  * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.0.2:5000
+Press CTRL+C to quit
+python3 -c "
+> import urllib.request, json
+> # Test GET /
+> resp = urllib.request.urlopen('http://localhost:5000/')
+> print('GET / status:', resp.status)
+> html = resp.read().decode()
+> print('Has trigger-btn:', 'trigger-btn' in html)
+> print('Has pre#logs:', 'id=\"logs\"' in html)
+> print('Has /download link:', 'href=\"/download\"' in html)
+> "
+127.0.0.1 - - [26/Apr/2026 22:52:09] "GET / HTTP/1.1" 200 -
+GET / status: 200
+Has trigger-btn: True
+Has pre#logs: True
+Has /download link: True
+root@3cec0162b557:/app# python3 -c "
+> import urllib.request
+> req = urllib.request.Request('http://localhost:5000/trigger', data=b'', method='POST')
+> resp = urllib.request.urlopen(req)
+> print('POST /trigger status:', resp.status)
+> print('Response:', resp.read().decode())
+> "
+127.0.0.1 - - [26/Apr/2026 22:52:11] "POST /trigger HTTP/1.1" 200 -
+POST /trigger status: 200
+Response: {"records":0,"status":"success"}
+
+root@3cec0162b557:/app# python3 -c "
+> import urllib.request
+> resp = urllib.request.urlopen('http://localhost:5000/logs')
+> print('GET /logs status:', resp.status)
+> print(resp.read().decode())
+> "
+127.0.0.1 - - [26/Apr/2026 22:52:13] "GET /logs HTTP/1.1" 200 -
+GET /logs status: 200
+[2026-04-26 22:52:11] SUCCESS: ETL pipeline completed. 0 records processed.
+
+root@3cec0162b557:/app# cat /app/workspace/data/etl.log
+[2026-04-26 22:52:11] SUCCESS: ETL pipeline completed. 0 records processed.
+root@3cec0162b557:/app# cat /app/workspace/data/output.json
+[]root@3cec0162b557:/app# python3 -c "import sqlite3; conn=sqlite3.connect('/app/workspace/data/etl.db'); print(conn.execute('SELECT sql FROM sqlite_master WHER
+E name=\"records\"').fetchone()[0]); conn.close()"
+CREATE TABLE records (id INTEGER PRIMARY KEY, data TEXT)
+root@3cec0162b557:/app# kill %1 2>/dev/null; wait 2>/dev/null
+root@3cec0162b557:/app#

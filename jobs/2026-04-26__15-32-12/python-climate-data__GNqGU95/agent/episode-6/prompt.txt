@@ -1,0 +1,110 @@
+New Terminal Output:
+
+root@ab385bf0f4c5:/app/workspace# cat > /app/workspace/src/analyzer.py << 'PYEOF'
+> import csv
+> import json
+> import os
+> import graphviz
+> from collections import defaultdict
+>
+> # Paths
+> BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+> CSV_PATH = os.path.join(BASE, "data", "climate.csv")
+> META_PATH = os.path.join(BASE, "data", "metadata.json")
+> CLEANED_PATH = os.path.join(BASE, "data", "cleaned.json")
+> TRENDS_PATH = os.path.join(BASE, "data", "trends.json")
+> OUTPUT_DIR = os.path.join(BASE, "output")
+>
+> # Load metadata (region_id -> region name mapping)
+> with open(META_PATH, "r") as f:
+>     metadata = json.load(f)
+>
+> # Read and filter CSV (exclude anything before 2021)
+> records = []
+> with open(CSV_PATH, "r") as f:
+>     reader = csv.DictReader(f)
+>     for row in reader:
+>         year = int(row["year"])
+>         if year < 2021:
+>             continue
+>         region_id = str(row["region_id"])
+>         region_name = metadata[region_id]
+>         temperature = float(row["temperature"])
+>         records.append({
+>             "region": region_name,
+>             "temperature": temperature,
+>             "year": year
+>         })
+>
+> # Write cleaned.json
+> with open(CLEANED_PATH, "w") as f:
+>     json.dump(records, f, indent=2)
+> print(f"Wrote {CLEANED_PATH} ({len(records)} records)")
+>
+> # Compute average temperatures per region
+> temp_sums = defaultdict(float)
+> temp_counts = defaultdict(int)
+> for rec in records:
+>     temp_sums[rec["region"]] += rec["temperature"]
+>     temp_counts[rec["region"]] += 1
+>
+> trends = {}
+> for region in temp_sums:
+>     trends[region] = temp_sums[region] / temp_counts[region]
+>
+> # Write trends.json
+> with open(TRENDS_PATH, "w") as f:
+>     json.dump(trends, f, indent=2)
+> print(f"Wrote {TRENDS_PATH}")
+>
+> # Generate Graphviz directed graph
+> os.makedirs(OUTPUT_DIR, exist_ok=True)
+> dot = graphviz.Digraph("climate_graph", format="png")
+> dot.attr(rankdir="LR")
+>
+> for region, avg_temp in trends.items():
+>     avg_label = f"{avg_temp:.1f}\u00b0C"
+>     dot.node(region, region)
+>     dot.node(avg_label, avg_label)
+>     dot.edge(region, avg_label)
+>
+> # Save the .gv source file explicitly
+> gv_path = os.path.join(OUTPUT_DIR, "climate_graph.gv")
+> dot.save(gv_path)
+> print(f"Wrote {gv_path}")
+>
+> # Render to output/climate_graph.png
+> png_path = dot.render(filename=os.path.join(OUTPUT_DIR, "climate_graph.gv"), cleanup=False)
+> print(f"Wrote {png_path}")
+>
+> # Rename rendered file from climate_graph.gv.png to climate_graph.png
+> final_png = os.path.join(OUTPUT_DIR, "climate_graph.png")
+> if png_path != final_png:
+>     os.replace(png_path, final_png)
+>
+> print("Done!")
+> PYEOF
+root@ab385bf0f4c5:/app/workspace# python3 /app/workspace/src/analyzer.py
+Wrote /app/workspace/data/cleaned.json (2 records)
+Wrote /app/workspace/data/trends.json
+Wrote /app/workspace/output/climate_graph.gv
+Wrote /app/workspace/output/climate_graph.gv.png
+Done!
+root@ab385bf0f4c5:/app/workspace# ls -la /app/workspace/output/
+total 40
+drwxr-xr-x 1 root root  4096 Apr 26 22:33 .
+drwxr-xr-x 1 root root  4096 Apr 26 04:22 ..
+-rw-r--r-- 1 root root   211 Apr 26 22:33 climate_graph
+-rw-r--r-- 1 root root   211 Apr 26 22:33 climate_graph.gv
+-rw-r--r-- 1 root root 17461 Apr 26 22:33 climate_graph.png
+root@ab385bf0f4c5:/app/workspace# cat /app/workspace/output/climate_graph.gv
+digraph climate_graph {
+        rankdir=LR
+        "North America" [label="North America"]
+        "15.0°C" [label="15.0°C"]
+        "North America" -> "15.0°C"
+        Europe [label=Europe]
+        "22.5°C" [label="22.5°C"]
+        Europe -> "22.5°C"
+}
+root@ab385bf0f4c5:/app/workspace#

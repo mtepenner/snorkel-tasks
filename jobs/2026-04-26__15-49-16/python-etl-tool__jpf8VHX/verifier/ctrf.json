@@ -1,0 +1,119 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 11,
+            "passed": 11,
+            "failed": 0,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1777243833.2710547,
+            "stop": 1777243834.2577932
+        },
+        "tests": [
+            {
+                "name": "test_m1.py::TestMilestone1::test_flask_host_port",
+                "status": "passed",
+                "duration": 0.3651592480000545,
+                "start": 1777243833.5196447,
+                "stop": 1777243833.8852441,
+                "retries": 0,
+                "file_path": "test_m1.py"
+            },
+            {
+                "name": "test_m1.py::TestMilestone1::test_trigger_etl_all_columns",
+                "status": "passed",
+                "duration": 0.005417983999905118,
+                "start": 1777243833.8854408,
+                "stop": 1777243833.891183,
+                "retries": 0,
+                "file_path": "test_m1.py"
+            },
+            {
+                "name": "test_m1.py::TestMilestone1::test_db_schema_and_inserts",
+                "status": "passed",
+                "duration": 0.0005115240010127309,
+                "start": 1777243833.891385,
+                "stop": 1777243833.892197,
+                "retries": 0,
+                "file_path": "test_m1.py"
+            },
+            {
+                "name": "test_m1.py::TestMilestone1::test_logs_endpoint",
+                "status": "passed",
+                "duration": 0.0021193440006754827,
+                "start": 1777243833.892347,
+                "stop": 1777243833.8949387,
+                "retries": 0,
+                "file_path": "test_m1.py"
+            },
+            {
+                "name": "test_m1.py::TestMilestone1::test_download_endpoint",
+                "status": "passed",
+                "duration": 0.002152374000615964,
+                "start": 1777243833.8951025,
+                "stop": 1777243833.89765,
+                "retries": 0,
+                "file_path": "test_m1.py"
+            },
+            {
+                "name": "test_m1.py::TestMilestone1::test_etl_log_appended",
+                "status": "passed",
+                "duration": 0.0054896989995540935,
+                "start": 1777243833.8978527,
+                "stop": 1777243833.9037244,
+                "retries": 0,
+                "file_path": "test_m1.py"
+            },
+            {
+                "name": "test_m2.py::TestMilestone2::test_index_served_by_flask",
+                "status": "passed",
+                "duration": 0.3389552660000845,
+                "start": 1777243833.9043593,
+                "stop": 1777243834.2438505,
+                "retries": 0,
+                "file_path": "test_m2.py"
+            },
+            {
+                "name": "test_m2.py::TestMilestone2::test_trigger_button_and_post_method",
+                "status": "passed",
+                "duration": 0.0018585810003060033,
+                "start": 1777243834.244047,
+                "stop": 1777243834.2464917,
+                "retries": 0,
+                "file_path": "test_m2.py"
+            },
+            {
+                "name": "test_m2.py::TestMilestone2::test_button_disable_logic",
+                "status": "passed",
+                "duration": 0.002989278999848466,
+                "start": 1777243834.2466764,
+                "stop": 1777243834.2500327,
+                "retries": 0,
+                "file_path": "test_m2.py"
+            },
+            {
+                "name": "test_m2.py::TestMilestone2::test_logs_fetched_on_page_load",
+                "status": "passed",
+                "duration": 0.002316740999049216,
+                "start": 1777243834.250371,
+                "stop": 1777243834.254953,
+                "retries": 0,
+                "file_path": "test_m2.py"
+            },
+            {
+                "name": "test_m2.py::TestMilestone2::test_download_link",
+                "status": "passed",
+                "duration": 0.0018934380004793638,
+                "start": 1777243834.255134,
+                "stop": 1777243834.2573695,
+                "retries": 0,
+                "file_path": "test_m2.py"
+            }
+        ]
+    }
+}

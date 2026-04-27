@@ -1,0 +1,46 @@
+Downloading cpython-3.13.5-linux-x86_64-gnu (download) (33.8MiB)
+ Downloading cpython-3.13.5-linux-x86_64-gnu (download)
+Downloading pygments (1.2MiB)
+Downloading fonttools (4.7MiB)
+Downloading pillow (6.8MiB)
+ Downloading pygments
+ Downloading fonttools
+ Downloading pillow
+Installed 15 packages in 17ms
+============================= test session starts ==============================
+platform linux -- Python 3.13.5, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+plugins: json-ctrf-0.3.5
+collected 7 items
+
+../../tests/test_outputs.py .......                                      [100%]
+
+=============================== warnings summary ===============================
+test_outputs.py::test_extraction_fallback_and_chunking
+test_outputs.py::test_extraction_positive_metadata
+  /tests/test_outputs.py:24: DeprecationWarning: Substituting font arial by core font helvetica - This is deprecated since v2.7.8, and will soon be removed
+    pdf.set_font("Arial", size=12)
+
+test_outputs.py: 598 warnings
+  /tests/test_outputs.py:27: DeprecationWarning: The parameter "txt" has been renamed to "text" in 2.7.6
+    pdf.cell(200, 10, txt=line, ln=True, align="L")
+
+test_outputs.py: 598 warnings
+  /tests/test_outputs.py:27: DeprecationWarning: The parameter "ln" is deprecated since v2.5.2. Instead of ln=True use new_x=XPos.LMARGIN, new_y=YPos.NEXT.
+    pdf.cell(200, 10, txt=line, ln=True, align="L")
+
+test_outputs.py::test_chunk_boundary_uses_1000_word_cap
+  /tests/test_outputs.py:35: DeprecationWarning: Substituting font arial by core font helvetica - This is deprecated since v2.7.8, and will soon be removed
+    pdf.set_font("Arial", size=12)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED ../../tests/test_outputs.py::test_required_files_exist
+PASSED ../../tests/test_outputs.py::test_api_source_uses_required_frameworks
+PASSED ../../tests/test_outputs.py::test_static_ui_accessible_and_functional
+PASSED ../../tests/test_outputs.py::test_extract_rejects_get_requests
+PASSED ../../tests/test_outputs.py::test_extraction_fallback_and_chunking
+PASSED ../../tests/test_outputs.py::test_chunk_boundary_uses_1000_word_cap
+PASSED ../../tests/test_outputs.py::test_extraction_positive_metadata
+======================= 7 passed, 1199 warnings in 0.94s =======================

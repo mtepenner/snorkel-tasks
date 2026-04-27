@@ -1,0 +1,107 @@
+{
+    "id": "1eb1b553-4ae1-42cb-bb4b-6370b803bdd0",
+    "task_name": "python-etl-tool",
+    "trial_name": "python-etl-tool__7Ps9o9Q",
+    "trial_uri": "file:///mnt/c/Users/mtepe/Scripts/snorkel-ai/tasks/jobs/2026-04-26__15-50-50/python-etl-tool__7Ps9o9Q",
+    "task_id": {
+        "path": "/mnt/c/Users/mtepe/Scripts/snorkel-ai/tasks/python-etl-tool"
+    },
+    "source": null,
+    "task_checksum": "7572a7854806631aa5f8e40faac4f4489a0aeb78cea2f7b24293f5a16a77d326",
+    "config": {
+        "task": {
+            "path": "/mnt/c/Users/mtepe/Scripts/snorkel-ai/tasks/python-etl-tool",
+            "git_url": null,
+            "git_commit_id": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "python-etl-tool__7Ps9o9Q",
+        "trials_dir": "jobs/2026-04-26__15-50-50",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "openai/@anthropic/claude-opus-4-6",
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {},
+            "env": {}
+        },
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": false,
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "b18a8c86-290b-49e9-ac61-f6b94f3054eb"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "@anthropic/claude-opus-4-6",
+            "provider": "openai"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 32770,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 4125,
+        "cost_usd": null,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 5,
+            "api_request_times_msec": [
+                20061.04588508606,
+                8040.982246398926,
+                9172.354221343994,
+                5658.539772033691,
+                8967.270135879517
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-04-26T22:50:50.493953Z",
+    "finished_at": "2026-04-26T22:52:41.438406Z",
+    "environment_setup": {
+        "started_at": "2026-04-26T22:50:50.562376Z",
+        "finished_at": "2026-04-26T22:50:54.140951Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-04-26T22:50:54.140978Z",
+        "finished_at": "2026-04-26T22:51:04.224342Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-04-26T22:51:04.224382Z",
+        "finished_at": "2026-04-26T22:52:31.685970Z"
+    },
+    "verifier": {
+        "started_at": "2026-04-26T22:52:31.686062Z",
+        "finished_at": "2026-04-26T22:52:39.342053Z"
+    }
+}

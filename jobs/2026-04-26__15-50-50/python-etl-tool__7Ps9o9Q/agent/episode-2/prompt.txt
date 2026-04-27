@@ -1,0 +1,172 @@
+New Terminal Output:
+
+root@3cec0162b557:/app# python3 -c "import ast; ast.parse(open('/app/workspace/src/app.py').read()); print('app.py syntax OK')"
+app.py syntax OK
+root@3cec0162b557:/app# cat /app/workspace/src/app.py
+import os
+import csv
+import json
+import sqlite3
+from datetime import datetime
+from flask import Flask, render_template, jsonify, send_file, Response
+
+app = Flask(__name__)
+
+DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data')
+INPUT_DIR = os.path.join(DATA_DIR, 'input')
+OUTPUT_JSON = os.path.join(DATA_DIR, 'output.json')
+DB_PATH = os.path.join(DATA_DIR, 'etl.db')
+LOG_PATH = os.path.join(DATA_DIR, 'etl.log')
+
+
+def run_etl():
+    """Run the ETL pipeline: read CSVs -> write output.json -> insert into DB -> append to log."""
+    try:
+        # Read all CSV files from input directory
+        all_records = []
+        if os.path.isdir(INPUT_DIR):
+            for filename in sorted(os.listdir(INPUT_DIR)):
+                if filename.lower().endswith('.csv'):
+                    filepath = os.path.join(INPUT_DIR, filename)
+                    with open(filepath, 'r', newline='', encoding='utf-8') as f:
+                        reader = csv.DictReader(f)
+                        for row in reader:
+                            # Preserve all original columns, convert all values to strings
+                            record = {k: str(v) for k, v in row.items()}
+                            all_records.append(record)
+
+        # Write output.json
+        with open(OUTPUT_JSON, 'w', encoding='utf-8') as f:
+            json.dump(all_records, f, indent=2)
+
+        # Insert into SQLite DB
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY, data TEXT)')
+        # Clear existing records before inserting
+        cursor.execute('DELETE FROM records')
+        for record in all_records:
+            cursor.execute('INSERT INTO records (data) VALUES (?)', (json.dumps(record),))
+        conn.commit()
+        conn.close()
+
+        # Append success log entry
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        log_entry = f"[{timestamp}] SUCCESS: ETL pipeline completed. {len(all_records)} records processed.\n"
+        with open(LOG_PATH, 'a', encoding='utf-8') as f:
+            f.write(log_entry)
+
+        return {'status': 'success', 'records': len(all_records)}
+
+    except Exception as e:
+        # Append error log entry
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        log_entry = f"[{timestamp}] ERROR: {str(e)}\n"
+        with open(LOG_PATH, 'a', encoding='utf-8') as f:
+            f.write(log_entry)
+
+        return {'status': 'error', 'message': str(e)}
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/trigger', methods=['POST'])
+def trigger():
+    result = run_etl()
+    return jsonify(result)
+
+
+@app.route('/logs')
+def logs():
+    if os.path.exists(LOG_PATH):
+        with open(LOG_PATH, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return Response(content, mimetype='text/plain')
+    return Response('', mimetype='text/plain')
+
+
+@app.route('/download')
+def download():
+    return send_file(OUTPUT_JSON, as_attachment=True)
+
+
+if __name__ == '__main__':
+    os.makedirs(INPUT_DIR, exist_ok=True)
+    app.run(host='0.0.0.0', port=5000)
+root@3cec0162b557:/app# cat /app/workspace/src/templates/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETL Dashboard</title>
+</head>
+<body>
+    <h1>ETL Dashboard</h1>
+
+    <button id="trigger-btn" onclick="triggerETL()">Run ETL Pipeline</button>
+
+    <h2>Logs</h2>
+    <pre id="logs"></pre>
+
+    <h2>Download</h2>
+    <a href="/download">Download output.json</a>
+
+    <script>
+        function triggerETL() {
+            var btn = document.getElementById('trigger-btn');
+            btn.disabled = true;
+            fetch('/trigger', { method: 'POST' })
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    btn.disabled = false;
+                    fetchLogs();
+                })
+                .catch(function(err) {
+                    btn.disabled = false;
+                    fetchLogs();
+                });
+        }
+
+        function fetchLogs() {
+            fetch('/logs')
+                .then(function(response) { return response.text(); })
+                .then(function(text) {
+                    document.getElementById('logs').textContent = text;
+                });
+        }
+
+        window.onload = function() {
+            fetchLogs();
+        };
+    </script>
+</body>
+</html>
+root@3cec0162b557:/app# cd /app/workspace/src && python3 app.py &
+[1] 630
+root@3cec0162b557:/app#  * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.21.0.2:5000
+Press CTRL+C to quit
+curl -s http://localhost:5000/ | head -20
+bash: curl: command not found
+root@3cec0162b557:/app# curl -s -X POST http://localhost:5000/trigger
+bash: curl: command not found
+root@3cec0162b557:/app# curl -s http://localhost:5000/logs
+bash: curl: command not found
+root@3cec0162b557:/app# curl -s http://localhost:5000/download
+bash: curl: command not found
+root@3cec0162b557:/app# cat /app/workspace/data/etl.log
+cat: /app/workspace/data/etl.log: No such file or directory
+root@3cec0162b557:/app# cat /app/workspace/data/output.json
+cat: /app/workspace/data/output.json: No such file or directory
+root@3cec0162b557:/app# sqlite3 /app/workspace/data/etl.db '.schema records'
+bash: sqlite3: command not found
+root@3cec0162b557:/app# kill %1 2>/dev/null; wait 2>/dev/null
+root@3cec0162b557:/app#

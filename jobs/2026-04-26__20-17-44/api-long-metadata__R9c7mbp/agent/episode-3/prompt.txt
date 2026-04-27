@@ -1,0 +1,184 @@
+Current terminal state:
+New Terminal Output:
+
+root@4de46265a4e6:/app/workspace# cat > /app/workspace/src/api.py <<'PY'
+> from __future__ import annotations
+>
+ > import io
+> import re
+> from collections import Counter
+> from typing import List
+>
+> from fastapi import FastAPI, File, UploadFile
+> from fastapi.responses import JSONResponse
+> from fastapi.staticfiles import StaticFiles
+> from PyPDF2 import PdfReader
+>
+>
+> # Disable auto docs/openapi endpoints; requirement is POST /extract only (+ static mount).
+> app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+
+  >
+ > # Mount manual check page directory
+> app.mount(
+ len(topics>     "/static",
+>     StaticFiles(directory="/app/workspace/src/static", html=False),
+>     name="static",
+> )
+>
+>
+ings).
+    > _STOPWORDS = {
+>     "a","about","above","after","again","against","all","am","an","and","any","are","as","at",
+>     "be","because","been","before","being","below","between","both","but","by",
+>     "can","could",
+>     "did","do","does","doing","down","during",
+>     "each",
+>     "few","for","from","further",
+>     "had","has","have","having","he","her","here","hers","herself","him","himself","his","how",
+>     "i","if","in","into","is","it","its","itself",
+>     "just",
+>     "me","more","most","my","myself",
+>     "no","nor","not","now",
+>     "of","off","on","once","only","or","other","our","ours","ourselves","out","over","own",
+>     "s","same","she","should","so","some","such",
+>     "t","than","that","the","their","theirs","them","themselves","then","there","these","they",
+>     "this","those","through","to","too",
+>     "under","until","up",
+>     "very",
+>     "was","we","were","what","when","where","which","while","who","whom","why","will","with",
+>     "you","your","yours","yourself","yourselves",
+>     # common PDF/boilerplate-ish
+>     "page","pages","copyright","www","http","https","com","org","net",
+> }
+>
+>
+> def _normalize_words(text: str) -> List[str]:
+>     # Keep words with letters/numbers and internal apostrophes/hyphens; drop punctuation.
+>     raw = re.findall(r"[A-Za-z][A-Za-z0-9'\-]{1,}", text)
+>     words: List[str] = []
+>     for w in raw:
+>         wl = w.lower().strip("-'\"")
+>         if len(wl) < 3:
+>             continue
+>         if wl in _STOPWORDS:
+>             continue
+>         if wl.isdigit():
+>             continue
+>         letters = sum(ch.isalpha() for ch in wl)
+>         if letters < 2:
+>             continue
+>         words.append(wl)
+>     return words
+>
+>
+> def _extract_topics(text: str) -> List[str]:
+>     words = _normalize_words(text)
+>     if not words:
+>         return []
+>
+>     counts = Counter(words)
+>
+>     # Prefer informative terms: longer words get a slight boost.
+>     scored = []
+>     for w, c in counts.items():
+>         score = c * (1.0 + min(len(w), 12) / 24.0)
+>         scored.append((score, w))
+>
+>     scored.sort(reverse=True)
+>
+>     topics: List[str] = []
+>     used: set[str] = set()
+>     for _, w in scored:
+>         if w in used:
+>             continue
+>         # avoid near-duplicates by prefix
+>         if any(w.startswith(t) or t.startswith(w) for t in used):
+>             continue
+>         used.add(w)
+>         topics.append(w)
+>         if len(topics) >= 10:
+>             break
+>
+>     return topics
+>
+>
+> def _chunk_count(total_words: int, chunk_size: int = 1000) -> int:
+>     if total_words <= 0:
+>         return 0
+>     return (total_words + chunk_size - 1) // chunk_size
+>
+>
+> @app.post("/extract")
+> async def extract(file: UploadFile = File(...)):
+>     data = await file.read()
+>
+>     try:
+>         reader = PdfReader(io.BytesIO(data))
+>     except Exception as e:
+>         return JSONResponse(status_code=400, content={"detail": f"Invalid PDF: {e}"})
+>
+>     # Metadata
+>     author = "Unknown Author"
+>     title = "Untitled"
+>     try:
+>         md = reader.metadata
+>         if md is not None:
+>             a = getattr(md, "author", None)
+>             t = getattr(md, "title", None)
+>             if not a and hasattr(md, "get"):
+>                 a = md.get("/Author")
+>             if not t and hasattr(md, "get"):
+>                 t = md.get("/Title")
+>             if isinstance(a, str) and a.strip():
+>                 author = a.strip()
+>             if isinstance(t, str) and t.strip():
+>                 title = t.strip()
+>     except Exception:
+>         pass
+>
+>     # Extract text
+>     parts: List[str] = []
+>     for p in reader.pages:
+>         try:
+>             txt = p.extract_text() or ""
+>         except Exception:
+>             txt = ""
+>         if txt:
+>             parts.append(txt)
+>
+>     full_text = "\n".join(parts).strip()
+>
+>     # Words / chunks
+>     word_list = re.findall(r"\b\w+\b", full_text)
+>     total_words = len(word_list)
+>     total_chunks = _chunk_count(total_words, 1000)
+>
+>     topics = [t for t in _extract_topics(full_text) if isinstance(t, str) and t.strip()]
+>     if full_text:
+>         topics = topics[:10]
+>         if len(topics) < 3:
+>             # If text exists but signal is low, return what we have (still non-empty strings).
+>             pass
+>     else:
+>         topics = []
+>
+>     return {
+>         "author": author,
+>         "title": title,
+>         "topics": topics,
+>         "total_chunks": int(total_chunks),
+>         "filename": file.filename or "",
+>         "total_words": int(total_words),
+>     }
+> PY
+root@4de46265a4e6:/app/workspace# python3 -m py_compile /app/workspace/src/api.py
+root@4de46265a4e6:/app/workspace# python3 -c "import importlib.util; spec=importlib.util.spec_from_file_location('api','/app/workspace/src/api.py'); m=importlib
+.util.module_from_spec(spec); spec.loader.exec_module(m); print([getattr(r,'path',None) for r in m.app.router.routes])"
+['/static', '/extract']
+root@4de46265a4e6:/app/workspace# ls -la /app/workspace/src/static/index.html
+-rw-r--r-- 1 root root 2082 Apr 27 03:18 /app/workspace/src/static/index.html
+root@4de46265a4e6:/app/workspace#
+
+
+Are you sure you want to mark the task as complete? This will trigger your solution to be graded and you won't be able to make any further corrections. If so, include "task_complete": true in your JSON response again.
