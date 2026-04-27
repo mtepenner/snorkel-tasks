@@ -67,7 +67,16 @@ def assert_close(left, right, tolerance=1e-6):
     assert math.isclose(left, right, rel_tol=tolerance, abs_tol=tolerance), f"{left} != {right}"
 
 
+def assert_analysis_close(actual, expected):
+    """Helper to safely compare analysis dictionaries with floating-point tolerance."""
+    assert_close(actual["mean_velocity"], expected["mean_velocity"])
+    assert_close(actual["velocity_stddev"], expected["velocity_stddev"])
+    assert_close(actual["pressure_drop"], expected["pressure_drop"])
+    assert actual["dominant_regime"] == expected["dominant_regime"]
+
+
 def test_health_and_required_files():
+    """Verify that the health endpoint returns status ok and both required source files exist."""
     response = requests.get(f"{BASE_URL}/health", timeout=3)
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
@@ -76,6 +85,7 @@ def test_health_and_required_files():
 
 
 def test_simulation_response_and_saved_files():
+    """Verify /simulate returns all required keys, correct array lengths, decreasing pressure and velocity profiles, and that both persistence files are written with matching content."""
     payload = {"viscosity": 0.12, "inlet_velocity": 2.4, "grid_points": 6, "steps": 4}
     data = run_simulation(payload)
 
@@ -106,10 +116,11 @@ def test_simulation_response_and_saved_files():
     saved_analysis = json.loads(ANALYSIS_FILE.read_text())
     assert saved_simulation["grid_points"] == payload["grid_points"]
     assert saved_simulation["velocity_profile"] == data["velocity_profile"]
-    assert saved_analysis == data["analysis"]
+    assert_analysis_close(saved_analysis, data["analysis"])
 
 
 def test_python_postprocess_matches_api_analysis_and_latest_report():
+    """Verify that running the postprocess.py script directly matches the analysis from the API, and that /latest-report serves it correctly."""
     payload = {"viscosity": 0.18, "inlet_velocity": 3.1, "grid_points": 7, "steps": 5}
     data = run_simulation(payload)
 
@@ -121,14 +132,15 @@ def test_python_postprocess_matches_api_analysis_and_latest_report():
     )
     helper_analysis = json.loads(helper.stdout.strip())
 
-    assert helper_analysis == data["analysis"]
+    assert_analysis_close(helper_analysis, data["analysis"])
 
     report_response = requests.get(f"{BASE_URL}/latest-report", timeout=3)
     assert report_response.status_code == 200
-    assert report_response.json() == helper_analysis
+    assert_analysis_close(report_response.json(), helper_analysis)
 
 
 def test_analysis_fields_are_consistent_with_profiles():
+    """Verify that the computed analysis fields (mean, stddev, pressure drop, regime) mathematically match the generated simulation profiles."""
     payload = {"viscosity": 0.08, "inlet_velocity": 2.8, "grid_points": 8, "steps": 6}
     data = run_simulation(payload)
 
@@ -143,9 +155,18 @@ def test_analysis_fields_are_consistent_with_profiles():
 
 
 def test_inputs_change_the_simulation():
+    """Verify that changing input parameters genuinely modifies the physics output, checking the inverse relationships between viscosity/inlet_velocity and Reynolds number."""
+    # Viscosity sensitivity
     low_viscosity = run_simulation({"viscosity": 0.05, "inlet_velocity": 3.0, "grid_points": 6, "steps": 4})
     high_viscosity = run_simulation({"viscosity": 0.25, "inlet_velocity": 3.0, "grid_points": 6, "steps": 4})
 
     assert low_viscosity["reynolds_number"] > high_viscosity["reynolds_number"]
     assert low_viscosity["analysis"]["mean_velocity"] > high_viscosity["analysis"]["mean_velocity"]
-    assert low_viscosity["analysis"]["pressure_drop"] != high_viscosity["analysis"]["pressure_drop"]
+    assert not math.isclose(low_viscosity["analysis"]["pressure_drop"], high_viscosity["analysis"]["pressure_drop"], rel_tol=1e-6, abs_tol=1e-6)
+
+    # Inlet velocity sensitivity
+    slow_velocity = run_simulation({"viscosity": 0.1, "inlet_velocity": 1.0, "grid_points": 6, "steps": 4})
+    fast_velocity = run_simulation({"viscosity": 0.1, "inlet_velocity": 5.0, "grid_points": 6, "steps": 4})
+
+    assert fast_velocity["reynolds_number"] > slow_velocity["reynolds_number"]
+    assert fast_velocity["analysis"]["mean_velocity"] > slow_velocity["analysis"]["mean_velocity"]
