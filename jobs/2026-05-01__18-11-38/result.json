@@ -1,0 +1,30 @@
+{
+    "id": "2e627657-c6c3-4801-9558-93eb6817adb6",
+    "started_at": "2026-05-01T18:11:38.793963",
+    "finished_at": "2026-05-01T18:12:54.864531",
+    "n_total_trials": 1,
+    "stats": {
+        "n_trials": 1,
+        "n_errors": 0,
+        "evals": {
+            "oracle__adhoc": {
+                "n_trials": 1,
+                "n_errors": 0,
+                "metrics": [
+                    {
+                        "mean": 1.0
+                    }
+                ],
+                "pass_at_k": {},
+                "reward_stats": {
+                    "reward": {
+                        "1.0": [
+                            "react-journal-analyzer-harbor-20__kcX3oNd"
+                        ]
+                    }
+                },
+                "exception_stats": {}
+            }
+        }
+    }
+}

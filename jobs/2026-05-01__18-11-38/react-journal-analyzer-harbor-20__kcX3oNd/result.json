@@ -1,0 +1,99 @@
+{
+    "id": "fe0cc27c-b2e0-4eb7-b5e8-45ea1f4d4756",
+    "task_name": "react-journal-analyzer-harbor-20260501-181127",
+    "trial_name": "react-journal-analyzer-harbor-20__kcX3oNd",
+    "trial_uri": "file:///C:/Users/mtepe/Scripts/snorkel-ai/tasks/jobs/2026-05-01__18-11-38/react-journal-analyzer-harbor-20__kcX3oNd",
+    "task_id": {
+        "path": "C:\\Users\\mtepe\\AppData\\Local\\Temp\\react-journal-analyzer-harbor-20260501-181127"
+    },
+    "source": null,
+    "task_checksum": "b7810c6dbff86ded6e06cb8acb8198150c7d2b46a110e8a1e0e60354fa1e2117",
+    "config": {
+        "task": {
+            "path": "C:\\Users\\mtepe\\AppData\\Local\\Temp\\react-journal-analyzer-harbor-20260501-181127",
+            "git_url": null,
+            "git_commit_id": null,
+            "name": null,
+            "ref": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "react-journal-analyzer-harbor-20__kcX3oNd",
+        "trials_dir": "c:\\Users\\mtepe\\Scripts\\snorkel-ai\\tasks\\jobs\\2026-05-01__18-11-38",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "oracle",
+            "import_path": null,
+            "model_name": null,
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {},
+            "env": {}
+        },
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": false,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "env": {},
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "2e627657-c6c3-4801-9558-93eb6817adb6"
+    },
+    "agent_info": {
+        "name": "oracle",
+        "version": "1.0.0",
+        "model_info": null
+    },
+    "agent_result": {
+        "n_input_tokens": null,
+        "n_cache_tokens": null,
+        "n_output_tokens": null,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-02T01:11:41.318742Z",
+    "finished_at": "2026-05-02T01:12:54.855119Z",
+    "environment_setup": {
+        "started_at": "2026-05-02T01:11:41.437865Z",
+        "finished_at": "2026-05-02T01:11:45.795080Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-02T01:11:45.795118Z",
+        "finished_at": "2026-05-02T01:11:45.795175Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-02T01:11:45.795269Z",
+        "finished_at": "2026-05-02T01:11:46.843377Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-02T01:11:46.843522Z",
+        "finished_at": "2026-05-02T01:12:52.231961Z"
+    }
+}

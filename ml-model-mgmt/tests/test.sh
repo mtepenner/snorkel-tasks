@@ -8,11 +8,11 @@ ensure_uv() {
 
   if command -v curl >/dev/null 2>&1; then
     export UV_UNMANAGED_INSTALL="/usr/local/bin"
-    curl -LsSf https://astral.sh/uv/install.sh | sh
+    curl -LsSf https://astral.sh/uv/0.7.13/install.sh | sh
     hash -r
   elif command -v wget >/dev/null 2>&1; then
     export UV_UNMANAGED_INSTALL="/usr/local/bin"
-    wget -qO- https://astral.sh/uv/install.sh | sh
+    wget -qO- https://astral.sh/uv/0.7.13/install.sh | sh
     hash -r
   else
     python3 -m pip install --no-cache-dir uv
