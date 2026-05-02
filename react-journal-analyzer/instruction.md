@@ -1,33 +1,9 @@
-# [UI-505] React Client-Side Journal Analyzer
+<!-- markdownlint-disable-file MD041 -->
 
-**Context:**
-Need a quick tool for the researchers to analyze journals. Keeping it entirely client-side is fine.
+Build the app in `/app/index.html`. A single client-side HTML file is enough. It is fine to load React, ReactDOM, Babel, and a client-side PDF parser such as pdf.js from CDNs instead of setting up a full build pipeline. The page must include a real file picker that accepts `.md`, `.markdown`, and `.pdf` files, and the analysis must run automatically as soon as a file is loaded. Do not add a server, API, or background worker. Do not require an extra submit or analyze button after file selection.
 
-**AC:**
+For every successful upload, read the raw document text and compute the analysis deterministically. Count bracket citations such as `[1]` and `[42]`. Compute `totalWords` from the raw uploaded text using the same behavior as `/\b[\w'-]+\b/g`, so heading words and citation numbers like the `1` in `[1]` still count. Under `keywordDensity`, report `quantum` and `entanglement` case-insensitively with `count` and `density`, where density is `count / totalWords` rounded to 3 decimals. The JSON mirror must use the field names `fileType`, `citations`, `totalWords`, `keywordDensity`, and `sectionSummaries` exactly. Do not rename fields, omit required keys, or replace the JSON with formatted prose.
 
-* Build the app in `/app/index.html`.
-* You can just use React, ReactDOM, and Babel CDNs in the HTML file, don't bother setting up a full build pipeline.
-* Put a real file picker on the page that accepts `.md`, `.markdown`, and `.pdf` files.
-* App should analyze the file as soon as it's loaded and update the dashboard automatically.
+For Markdown files, treat lines starting with `#` as section headings and summarize each section with the first non-empty sentence under that heading. For PDF files, extract text client-side and then recover headings from the extracted text. The verifier PDF is a simple text-based fixture whose extracted text preserves standalone heading lines such as `Introduction` and `Conclusion` followed by ordinary sentence text on later lines. Preserve line breaks if your parser provides them, and treat a short standalone title-case line, roughly 1 to 4 words made of letters, numbers, spaces, or hyphens, as a heading for the PDF path. If a PDF upload succeeds, update the JSON mirror with `fileType: "pdf"` and the parsed counts from that PDF. Do not leave the initial empty state behind after a PDF upload, and do not invent section titles when no heading-like lines were found.
 
-**Analysis Requirements:**
-
-* **Citations:** Count bracket style citations e.g., `[1]` or `[42]`.
-* **Word counting:** Keep `totalWords` deterministic. Count words from the raw uploaded text with the same behavior as `/\b[\w'-]+\b/g`, so heading words and citation numbers like the `1` in `[1]` still count.
-* **Keywords:** Count frequency & density for "quantum" and "entanglement" (case-insensitive). Density = `count / totalWords` (round to 3 decimals).
-* **Summaries:**
-  * For Markdown: Treat lines starting with `#` as headers. Summarize with the first non-empty sentence under that heading.
-  * For PDF: Extract text client-side, recover headings if possible, and do the same summary logic.
-  * Do not overengineer the PDF path. The verifier uses a simple text-based PDF fixture, so a lightweight client-side parser or fallback that can pull text from a basic PDF stream is enough.
-  * Whatever PDF approach you take, make sure uploading a `.pdf` actually updates the JSON mirror with `fileType: "pdf"` and the parsed counts instead of leaving the initial empty state behind.
-
-**UI Requirements:**
-
-* Upload control & status message.
-* Show visible dashboard sections titled exactly `Citation Frequency`, `Keyword Density`, and `Section Summaries`.
-* The section summaries list needs to render each section title clearly in the UI, not just bury it inside the JSON mirror.
-* Put that rendered section summary list inside a `.sections` container and render each section title in a `<strong>` element so the titles are easy to scan.
-* **CRITICAL FOR TESTS:** Render a machine-readable mirror of the analysis in a `<pre id="analysis-output"></pre>`.
-* The data shown there must stay valid JSON and expose a consistent parseable shape with fields named `fileType`, `citations`, `totalWords`, `keywordDensity`, and `sectionSummaries`.
-* Under `keywordDensity`, include `quantum` and `entanglement`, each with `count` and `density`. Under `sectionSummaries`, include each section's `title` and `summary` text.
-* Do not hide any of that information behind visual-only formatting. The `<pre>` content needs to expose the same analysis the dashboard shows.
+Show a visible upload control and a status message. Render dashboard sections titled exactly `Citation Frequency`, `Keyword Density`, and `Section Summaries`. Render the section summaries inside a `.sections` container, and render each section title in a `<strong>` element so the titles are easy to scan in the visible UI. Also render a machine-readable mirror of the current analysis in a `<pre id="analysis-output"></pre>`. The JSON in that `<pre>` must stay valid and must expose the same analysis the dashboard shows; do not hide required information in visual-only markup.

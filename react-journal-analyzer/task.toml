@@ -5,9 +5,9 @@ version = "2.0"
 author_name = "mtepenner"
 author_email = "mtepenner@gmail.com"
 number_of_milestones = 0
-difficulty = "hard"
+difficulty = "medium"
 category = "software-engineering"
-subcategories = [ "ui_building", "long_context" ]
+subcategories = [ "ui_building" ]
 codebase_size = "minimal"
 languages = [ "html", "javascript", "css" ]
 tags = [ "react", "document-analysis", "scientific-computing", "frontend" ]
@@ -15,7 +15,7 @@ expert_time_estimate_min = 45
 junior_time_estimate_min = 90
 
 [verifier]
-timeout_sec = 120.0
+timeout_sec = 600.0
 
 [agent]
 timeout_sec = 600.0
