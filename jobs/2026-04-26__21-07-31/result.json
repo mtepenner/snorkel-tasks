@@ -1,0 +1,29 @@
+{
+    "id": "9fef0823-baf2-4fab-ba1f-c676c813f67e",
+    "started_at": "2026-04-26T21:07:31.455871",
+    "finished_at": "2026-04-26T21:08:08.483688",
+    "n_total_trials": 1,
+    "stats": {
+        "n_trials": 1,
+        "n_errors": 0,
+        "evals": {
+            "oracle__adhoc": {
+                "n_trials": 1,
+                "n_errors": 0,
+                "metrics": [
+                    {
+                        "mean": 0.0
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "0.0": [
+                            "python-etl-tool__WjMPKrv"
+                        ]
+                    }
+                },
+                "exception_stats": {}
+            }
+        }
+    }
+}

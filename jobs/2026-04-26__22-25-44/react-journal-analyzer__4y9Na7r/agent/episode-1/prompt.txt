@@ -1,0 +1,258 @@
+New Terminal Output:
+root@ec1dd7abfc7f:/app# cat > /app/index.html << 'HTMLEOF'
+> <!DOCTYPE html>
+> <html lang="en">
+> <head>
+>   <meta charset="UTF-8">
+>   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+>   <title>Journal Analyzer</title>
+>   <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+>   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+ w>   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+>   <style>
+>     body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+>     h1 { color: #333; }
+>     .upload-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+>     .status { margin-top: 10px; padding: 8px; border-radius: 4px; }
+>     .status.success { background: #d4edda; color: #155724; }
+>     .status.info { background: #d1ecf1; color: #0c5460; }
+>     .dashboard-section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+glement: { >     .dashboard-section h2 { margin-top: 0; color: #444; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+>     table { width: 100%; border-collapse: collapse; }
+>     th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid #eee; }
+>     th { background: #f8f9fa; }
+>     .sections ul { list-style: none; padding: 0; }
+>     .sections li { padding: 10px; margin-bottom: 8px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #007bff; }
+>     .sections li strong { display: block; margin-bottom: 4px; color: #333; }
+>     pre#analysis-output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-wo
+rd; font-size: 13px; }
+>   </style>
+> </head>
+> <body>
+>   <div id="root"></div>
+>   <script type="text/babel">
+>     function parsePDF(arrayBuffer) {
+>       try {
+ull) {
+   >         const bytes = new Uint8Array(arrayBuffer);
+>         let raw = "";
+>         for (let i = 0; i < bytes.length; i++) {
+>           raw += String.fromCharCode(bytes[i]);
+>         }
+>
+>         const lines = [];
+>
+  t>         // Extract text from stream objects
+>         const streamRegex = /stream\r?\n([\s\S]*?)\r?\nendstream/g;
+>         let match;
+>         while ((match = streamRegex.exec(raw)) !== null) {
+>           const content = match[1];
+>           // Extract text from BT...ET blocks
+>           const btRegex = /BT([\s\S]*?)ET/g;
+>           let btMatch;
+T = null;
+        let currentB >           while ((btMatch = btRegex.exec(content)) !== null) {
+>             const block = btMatch[1];
+>             // Extract Tj and TJ strings
+>             const tjRegex = /\(([^)]*)\)\s*Tj/g;
+>             let tjMatch;
+>             while ((tjMatch = tjRegex.exec(block)) !== null) {
+>               let text = tjMatch[1];
+>               // Unescape PDF string escapes
+>               text = text.replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\t/g, '\t');
+>               text = text.replace(/\\\(/g, '(').replace(/\\\)/g, ')').replace(/\\\\/g, '\\');
+>               lines.push(text);
+>             }
+>             // TJ arrays
+>             const tjArrayRegex = /\[([^\]]*)\]\s*TJ/g;
+>             let tjArrMatch;
+>             while ((tjArrMatch = tjArrayRegex.exec(block)) !== null) {
+>               const arr = tjArrMatch[1];
+>               const strRegex = /\(([^)]*)\)/g;
+>               let strMatch;
+>               let combined = "";
+>               while ((strMatch = strRegex.exec(arr)) !== null) {
+>                 let text = strMatch[1];
+>                 text = text.replace(/\\n/g, '\n').replace(/\\r/g, '\r').replace(/\\t/g, '\t');
+>                 text = text.replace(/\\\(/g, '(').replace(/\\\)/g, ')').replace(/\\\\/g, '\\');
+>                 combined += text;
+>               }
+us>               if (combined) lines.push(combined);
+>             }
+rnal file (.md>           }
+>         }
+>
+>         return lines.join('\n');
+>       } catch (e) {
+>         console.error('PDF parse error:', e);
+>         return '';
+>       }
+>     }
+>
+>     function analyzeText(text, fileType) {
+>       // Citation counting: bracket style [1], [42], etc.
+>       const citationMatches = text.match(/\[\d+\]/g);
+>       const citations = citationMatches ? citationMatches.length : 0;
+>
+>       // Word counting using the specified regex
+>       const wordMatches = text.match(/\b[\w'-]+\b/g);
+>       const totalWords = wordMatches ? wordMatches.length : 0;
+>
+>       // Keyword density
+>       const lowerText = text.toLowerCase();
+>       const lowerWords = wordMatches ? wordMatches.map(w => w.toLowerCase()) : [];
+>
+>       const quantumCount = lowerWords.filter(w => w === 'quantum').length;
+>       const entanglementCount = lowerWords.filter(w => w === 'entanglement').length;
+>
+>       con
+[... output limited to 10000 bytes; 70 interior bytes omitted ...]
+!text || text.trim().length === 0) return '';
+>       // Match first sentence ending with . ! or ?
+>       const match = text.match(/^(.*?[.!?])(?:\s|$)/);
+>       if (match) return match[1].trim();
+>       return text.trim();
+>     }
+>
+>     function App() {
+>       const [analysis, setAnalysis] = React.useState(null);
+>       const [status, setStatus] = React.useState('Please upload a journal file (.md, .markdown, or .pdf)');
+>       const [statusType, setStatusType] = React.useState('info');
+>
+>       const handleFileChange = (e) => {
+>         const file = e.target.files[0];
+>         if (!file) return;
+>
+>         setStatus(`Analyzing "${file.name}"...`);
+>         setStatusType('info');
+>
+>         const ext = file.name.split('.').pop().toLowerCase();
+>         const fileType = ext === 'pdf' ? 'pdf' : 'markdown';
+>
+>         if (fileType === 'pdf') {
+>           const reader = new FileReader();
+>           reader.onload = (ev) => {
+>             const text = parsePDF(ev.target.result);
+>             const result = analyzeText(text, 'pdf');
+>             setAnalysis(result);
+>             setStatus(`Analysis complete for "${file.name}"`);
+>             setStatusType('success');
+>           };
+>           reader.readAsArrayBuffer(file);
+>         } else {
+>           const reader = new FileReader();
+>           reader.onload = (ev) => {
+>             const text = ev.target.result;
+>             const result = analyzeText(text, 'markdown');
+>             setAnalysis(result);
+>             setStatus(`Analysis complete for "${file.name}"`);
+>             setStatusType('success');
+>           };
+>           reader.readAsText(file);
+>         }
+>       };
+>
+>       const defaultAnalysis = {
+>         fileType: "",
+>         citations: 0,
+>         totalWords: 0,
+>         keywordDensity: {
+>           quantum: { count: 0, density: 0 },
+>           entanglement: { count: 0, density: 0 }
+>         },
+>         sectionSummaries: []
+>       };
+>
+>       const data = analysis || defaultAnalysis;
+>
+>       return (
+>         <div>
+>           <h1>Journal Analyzer</h1>
+>
+>           <div className="upload-section">
+>             <h2>Upload Journal</h2>
+>             <input
+>               type="file"
+>               accept=".md,.markdown,.pdf"
+>               onChange={handleFileChange}
+>             />
+>             <div className={`status ${statusType}`}>{status}</div>
+>           </div>
+>
+>           {analysis && (
+>             <>
+>               <div className="dashboard-section">
+>                 <h2>Citation Frequency</h2>
+>                 <table>
+>                   <thead>
+>                     <tr><th>Metric</th><th>Value</th></tr>
+>                   </thead>
+>                   <tbody>
+>                     <tr><td>Total Citations</td><td>{data.citations}</td></tr>
+>                   </tbody>
+>                 </table>
+>               </div>
+>
+>               <div className="dashboard-section">
+>                 <h2>Keyword Density</h2>
+>                 <table>
+>                   <thead>
+>                     <tr><th>Keyword</th><th>Count</th><th>Density</th></tr>
+>                   </thead>
+>                   <tbody>
+>                     <tr>
+>                       <td>quantum</td>
+>                       <td>{data.keywordDensity.quantum.count}</td>
+>                       <td>{data.keywordDensity.quantum.density}</td>
+>                     </tr>
+>                     <tr>
+>                       <td>entanglement</td>
+>                       <td>{data.keywordDensity.entanglement.count}</td>
+>                       <td>{data.keywordDensity.entanglement.density}</td>
+>                     </tr>
+>                   </tbody>
+>                 </table>
+>               </div>
+>
+>               <div className="dashboard-section">
+>                 <h2>Section Summaries</h2>
+>                 <div className="sections">
+>                   <ul>
+>                     {data.sectionSummaries.map((sec, i) => (
+>                       <li key={i}>
+>                         <strong>{sec.title}</strong>
+>                         <span>{sec.summary}</span>
+>                       </li>
+>                     ))}
+>                   </ul>
+>                 </div>
+>               </div>
+>             </>
+>           )}
+>
+>           <pre id="analysis-output">{JSON.stringify(data, null, 2)}</pre>
+>         </div>
+>       );
+>     }
+>
+>     const root = ReactDOM.createRoot(document.getElementById('root'));
+>     root.render(<App />);
+>   </script>
+> </body>
+> </html>
+> HTMLEOF
+root@ec1dd7abfc7f:/app# wc -l /app/index.html
+322 /app/index.html
+root@ec1dd7abfc7f:/app# head -5 /app/index.html && echo '---' && tail -5 /app/index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+---
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
+root@ec1dd7abfc7f:/app#

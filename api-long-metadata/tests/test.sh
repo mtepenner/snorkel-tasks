@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Bootstrap uv into the container without shelling out to curl.
-python3 -m pip install --no-cache-dir uv==0.7.13 > /dev/null 2>&1
+python3 -m pip install --no-cache-dir uv==0.7.13
 
 server_ready() {
   python3 - <<'PY'

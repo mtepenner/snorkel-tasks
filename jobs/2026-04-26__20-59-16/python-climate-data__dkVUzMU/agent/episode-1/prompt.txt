@@ -1,0 +1,65 @@
+New Terminal Output:
+root@de88dad28b6a:/app/workspace# pwd
+/app/workspace
+root@de88dad28b6a:/app/workspace# ls -R
+.:
+data  output  src
+
+./data:
+climate.csv  metadata.json
+
+./output:
+
+./src:
+root@de88dad28b6a:/app/workspace# sed -n '1,200p' src/analyzer.py
+sed: can't read src/analyzer.py: No such file or directory
+root@de88dad28b6a:/app/workspace# ls -ლა data
+ls: invalid option -- ''
+Try 'ls --help' for more information.
+root@de88dad28b6a:/app/workspace# python3 - <<'PY'
+> import pandas as pd, json
+> print('--- climate.csv head ---')
+> df=pd.read_csv('data/climate.csv')
+> print(df.head())
+> print('columns:', list(df.columns))
+> print('min_year:', df['year'].min() if 'year' in df.columns else 'NO year col')
+> print('max_year:', df['year'].max() if 'year' in df.columns else 'NO year col')
+> print('rows:', len(df))
+> print('--- metadata.json ---')
+> with open('data/metadata.json','r') as f:
+>     meta=json.load(f)
+> print(type(meta))
+> if isinstance(meta, dict):
+>     print('keys:', list(meta.keys())[:50])
+> print('sample:', str(meta)[:500])
+> PY
+--- climate.csv head ---
+   region_id  year  temperature
+0          1  2020         14.5
+1          1  2021         15.0
+2          2  2020         22.1
+3          2  2021         22.5
+columns: ['region_id', 'year', 'temperature']
+min_year: 2020
+max_year: 2021
+rows: 4
+--- metadata.json ---
+<class 'dict'>
+keys: ['1', '2']
+sample: {'1': 'North America', '2': 'Europe'}
+root@de88dad28b6a:/app/workspace# python3 src/analyzer.py
+python3: can't open file '/app/workspace/src/analyzer.py': [Errno 2] No such file or directory
+root@de88dad28b6a:/app/workspace# find data output -maxdepth 2 -type f -print -exec ls -l {} \;
+data/metadata.json
+-rw-r--r-- 1 root root 38 Apr 27 03:58 data/metadata.json
+data/climate.csv
+-rw-r--r-- 1 root root 75 Apr 27 03:58 data/climate.csv
+root@de88dad28b6a:/app/workspace# for f in data/cleaned.json data/trends.json output/climate_graph.gv; do echo "\n===== $f ====="; [ -f "$f" ] && sed -n '1,200p
+' "$f" || echo "MISSING"; done
+\n===== data/cleaned.json =====
+MISSING
+\n===== data/trends.json =====
+MISSING
+\n===== output/climate_graph.gv =====
+MISSING
+root@de88dad28b6a:/app/workspace#

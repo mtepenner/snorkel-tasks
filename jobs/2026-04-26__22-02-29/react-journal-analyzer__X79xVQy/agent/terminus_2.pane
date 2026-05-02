@@ -1,0 +1,387 @@
+[?2004hroot@599d5bf704a3:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@599d5bf704a3:/app# clear
+[?2004l[H[J[3J[?2004hroot@599d5bf704a3:/app# ls -la
+[?2004ltotal 8
+drwxr-xr-x 2 root root 4096 Apr 25 04:40 .
+drwxr-xr-x 1 root root 4096 Apr 27 05:03 ..
+[?2004hroot@599d5bf704a3:/app# cat > /app/index.html <<'HTML'
+[?2004l[?2004h> <!doctype html>
+[?2004lonospace; }
+    input[type="file"] { padding: 6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Client-Side Journal Analyzer</h1>
+    <div id="root"></div>
+  </div>
+
+  <!-- React + Babel (no build pipeline) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- PDF.js for PDF text extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js" integrity="sha512-5Yd3f5+OeY7vX3sBqK+fVd2Je2v0qF2v8yEyyF9W4vYVZg8o5pWzQ/7nIglV8dBvCqzK7l+Oq8nry0rKq6wSA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script type="text/babel">
+    const { useMemo, useState } = React;
+
+    function normalizeWhitespace(s) {
+      return (s || "").replace(/\r\n/g, "\n").replace(/\t/g, " ");
+    }
+
+    function countCitations(text) {
+      // bracket st[?2004h> <html lang="en">
+[?2004l[?2004h> <head>
+[?2004l[?2004h>   <meta charset="utf-8" />
+[?2004l[?2004h>   <meta name="viewport" content="width=device-width,initial-scale=1" />
+[?2004l[?2004h>   <title>Journal Analyzer</title>
+[?2004l[?2004h>   <style>
+[?2004l[?2004h>     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; }
+[?2004l[?2004h>     .container { max-width: 1000px; margin: 0 auto; }
+[?2004lim()[?2004h>     .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 14px 0; }
+[?2004l[?2004h>     .row { display: flex; gap: 16px; flex-wrap: wrap; }
+[?2004l[?2004h>     .row .card { flex: 1 1 280px; }
+[?2004l[?2004h>     h2 { margin: 0 0 8px 0; }
+[?2004l[?2004h>     h3 { margin: 0 0 10px 0; }
+[?2004lcandidateText);
+ [?2004h>     .muted { color: #555; }
+[?2004l[?2004h>     .status { margin: 10px 0 0 0; }
+[?2004l[?2004h>     .sections > div { padding: 10px 0; border-top: 1px solid #eee; }
+[?2004l[?2004h>     .sections > div:first-child { border-top: 0; }
+[?2004l[?2004h>     pre { background: #0b1020; color: #d6e2ff; padding: 12px; border-radius: 8px; overflow: auto; }
+[?2004l[?2004h>     code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+[?2004l[?2004h>     input[type="file"] { padding: 6px; }
+[?2004l[?2004h>   </style>
+[?2004l[?2004h> </head>
+[?2004l[?2004h> <body>
+[?2004l[?2004h>   <div class="container">
+[?2004l[?2004h>     <h1>Client-Side Journal Analyzer</h1>
+[?2004l[?2004h>     <div id="root"></div>
+[?2004l[?2004h>   </div>
+[?2004l[?2004h> 
+[?2004ly[?2004h>   <!-- React + Babel (no build pipeline) -->
+[?2004l[?2004h>   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+[?2004l[?2004h>   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+[?2004l[?2004h>   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+[?2004l[?2004h> 
+[?2004l[?2004h>   <!-- PDF.js for PDF text extraction -->
+[?2004l[?2004h>   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js" integrity="sha512-5Yd3f5+OeY7vX3sBqK+fVd2Je2v0qF2v8yEyyF9W4vYVZg8o5pWzQ/7nIglV8dBvCqzK7l+Oq8nry0rKq6wSA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+[?2004l[?2004h> 
+[?2004li[?2004h>   <script type="text/babel">
+[?2004l[?2004h>     const { useMemo, useState } = React;
+[?2004l[?2004h> 
+[?2004l[?2004h>     function normalizeWhitespace(s) {
+[?2004l[?2004h>       return (s || "").replace(/\r\n/g, "\n").replace(/\t/g, " ");
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function countCitations(text) {
+[?2004l[?2004h>       // bracket style citations like [1], [42]
+[?2004l[?2004h>       const m = (text || "").match(/\[\d+\]/g);
+[?2004l[?2004h>       return m ? m.length : 0;
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function tokenizeWords(text) {
+[?2004l[?2004h>       // Keep it simple + consistent: words are A-Z sequences with optional apostrophes
+[?2004l[?2004h>       const m = (text || "").toLowerCase().match(/[a-z]+(?:'[a-z]+)?/g);
+[?2004l[?2004h>       return m || [];
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function keywordStats(text) {
+[?2004l[?2004h>       const words = tokenizeWords(text);
+[?2004l[?2004h>       const totalWords = words.length;
+[?2004l[?2004h>       const counts = { quantum: 0, entanglement: 0 };
+[?2004l[?2004h>       for (const w of words) {
+[?2004l[?2004h>         if (w === "quantum") counts.quantum++;
+[?2004l[?2004h>         if (w === "entanglement") counts.entanglement++;
+[?2004l[?2004h>       }
+[?2004l   })
+  [?2004h>       const density = (count) => {
+[?2004l[?2004h>         if (!totalWords) return 0;
+[?2004l[?2004h>         return Number((count / totalWords).toFixed(3));
+[?2004l[?2004h>       };
+[?2004l[?2004h>       return {
+[?2004l[?2004h>         totalWords,
+[?2004lt[?2004h>         keywordDensity: {
+[?2004lo extract text content
+   [?2004h>           quantum: { count: counts.quantum, density: density(counts.quantum) },
+[?2004l[?2004h>           entanglement: { count: counts.entanglement, density: density(counts.entanglement) }
+[?2004l[?2004h>         }
+[?2004l[?2004h>       };
+[?2004l8[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function splitIntoSentences(block) {
+[?2004l[?2004h>       // Lightweight sentence splitting: end punctuation followed by whitespace/newline.
+[?2004l[?2004h>       const cleaned = (block || "").replace(/\s+/g, " ").trim();
+[?2004l[?2004h>       if (!cleaned) return [];
+[?2004l[?2004h>       // Preserve the punctuation.
+[?2004l[?2004h>       const parts = cleaned.split(/(?<=[.!?])\s+/);
+[?2004l[?2004h>       return parts.map(s => s.trim()).filter(Boolean);
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function summarizeMarkdown(mdText) {
+[?2004l[?2004h>       const text = normalizeWhitespace(mdText);
+[?2004l[?2004h>       const lines = text.split("\n");
+[?2004l[?2004h> 
+[?2004l[?2004h>       const sections = [];
+[?2004l[?2004h>       let current = null;
+[?2004l[?2004h> 
+[?2004l[?2004h>       const pushCurrent = () => {
+[?2004l[?2004h>         if (current) sections.push(current);
+[?2004l[?2004h>       };
+[?2004l") + "\n\[?2004h> 
+[?2004l[?2004h>       for (let i = 0; i < lines.length; i++) {
+[?2004l[?2004h>         const line = lines[i];
+[?2004l[?2004h>         const headerMatch = line.match(/^\s*#+\s+(.*)\s*$/);
+[?2004l[?2004h>         if (headerMatch) {
+[?2004l[?2004h>           pushCurrent();
+[?2004ls[?2004h>           current = { title: headerMatch[1].trim(), bodyLines: [] };
+[?2004l[?2004h>         } else {
+[?2004l[?2004h>           if (!current) {
+[?2004l[?2004h>             // content before any header goes into a synthetic section
+[?2004l[?2004h>             current = { title: "(Intro)", bodyLines: [] };
+[?2004l[?2004h>           }
+[?2004l[?2004h>           current.bodyLines.push(line);
+[?2004l[?2004h>         }
+[?2004l[?2004h>       }
+[?2004l[?2004h>       pushCurrent();
+[?2004l[?2004h> 
+[?2004l [?2004h>       return sections.map(sec => {
+[?2004l[?2004h>         const body = sec.bodyLines.join("\n");
+[?2004l[?2004h>         // Find first non-empty sentence under heading
+[?2004l[?2004h>         const firstNonEmptyLineIndex = sec.bodyLines.findIndex(l => l.trim().length > 0);
+[?2004l[?2004h>         let candidateText = "";
+[?2004l[?2004h>         if (firstNonEmptyLineIndex >= 0) {
+[?2004l[?2004h>           candidateText = sec.bodyLines.slice(firstNonEmptyLineIndex).join(" ");
+[?2004l[?2004h>         }
+[?2004l[?2004h>         const sentences = splitIntoSentences(candidateText);
+[?2004l[?2004h>         const summary = sentences[0] || "";
+[?2004l[?2004h>         return { title: sec.title, summary };
+[?2004l[?2004h>       }).filter(s => (s.title && s.title.trim().length) || (s.summary && s.summary.trim().length));
+[?2004l[?2004h>     }
+[?2004ltent J[?2004h> 
+[?2004l[?2004h>     function recoverHeadingsFromText(rawText) {
+[?2004l[?2004h>       // Heuristic: headings are short lines (<= 80 chars) that are either ALL CAPS
+[?2004l[?2004h>       // or Title-like and surrounded by blank lines.
+[?2004l[?2004h>       const text = normalizeWhitespace(rawText);
+[?2004l[?2004h>       const lines = text.split("\n").map(l => l.replace(/\s+/g, " ").trim());
+[?2004l".m[?2004h> 
+[?2004l[?2004h>       const sections = [];
+[?2004l[?2004h>       let current = { title: "(Intro)", bodyLines: [] };
+[?2004l[?2004h> 
+[?2004l[?2004h>       function looksLikeHeading(line) {
+[?2004l[?2004h>         if (!line) return false;
+[?2004l[?2004h>         if (line.length > 80) return false;
+[?2004l[?2004h>         // Exclude lines that look like page numbers or figure/table labels
+[?2004l[?2004h>         if (/^\d+$/.test(line)) return false;
+[?2004l[?2004h>         if (/^(figure|fig\.|table)\b/i.test(line)) return false;
+[?2004l[?2004h> 
+[?2004l[?2004h>         const letters = line.replace(/[^A-Za-z]/g, "");
+[?2004l[?2004h>         if (!letters) return false;
+[?2004l[?2004h> 
+[?2004l[?2004h>         const isAllCaps = line === line.toUpperCase() && /[A-Z]/.test(line);
+[?2004l[?2004h>         const isTitleCaseish = /^[A-Z][A-Za-z0-9\s\-:;,()]+$/.test(line);
+[?2004l[?2004h>         return isAllCaps || isTitleCaseish;
+[?2004l[?2004h>       }
+[?2004l[?2004h> 
+[?2004l[?2004h>       for (let i = 0; i < lines.length; i++) {
+[?2004l[?2004h>         const line = lines[i];
+[?2004l [?2004h>         const prev = i > 0 ? lines[i - 1] : "";
+[?2004l[?2004h>         const next = i + 1 < lines.length ? lines[i + 1] : "";
+[?2004l[?2004h> 
+[?2004l[?2004h>         const boundary = (!prev && !!line) || (!next && !!line) || (!prev && !next);
+[?2004l[?2004h>         const headingCandidate = looksLikeHeading(line) && (prev === "" || next === "") && !boundary;
+[?2004l[?2004h> 
+[?2004l[?2004h>         if (headingCandidate) {
+[?2004l[?2004h>           // push current and start new
+[?2004l[?2004h>           sections.push(current);
+[?2004l[?2004h>           current = { title: line, bodyLines: [] };
+[?2004l[?2004h>         } else {
+[?2004l[?2004h>           current.bodyLines.push(line);
+[?2004l[?2004h>         }
+[?2004l[?2004h>       }
+[?2004l      <d[?2004h>       sections.push(current);
+[?2004l[?2004h> 
+[?2004l[?2004h>       return sections
+[?2004l[?2004h>         .map(sec => {
+[?2004l[?2004h>           const body = sec.bodyLines.join(" ").trim();
+[?2004l[?2004h>           const sentences = splitIntoSentences(body);
+[?2004l[?2004h>           return { title: sec.title, summary: sentences[0] || "" };
+[?2004l[?2004h>         })
+[?2004l[?2004h>         .filter(s => (s.title && s.title.trim().length) || (s.summary && s.summary.trim().length));
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     async function extractPdfText(file) {
+[?2004l[?2004h>       // Using PDF.js to extract text content
+[?2004l[?2004h>       if (!window.pdfjsLib) {
+[?2004l[?2004h>         throw new Error("PDF.js failed to load");
+[?2004l[?2004h>       }
+[?2004lywordDensit[?2004h>       // worker
+[?2004l[?2004h>       try {
+[?2004l[?2004h>         const workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.js";
+[?2004l[?2004h>         window.pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
+[?2004l[?2004h>       } catch (e) {
+[?2004l[?2004h>         // ignore
+[?2004l[?2004h>       }
+[?2004lity}</di[?2004h> 
+[?2004l[?2004h>       const buf = await file.arrayBuffer();
+[?2004l[?2004h>       const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+[?2004l[?2004h> 
+[?2004lm[?2004h>       let fullText = "";
+[?2004l[?2004h>       for (let p = 1; p <= pdf.numPages; p++) {
+[?2004l[?2004h>         const page = await pdf.getPage(p);
+[?2004l[?2004h>         const content = await page.getTextContent();
+[?2004l[?2004h>         const strings = content.items.map(it => (it.str || "").trim()).filter(Boolean);
+[?2004l[?2004h>         // Separate items with spaces; add newlines between pages to help headings heuristics.
+[?2004l[?2004h>         fullText += strings.join(" ") + "\n\n";
+[?2004l[?2004h>       }
+[?2004l[?2004h>       return fullText;
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function analyzeText({ fileType, text }) {
+[?2004l[?2004h>       const citations = countCitations(text);
+[?2004l[?2004h>       const { totalWords, keywordDensity } = keywordStats(text);
+[?2004l[?2004h> 
+[?2004l[?2004h>       let sectionSummaries = [];
+[?2004l[?2004h>       if (fileType === "markdown") {
+[?2004l[?2004h>         sectionSummaries = summarizeMarkdown(text);
+[?2004l[?2004h>       } else if (fileType === "pdf") {
+[?2004l[?2004h>         // Try to recover headings and then summarize
+[?2004l[?2004h>         sectionSummaries = recoverHeadingsFromText(text);
+[?2004l[?2004h>       } else {
+[?2004lemen[?2004h>         sectionSummaries = [{ title: "(Content)", summary: splitIntoSentences(text)[0] || "" }];
+[?2004l[?2004h>       }
+[?2004l[?2004h> 
+[?2004l[?2004h>       return {
+[?2004l[?2004h>         fileType,
+[?2004l[?2004h>         citations,
+[?2004l[?2004h>         totalWords,
+[?2004l[?2004h>         keywordDensity,
+[?2004l[?2004h>         sectionSummaries
+[?2004l[?2004h>       };
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function App() {
+[?2004l[?2004h>       const [status, setStatus] = useState("No file loaded.");
+[?2004l[?2004h>       const [analysis, setAnalysis] = useState({
+[?2004l[?2004h>         fileType: null,
+[?2004l[?2004h>         citations: 0,
+[?2004l[?2004h>         totalWords: 0,
+[?2004l[?2004h>         keywordDensity: {
+[?2004l[?2004h>           quantum: { count: 0, density: 0 },
+[?2004l[?2004h>           entanglement: { count: 0, density: 0 }
+[?2004l[?2004h>         },
+[?2004l[?2004h>         sectionSummaries: []
+[?2004l[?2004h>       });
+[?2004l[?2004h> 
+[?2004l[?2004h>       const jsonMirror = useMemo(() => {
+[?2004l[?2004h>         // Ensure consistent JSON shape and always valid JSON
+[?2004l[?2004h>         return JSON.stringify(analysis, null, 2);
+[?2004l[?2004h>       }, [analysis]);
+[?2004l[?2004h> 
+[?2004l[?2004h>       async function onFileChange(e) {
+[?2004l[?2004h>         const file = e.target.files && e.target.files[0];
+[?2004l[?2004h>         if (!file) return;
+[?2004l[?2004h> 
+[?2004l[?2004h>         const name = file.name.toLowerCase();
+[?2004l[?2004h>         const isMd = name.endsWith(".md") || name.endsWith(".markdown");
+[?2004l[?2004h>         const isPdf = name.endsWith(".pdf");
+[?2004l[?2004h> 
+[?2004l[?2004h>         if (!isMd && !isPdf) {
+[?2004l[?2004h>           setStatus("Unsupported file type. Please choose .md, .markdown, or .pdf.");
+[?2004l[?2004h>           return;
+[?2004l[?2004h>         }
+[?2004l[?2004h> 
+[?2004l[?2004h>         try {
+[?2004l[?2004h>           setStatus(`Loading ${file.name}...`);
+[?2004l[?2004h>           if (isMd) {
+[?2004l[?2004h>             const text = await file.text();
+[?2004l[?2004h>             const result = analyzeText({ fileType: "markdown", text });
+[?2004l[?2004h>             setAnalysis(result);
+[?2004l[?2004h>             setStatus(`Analyzed ${file.name}.`);
+[?2004l[?2004h>           } else if (isPdf) {
+[?2004l[?2004h>             setStatus(`Extracting text from ${file.name}...`);
+[?2004l[?2004h>             const text = await extractPdfText(file);
+[?2004l[?2004h>             const result = analyzeText({ fileType: "pdf", text });
+[?2004l[?2004h>             setAnalysis(result);
+[?2004l[?2004h>             setStatus(`Analyzed ${file.name}.`);
+[?2004l[?2004h>           }
+[?2004l[?2004h>         } catch (err) {
+[?2004l[?2004h>           console.error(err);
+[?2004l[?2004h>           setStatus(`Error: ${err && err.message ? err.message : String(err)}`);
+[?2004l[?2004h>         }
+[?2004l[?2004h>       }
+[?2004l[?2004h> 
+[?2004l[?2004h>       return (
+[?2004l[?2004h>         <div>
+[?2004l[?2004h>           <div className="card">
+[?2004l[?2004h>             <label>
+[?2004l[?2004h>               <div><strong>Upload journal file</strong></div>
+[?2004l[?2004h>               <input
+[?2004l[?2004h>                 type="file"
+[?2004l[?2004h>                 accept=".md,.markdown,.pdf"
+[?2004l[?2004h>                 onChange={onFileChange}
+[?2004l[?2004h>               />
+[?2004l[?2004h>             </label>
+[?2004l[?2004h>             <div className="status muted">{status}</div>
+[?2004l[?2004h>           </div>
+[?2004l[?2004h> 
+[?2004l[?2004h>           <div className="row">
+[?2004l[?2004h>             <div className="card">
+[?2004l[?2004h>               <h3>Citation Frequency</h3>
+[?2004l[?2004h>               <div><strong>Total citations:</strong> {analysis.citations}</div>
+[?2004l[?2004h>             </div>
+[?2004l[?2004h> 
+[?2004l[?2004h>             <div className="card">
+[?2004l[?2004h>               <h3>Keyword Density</h3>
+[?2004l[?2004h>               <div><strong>Total words:</strong> {analysis.totalWords}</div>
+[?2004l[?2004h>               <div style={{ marginTop: 8 }}>
+[?2004l[?2004h>                 <div><strong>quantum</strong> — count: {analysis.keywordDensity.quantum.count}, density: {analysis.keywordDensity.quantum.density}</div>
+[?2004l[?2004h>                 <div><strong>entanglement</strong> — count: {analysis.keywordDensity.entanglement.count}, density: {analysis.keywordDensity.entanglement.density}</div>
+[?2004l[?2004h>               </div>
+[?2004l[?2004h>             </div>
+[?2004l[?2004h>           </div>
+[?2004l[?2004h> 
+[?2004l[?2004h>           <div className="card">
+[?2004l[?2004h>             <h3>Section Summaries</h3>
+[?2004l[?2004h>             <div className="sections">
+[?2004l[?2004h>               {analysis.sectionSummaries && analysis.sectionSummaries.length ? (
+[?2004l[?2004h>                 analysis.sectionSummaries.map((s, idx) => (
+[?2004l[?2004h>                   <div key={idx}>
+[?2004l[?2004h>                     <div><strong>{s.title}</strong></div>
+[?2004l[?2004h>                     <div className="muted">{s.summary || ""}</div>
+[?2004l[?2004h>                   </div>
+[?2004l[?2004h>                 ))
+[?2004l[?2004h>               ) : (
+[?2004l[?2004h>                 <div className="muted">No sections yet. Upload a file to generate summaries.</div>
+[?2004l[?2004h>               )}
+[?2004l[?2004h>             </div>
+[?2004l[?2004h>           </div>
+[?2004l[?2004h> 
+[?2004l[?2004h>           <div className="card">
+[?2004l[?2004h>             <div className="muted" style={{ marginBottom: 8 }}>
+[?2004l[?2004h>               Machine-readable analysis mirror (JSON):
+[?2004l[?2004h>             </div>
+[?2004l[?2004h>             <pre id="analysis-output">{jsonMirror}</pre>
+[?2004l[?2004h>           </div>
+[?2004l[?2004h>         </div>
+[?2004l[?2004h>       );
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+[?2004l[?2004h>   </script>
+[?2004l[?2004h> </body>
+[?2004l[?2004h> </html>
+[?2004l[?2004h> HTML
+[?2004l[?2004hroot@599d5bf704a3:/app# wc -l /app/index.html
+[?2004l339 /app/index.html
+[?2004hroot@599d5bf704a3:/app# grep -n "Citation Frequency\|Keyword Density\|Section Summaries\|analysis-output\|accept=\"\.md,\.markdown,\.pdf\"" -n /app/index.html
+[?2004l287:                accept=".md,.markdown,.pdf"
+296:              <h3>Citation Frequency</h3>
+301:              <h3>Keyword Density</h3>
+311:            <h3>Section Summaries</h3>
+330:            <pre id="analysis-output">{jsonMirror}</pre>
+[?2004hroot@599d5bf704a3:/app# 

@@ -1,0 +1,95 @@
+{
+    "id": "197f68c0-847d-446b-bbcb-a7c35db6f6a3",
+    "task_name": "react-journal-analyzer",
+    "trial_name": "react-journal-analyzer__YNGtiad",
+    "trial_uri": "file:///mnt/c/Users/mtepe/Scripts/snorkel-ai/tasks/jobs/2026-04-26__22-09-25/react-journal-analyzer__YNGtiad",
+    "task_id": {
+        "path": "react-journal-analyzer"
+    },
+    "source": null,
+    "task_checksum": "c684da838f1b778229dd6f9fd6b0441c2babf3a920f42edd55a1a91f7981db2c",
+    "config": {
+        "task": {
+            "path": "react-journal-analyzer",
+            "git_url": null,
+            "git_commit_id": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "react-journal-analyzer__YNGtiad",
+        "trials_dir": "jobs/2026-04-26__22-09-25",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "oracle",
+            "import_path": null,
+            "model_name": null,
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {},
+            "env": {}
+        },
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": false,
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "c451781e-945b-4c6d-b97a-9988990df74f"
+    },
+    "agent_info": {
+        "name": "oracle",
+        "version": "1.0.0",
+        "model_info": null
+    },
+    "agent_result": {
+        "n_input_tokens": null,
+        "n_cache_tokens": null,
+        "n_output_tokens": null,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": null,
+    "exception_info": {
+        "exception_type": "VerifierTimeoutError",
+        "exception_message": "Verifier execution timed out after 120.0 seconds",
+        "exception_traceback": "Traceback (most recent call last):\n  File \"/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/asyncio/tasks.py\", line 488, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/harbor/verifier/verifier.py\", line 123, in verify\n    await self._environment.exec(\n    ...<2 lines>...\n    )\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/harbor/environments/docker/docker.py\", line 349, in exec\n    return await self._run_docker_compose_command(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n        exec_command, check=False, timeout_sec=timeout_sec\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/harbor/environments/docker/docker.py\", line 197, in _run_docker_compose_command\n    stdout_bytes, stderr_bytes = await process.communicate()\n                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/asyncio/subprocess.py\", line 201, in communicate\n    stdin, stdout, stderr = await tasks.gather(stdin, stdout, stderr)\n                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/asyncio/subprocess.py\", line 181, in _read_stream\n    output = await stream.read()\n             ^^^^^^^^^^^^^^^^^^^\n  File \"/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/asyncio/streams.py\", line 723, in read\n    block = await self.read(self._limit)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/asyncio/streams.py\", line 730, in read\n    await self._wait_for_data('read')\n  File \"/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/asyncio/streams.py\", line 539, in _wait_for_data\n    await self._waiter\nasyncio.exceptions.CancelledError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/harbor/trial/trial.py\", line 298, in _verify_with_retry\n    self.result.verifier_result = await asyncio.wait_for(\n                                  ^^^^^^^^^^^^^^^^^^^^^^^\n    ...<2 lines>...\n    )\n    ^\n  File \"/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/asyncio/tasks.py\", line 487, in wait_for\n    async with timeouts.timeout(timeout):\n               ~~~~~~~~~~~~~~~~^^^^^^^^^\n  File \"/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/asyncio/timeouts.py\", line 114, in __aexit__\n    raise TimeoutError from exc_val\nTimeoutError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/harbor/trial/trial.py\", line 503, in run\n    await self._run_verification()\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/harbor/trial/trial.py\", line 280, in _run_verification\n    await self._verify_with_retry()\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/asyncio/__init__.py\", line 193, in async_wrapped\n    return await copy(fn, *args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/asyncio/__init__.py\", line 112, in __call__\n    do = await self.iter(retry_state=retry_state)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/asyncio/__init__.py\", line 157, in iter\n    result = await action(retry_state)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/_utils.py\", line 111, in inner\n    return call(*args, **kwargs)\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/__init__.py\", line 413, in exc_check\n    raise retry_exc.reraise()\n          ~~~~~~~~~~~~~~~~~^^\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/__init__.py\", line 184, in reraise\n    raise self.last_attempt.result()\n          ~~~~~~~~~~~~~~~~~~~~~~~~^^\n  File \"/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/concurrent/futures/_base.py\", line 443, in result\n    return self.__get_result()\n           ~~~~~~~~~~~~~~~~~^^\n  File \"/root/.local/share/uv/python/cpython-3.14.3-linux-x86_64-gnu/lib/python3.14/concurrent/futures/_base.py\", line 395, in __get_result\n    raise self._exception\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/tenacity/asyncio/__init__.py\", line 116, in __call__\n    result = await fn(*args, **kwargs)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/.local/share/uv/tools/snorkelai-stb/lib/python3.14/site-packages/harbor/trial/trial.py\", line 303, in _verify_with_retry\n    raise VerifierTimeoutError(\n    ...<3 lines>...\n    ) from e\nharbor.trial.trial.VerifierTimeoutError: Verifier execution timed out after 120.0 seconds\n",
+        "occurred_at": "2026-04-26T22:14:42.721667"
+    },
+    "started_at": "2026-04-27T05:09:25.236633Z",
+    "finished_at": "2026-04-27T05:14:45.158588Z",
+    "environment_setup": {
+        "started_at": "2026-04-27T05:10:37.498541Z",
+        "finished_at": "2026-04-27T05:10:41.340722Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-04-27T05:10:41.340758Z",
+        "finished_at": "2026-04-27T05:10:41.340797Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-04-27T05:10:41.340825Z",
+        "finished_at": "2026-04-27T05:10:41.596491Z"
+    },
+    "verifier": {
+        "started_at": "2026-04-27T05:10:41.596590Z",
+        "finished_at": "2026-04-27T05:14:42.712632Z"
+    }
+}

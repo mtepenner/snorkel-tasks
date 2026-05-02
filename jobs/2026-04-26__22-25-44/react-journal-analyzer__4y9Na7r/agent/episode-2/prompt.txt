@@ -1,0 +1,51 @@
+New Terminal Output:
+
+root@ec1dd7abfc7f:/app# grep -n 'analysis-output\|sections\|strong\|Citation Frequency\|Keyword Density\|Section Summaries\|fileType\|citations\|totalWords\|key
+wordDensity\|sectionSummaries' /app/index.html
+22:    .sections ul { list-style: none; padding: 0; }
+23:    .sections li { padding: 10px; margin-bottom: 8px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #007bff; }
+24:    .sections li strong { display: block; margin-bottom: 4px; color: #333; }
+25:    pre#analysis-output { background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-w
+ord; font-size: 13px; }
+87:    function analyzeText(text, fileType) {
+90:      const citations = citationMatches ? citationMatches.length : 0;
+94:      const totalWords = wordMatches ? wordMatches.length : 0;
+103:      const quantumDensity = totalWords > 0 ? Math.round((quantumCount / totalWords) * 1000) / 1000 : 0;
+104:      const entanglementDensity = totalWords > 0 ? Math.round((entanglementCount / totalWords) * 1000) / 1000 : 0;
+107:      const sectionSummaries = extractSections(text, fileType);
+110:        fileType,
+111:        citations,
+112:        totalWords,
+113:        keywordDensity: {
+117:        sectionSummaries
+121:    function extractSections(text, fileType) {
+123:      const sections = [];
+134:            sections.push({
+150:        sections.push({
+157:      if (sections.length === 0 && fileType === 'pdf') {
+167:              sections.push({
+179:          sections.push({
+186:      return sections;
+210:        const fileType = ext === 'pdf' ? 'pdf' : 'markdown';
+212:        if (fileType === 'pdf') {
+236:        fileType: "",
+237:        citations: 0,
+238:        totalWords: 0,
+239:        keywordDensity: {
+243:        sectionSummaries: []
+265:                <h2>Citation Frequency</h2>
+271:                    <tr><td>Total Citations</td><td>{data.citations}</td></tr>
+277:                <h2>Keyword Density</h2>
+285:                      <td>{data.keywordDensity.quantum.count}</td>
+286:                      <td>{data.keywordDensity.quantum.density}</td>
+290:                      <td>{data.keywordDensity.entanglement.count}</td>
+291:                      <td>{data.keywordDensity.entanglement.density}</td>
+298:                <h2>Section Summaries</h2>
+299:                <div className="sections">
+301:                    {data.sectionSummaries.map((sec, i) => (
+303:                        <strong>{sec.title}</strong>
+313:          <pre id="analysis-output">{JSON.stringify(data, null, 2)}</pre>
+root@ec1dd7abfc7f:/app# grep -n 'accept=\|type="file"' /app/index.html
+255:              type="file"
+256:              accept=".md,.markdown,.pdf"
+root@ec1dd7abfc7f:/app#

@@ -1,0 +1,78 @@
+
+up to date, audited 153 packages in 466ms
+
+40 packages are looking for funding
+  run `npm fund` for details
+
+6 vulnerabilities (5 moderate, 1 critical)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+Installing dependencies...
+Hit:1 http://deb.debian.org/debian bookworm InRelease
+Hit:2 http://deb.debian.org/debian bookworm-updates InRelease
+Hit:3 http://deb.debian.org/debian-security bookworm-security InRelease
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+libasound2 is already the newest version (1.2.8-1+b1).
+libatk-bridge2.0-0 is already the newest version (2.46.0-5).
+libatk1.0-0 is already the newest version (2.46.0-5).
+libatspi2.0-0 is already the newest version (2.46.0-5).
+libcairo2 is already the newest version (1.16.0-7).
+libcups2 is already the newest version (2.4.2-3+deb12u9).
+libdbus-1-3 is already the newest version (1.14.10-1~deb12u1).
+libdrm2 is already the newest version (2.4.114-1+b1).
+libgbm1 is already the newest version (22.3.6-1+deb12u1).
+libglib2.0-0 is already the newest version (2.74.6-2+deb12u8).
+libnspr4 is already the newest version (2:4.35-1).
+libnss3 is already the newest version (2:3.87.1-1+deb12u2).
+libpango-1.0-0 is already the newest version (1.50.12+ds-1).
+libx11-6 is already the newest version (2:1.8.4-2+deb12u2).
+libxcb1 is already the newest version (1.15-1).
+libxcomposite1 is already the newest version (1:0.4.5-1).
+libxdamage1 is already the newest version (1:1.1.6-1).
+libxext6 is already the newest version (2:1.3.4-1+b1).
+libxfixes3 is already the newest version (1:6.0.0-2).
+libxkbcommon0 is already the newest version (1.5.0-1).
+libxrandr2 is already the newest version (2:1.5.2-2+b1).
+xvfb is already the newest version (2:21.1.7-3+deb12u11).
+fonts-noto-color-emoji is already the newest version (2.042-0+deb12u1).
+fonts-unifont is already the newest version (1:15.0.01-2).
+libfontconfig1 is already the newest version (2.14.1-4).
+libfreetype6 is already the newest version (2.12.1+dfsg-5+deb12u4).
+xfonts-scalable is already the newest version (1:1.0.3-1.3).
+fonts-liberation is already the newest version (1:1.07.4-11).
+fonts-ipafont-gothic is already the newest version (00303-23).
+fonts-wqy-zenhei is already the newest version (0.9.45-8).
+fonts-tlwg-loma-otf is already the newest version (1:0.7.3-1).
+fonts-freefont-ttf is already the newest version (20120503-10).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+
+> test
+> vitest run
+
+
+ RUN  v2.1.9 /tests
+
+ ✓ unit/analyzer.spec.ts (1 test) 3ms
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  04:50:37
+   Duration  1.69s (transform 126ms, setup 0ms, collect 24ms, tests 3ms, environment 223ms, prepare 394ms)
+
+
+> test:e2e
+> playwright test
+
+
+Running 2 tests using 1 worker
+
+  ✓  1 [chromium] › e2e/analyzer.spec.ts:39:1 › markdown upload analyzes citations, keyword density, and section summaries (801ms)
+  ✓  2 [chromium] › e2e/analyzer.spec.ts:88:1 › pdf upload parses text-based pdf files and updates the dashboard (993ms)
+
+  2 passed (3.6s)

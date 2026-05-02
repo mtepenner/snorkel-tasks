@@ -1,0 +1,70 @@
+New Terminal Output:
+
+root@a242040940e6:/app# python3 - <<'PY'
+> from pathlib import Path
+> p=Path('/app/index.html')
+> text=p.read_text(encoding='utf-8', errors='replace')
+> print('lines', text.count('\n')+1)
+> # quick sanity checks
+> checks = {
+>   'has_root_div': '<div id="root"></div>' in text,
+>   'has_babel': 'babel.min.js' in text,
+>   'has_react': 'react@18' in text,
+>   'has_reactdom': 'react-dom@18' in text,
+>   'has_pdfjs': 'pdf.min.js' in text,
+>   'has_analysis_pre': 'id="analysis-output"' in text,
+> }
+> print(checks)
+> # look for heredoc/prompt artifacts that sometimes get inserted
+> suspects = ['ntum>', 's>', 'if (sa>', 'y tiny s>', 'ty sum>', 'rn {', '.>', '.</>']
+> found = {s: (s in text) for s in suspects}
+> print('suspects_found', {k:v for k,v in found.items() if v})
+> PY
+lines 377
+{'has_root_div': True, 'has_babel': True, 'has_react': True, 'has_reactdom': True, 'has_pdfjs': True, 'has_analysis_pre': True}
+suspects_found {'rn {': True}
+root@a242040940e6:/app# grep -n "analysis-output" -n /app/index.html
+365:              <pre id="analysis-output">{analysisJson}</pre>
+root@a242040940e6:/app# head -n 20 /app/index.html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client-Side Journal Analyzer</title>
+  <style>
+    :root { --bg:#0b1220; --panel:#101a33; --text:#e7ecff; --muted:#a9b4d6; --accent:#6aa6ff; --danger:#ff6a6a; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 18px; }
+    h1 { font-size: 18px; margin: 0 0 10px; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; }
+    .card { background: var(--panel); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; }
+    .card h2 { font-size: 14px; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
+    .top { align-items:center; justify-content:space-between; }
+    .status { color: var(--muted); font-size: 13px; }
+    .status strong { color: var(--text); }
+    input[type=file] { color: var(--muted); }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
+root@a242040940e6:/app# tail -n 20 /app/index.html
+                ) : (
+                  <div className="small">No summaries yet. Upload a file to generate section summaries.</div>
+                )}
+              </div>
+            </div>
+
+            <div className="card" style={{gridColumn: "1 / -1"}}>
+              <h2>Machine-readable analysis (for tests)</h2>
+              <pre id="analysis-output">{analysisJson}</pre>
+              <div className="hint">The JSON above mirrors the dashboard data.</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
+root@a242040940e6:/app#

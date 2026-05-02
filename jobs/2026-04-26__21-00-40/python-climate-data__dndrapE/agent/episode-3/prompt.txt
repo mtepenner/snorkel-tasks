@@ -1,0 +1,26 @@
+New Terminal Output:
+
+root@89d4e656df83:/app/workspace# cat /app/workspace/data/cleaned.json
+[
+  {
+    "region": "North America",
+    "temperature": 15.0,
+    "year": 2021
+  },
+  {
+    "region": "Europe",
+    "temperature": 22.5,
+    "year": 2021
+  }
+]root@89d4e656df83:/app/workspace# cat /app/workspace/data/trends.json
+{
+  "North America": 15.0,
+  "Europe": 22.5
+}root@89d4e656df83:/app/workspace# cat /app/workspace/output/climate_graph.gv
+digraph climate {
+    "North America" -> "15.0";
+    "Europe" -> "22.5";
+}
+root@89d4e656df83:/app/workspace# file /app/workspace/output/climate_graph.png
+bash: file: command not found
+root@89d4e656df83:/app/workspace#

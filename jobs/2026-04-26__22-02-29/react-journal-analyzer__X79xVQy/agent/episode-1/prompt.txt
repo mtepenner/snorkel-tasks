@@ -1,0 +1,268 @@
+Current terminal state:
+New Terminal Output:
+root@599d5bf704a3:/app# ls -la
+total 8
+drwxr-xr-x 2 root root 4096 Apr 25 04:40 .
+drwxr-xr-x 1 root root 4096 Apr 27 05:03 ..
+root@599d5bf704a3:/app# cat > /app/index.html <<'HTML'
+> <!doctype html>
+onospace; }
+    input[type="file"] { padding: 6px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Client-Side Journal Analyzer</h1>
+    <div id="root"></div>
+  </div>
+
+  <!-- React + Babel (no build pipeline) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- PDF.js for PDF text extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js" integrity="sha512-5Yd3f5+OeY7vX3sBqK+fVd2Je2v0qF2v8yEyyF9W4vYVZg8o5pWzQ/7nIglV8
+dBvCqzK7l+Oq8nry0rKq6wSA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <script type="text/babel">
+    const { useMemo, useState } = React;
+
+    function normalizeWhitespace(s) {
+      return (s || "").replace(/\r\n/g, "\n").replace(/\t/g, " ");
+    }
+
+    function countCitations(text) {
+      // bracket st> <html lang="en">
+> <head>
+>   <meta charset="utf-8" />
+>   <meta name="viewport" content="width=device-width,initial-scale=1" />
+>   <title>Journal Analyzer</title>
+>   <style>
+>     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; }
+>     .container { max-width: 1000px; margin: 0 auto; }
+im()>     .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 14px 0; }
+>     .row { display: flex; gap: 16px; flex-wrap: wrap; }
+>     .row .card { flex: 1 1 280px; }
+>     h2 { margin: 0 0 8px 0; }
+>     h3 { margin: 0 0 10px 0; }
+candidateText);
+ >     .muted { color: #555; }
+>     .status { margin: 10px 0 0 0; }
+>     .sections > div { padding: 10px 0; border-top: 1px solid #eee; }
+>     .sections > div:first-child { border-top: 0; }
+>     pre { background: #0b1020; color: #d6e2ff; padding: 12px; border-radius: 8px; overflow: auto; }
+>     code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+>     input[type="file"] { padding: 6px; }
+>   </style>
+> </head>
+> <body>
+>   <div class="container">
+>     <h1>Client-Side Journal Analyzer</h1>
+>     <div id="root"></div>
+>   </div>
+>
+y>   <!-- React + Babel (no build pipeline) -->
+>   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+>   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+>   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+>
+>   <!-- PDF.js for PDF text extraction -->
+>   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.js" integrity="sha512-5Yd3f5+OeY7vX3sBqK+fVd2Je2v0qF2v8yEyyF9W4vYVZg8o5pWzQ/7nIgl
+V8dBvCqzK7l+Oq8nry0rKq6wSA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+>
+i>   <script type="text/babel">
+>     const { useMemo, useState } = React;
+>
+>     function normalizeWhitespace(s) {
+>       return (s || "").replace(/\r\n/g, "\n").replace(/\t/g, " ");
+>     }
+>
+>     function countCitations(text) {
+>       // bracket style citations like [1], [42]
+>       const m = (text || "").match(/\[\d+\]/g);
+>       return m ? m.length : 0;
+>     }
+>
+>     function tokenizeWords(text) {
+>       // Keep it simple + consistent: words are A-Z sequences with optional apostrophes
+>       const m = (text || "").toLowerCase().match(/[a-z]+(?:'[a-z]+)?/g);
+>       return m || [];
+>     }
+>
+>     function keywordStats(text) {
+>       const words = tokenizeWords(text);
+>       const totalWords = words.length;
+>       const counts = { quantum: 0, entanglement: 0 };
+>       for (const w of words) {
+>         if (w === "quantum") counts.quantum++;
+>         if (w === "entanglement") counts.entanglement++;
+>       }
+   })
+  >       const density = (count) => {
+>         if (!totalWords) return 0;
+>         return Number((count / totalWords).toFixed(3));
+>       };
+>       return {
+>         totalWords,
+t>         keywordDensity: {
+o extract text content
+   >           quantum: { count: counts.quantum, density: density(counts.quantum) },
+>           entanglement: { count: counts.entanglement, density: density(counts.entanglement) }
+>         }
+>       };
+8>     }
+>
+>     function splitIntoSentences(block) {
+>       // Lightweight sentence splitting: end punctuation followed by whitespace/newline.
+>       const cleaned = (block || "").replace(/\s+/g, " ").trim();
+>       if (!cleaned) return [];
+>       // Preserve the punctuation.
+>       const parts = cleaned.split(/(?<=[.!?])\s+/);
+>       return parts.map(s => s.trim()).filter(Boolean);
+>     }
+>
+>     function summarizeMarkdown(mdText) {
+>       const text = normalizeWhitespace(mdText);
+>       const line
+[... output limited to 10000 bytes; 4924 interior bytes omitted ...]
+over headings and then summarize
+>         sectionSummaries = recoverHeadingsFromText(text);
+>       } else {
+emen>         sectionSummaries = [{ title: "(Content)", summary: splitIntoSentences(text)[0] || "" }];
+>       }
+>
+>       return {
+>         fileType,
+>         citations,
+>         totalWords,
+>         keywordDensity,
+>         sectionSummaries
+>       };
+>     }
+>
+>     function App() {
+>       const [status, setStatus] = useState("No file loaded.");
+>       const [analysis, setAnalysis] = useState({
+>         fileType: null,
+>         citations: 0,
+>         totalWords: 0,
+>         keywordDensity: {
+>           quantum: { count: 0, density: 0 },
+>           entanglement: { count: 0, density: 0 }
+>         },
+>         sectionSummaries: []
+>       });
+>
+>       const jsonMirror = useMemo(() => {
+>         // Ensure consistent JSON shape and always valid JSON
+>         return JSON.stringify(analysis, null, 2);
+>       }, [analysis]);
+>
+>       async function onFileChange(e) {
+>         const file = e.target.files && e.target.files[0];
+>         if (!file) return;
+>
+>         const name = file.name.toLowerCase();
+>         const isMd = name.endsWith(".md") || name.endsWith(".markdown");
+>         const isPdf = name.endsWith(".pdf");
+>
+>         if (!isMd && !isPdf) {
+>           setStatus("Unsupported file type. Please choose .md, .markdown, or .pdf.");
+>           return;
+>         }
+>
+>         try {
+>           setStatus(`Loading ${file.name}...`);
+>           if (isMd) {
+>             const text = await file.text();
+>             const result = analyzeText({ fileType: "markdown", text });
+>             setAnalysis(result);
+>             setStatus(`Analyzed ${file.name}.`);
+>           } else if (isPdf) {
+>             setStatus(`Extracting text from ${file.name}...`);
+>             const text = await extractPdfText(file);
+>             const result = analyzeText({ fileType: "pdf", text });
+>             setAnalysis(result);
+>             setStatus(`Analyzed ${file.name}.`);
+>           }
+>         } catch (err) {
+>           console.error(err);
+>           setStatus(`Error: ${err && err.message ? err.message : String(err)}`);
+>         }
+>       }
+>
+>       return (
+>         <div>
+>           <div className="card">
+>             <label>
+>               <div><strong>Upload journal file</strong></div>
+>               <input
+>                 type="file"
+>                 accept=".md,.markdown,.pdf"
+>                 onChange={onFileChange}
+>               />
+>             </label>
+>             <div className="status muted">{status}</div>
+>           </div>
+>
+>           <div className="row">
+>             <div className="card">
+>               <h3>Citation Frequency</h3>
+>               <div><strong>Total citations:</strong> {analysis.citations}</div>
+>             </div>
+>
+>             <div className="card">
+>               <h3>Keyword Density</h3>
+>               <div><strong>Total words:</strong> {analysis.totalWords}</div>
+>               <div style={{ marginTop: 8 }}>
+>                 <div><strong>quantum</strong> — count: {analysis.keywordDensity.quantum.count}, density: {analysis.keywordDensity.quantum.density}</div>
+>                 <div><strong>entanglement</strong> — count: {analysis.keywordDensity.entanglement.count}, density: {analysis.keywordDensity.entanglement.densi
+ty}</div>
+>               </div>
+>             </div>
+>           </div>
+>
+>           <div className="card">
+>             <h3>Section Summaries</h3>
+>             <div className="sections">
+>               {analysis.sectionSummaries && analysis.sectionSummaries.length ? (
+>                 analysis.sectionSummaries.map((s, idx) => (
+>                   <div key={idx}>
+>                     <div><strong>{s.title}</strong></div>
+>                     <div className="muted">{s.summary || ""}</div>
+>                   </div>
+>                 ))
+>               ) : (
+>                 <div className="muted">No sections yet. Upload a file to generate summaries.</div>
+>               )}
+>             </div>
+>           </div>
+>
+>           <div className="card">
+>             <div className="muted" style={{ marginBottom: 8 }}>
+>               Machine-readable analysis mirror (JSON):
+>             </div>
+>             <pre id="analysis-output">{jsonMirror}</pre>
+>           </div>
+>         </div>
+>       );
+>     }
+>
+>     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+>   </script>
+> </body>
+> </html>
+> HTML
+root@599d5bf704a3:/app# wc -l /app/index.html
+339 /app/index.html
+root@599d5bf704a3:/app# grep -n "Citation Frequency\|Keyword Density\|Section Summaries\|analysis-output\|accept=\"\.md,\.markdown,\.pdf\"" -n /app/index.html
+287:                accept=".md,.markdown,.pdf"
+296:              <h3>Citation Frequency</h3>
+301:              <h3>Keyword Density</h3>
+311:            <h3>Section Summaries</h3>
+330:            <pre id="analysis-output">{jsonMirror}</pre>
+root@599d5bf704a3:/app#
+
+
+Are you sure you want to mark the task as complete? This will trigger your solution to be graded and you won't be able to make any further corrections. If so, include "task_complete": true in your JSON response again.

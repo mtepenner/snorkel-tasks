@@ -1,0 +1,100 @@
+New Terminal Output:
+
+root@89d4e656df83:/app/workspace# which dot 2>/dev/null; pip list 2>/dev/null | grep -i graphviz
+/usr/bin/dot
+root@89d4e656df83:/app/workspace# pip install graphviz 2>/dev/null; apt-get install -y graphviz 2>/dev/null | tail -3
+Collecting graphviz
+  Downloading graphviz-0.21-py3-none-any.whl (47 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 47.3/47.3 kB 6.5 MB/s eta 0:00:00
+Installing collected packages: graphviz
+Successfully installed graphviz-0.21
+Reading state information...
+graphviz is already the newest version (2.42.4-3).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+root@89d4e656df83:/app/workspace# cat > /app/workspace/src/analyzer.py << 'SCRIPT'
+> import csv
+> import json
+> import os
+> from collections import defaultdict
+>
+> # Paths
+> CSV_PATH = "/app/workspace/data/climate.csv"
+> META_PATH = "/app/workspace/data/metadata.json"
+> CLEANED_PATH = "/app/workspace/data/cleaned.json"
+> TRENDS_PATH = "/app/workspace/data/trends.json"
+> GV_PATH = "/app/workspace/output/climate_graph.gv"
+> PNG_PATH = "/app/workspace/output/climate_graph.png"
+>
+> # Ensure output dirs exist
+> os.makedirs(os.path.dirname(CLEANED_PATH), exist_ok=True)
+> os.makedirs(os.path.dirname(GV_PATH), exist_ok=True)
+>
+> # Load metadata (region_id -> region_name mapping)
+> with open(META_PATH, "r") as f:
+>     metadata = json.load(f)
+>
+> # Read CSV and filter to post-2020 rows
+> cleaned = []
+> with open(CSV_PATH, "r") as f:
+>     reader = csv.DictReader(f)
+>     for row in reader:
+>         year = int(row["year"])
+>         if year <= 2020:
+>             continue
+>         region_id = str(row["region_id"])
+>         region_name = metadata[region_id]
+>         temperature = float(row["temperature"])
+>         cleaned.append({
+>             "region": region_name,
+>             "temperature": temperature,
+>             "year": year
+>         })
+>
+> # Phase 1: Write cleaned.json
+> with open(CLEANED_PATH, "w") as f:
+>     json.dump(cleaned, f, indent=2)
+> print(f"Phase 1: Wrote {len(cleaned)} records to {CLEANED_PATH}")
+>
+> # Phase 2: Compute mean temperature per region and write trends.json
+> region_temps = defaultdict(list)
+> for record in cleaned:
+>     region_temps[record["region"]].append(record["temperature"])
+>
+> trends = {}
+> for region, temps in region_temps.items():
+>     trends[region] = sum(temps) / len(temps)
+>
+> with open(TRENDS_PATH, "w") as f:
+>     json.dump(trends, f, indent=2)
+> print(f"Phase 2: Wrote trends for {len(trends)} regions to {TRENDS_PATH}")
+>
+> # Phase 3: Generate Graphviz directed graph
+> lines = ["digraph climate {"]
+> for region, mean_temp in trends.items():
+>     # Quote both region name and mean temp so decimal values survive verbatim
+>     temp_str = str(mean_temp)
+>     lines.append(f'    "{region}" -> "{temp_str}";')
+> lines.append("}")
+> gv_content = "\n".join(lines) + "\n"
+>
+> with open(GV_PATH, "w") as f:
+>     f.write(gv_content)
+> print(f"Phase 3: Wrote {GV_PATH}")
+>
+> # Render PNG
+> import subprocess
+> result = subprocess.run(["dot", "-Tpng", GV_PATH, "-o", PNG_PATH], capture_output=True, text=True)
+> if result.returncode == 0:
+>     print(f"Phase 3: Wrote {PNG_PATH}")
+> else:
+>     print(f"Phase 3 ERROR: {result.stderr}")
+>
+> print("Done.")
+> SCRIPT
+root@89d4e656df83:/app/workspace# python3 /app/workspace/src/analyzer.py
+Phase 1: Wrote 2 records to /app/workspace/data/cleaned.json
+Phase 2: Wrote trends for 2 regions to /app/workspace/data/trends.json
+Phase 3: Wrote /app/workspace/output/climate_graph.gv
+Phase 3: Wrote /app/workspace/output/climate_graph.png
+Done.
+root@89d4e656df83:/app/workspace#

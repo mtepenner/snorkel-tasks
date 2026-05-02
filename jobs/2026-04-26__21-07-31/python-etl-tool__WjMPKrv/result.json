@@ -1,0 +1,94 @@
+{
+    "id": "9916058b-8b03-47a5-831d-2524a9160608",
+    "task_name": "python-etl-tool",
+    "trial_name": "python-etl-tool__WjMPKrv",
+    "trial_uri": "file:///mnt/c/Users/mtepe/Scripts/snorkel-ai/tasks/jobs/2026-04-26__21-07-31/python-etl-tool__WjMPKrv",
+    "task_id": {
+        "path": "python-etl-tool"
+    },
+    "source": null,
+    "task_checksum": "2953f964c0ccf422e7e967e94100270b7aecb494dc833705ce2142bd3d731e3e",
+    "config": {
+        "task": {
+            "path": "python-etl-tool",
+            "git_url": null,
+            "git_commit_id": null,
+            "overwrite": false,
+            "download_dir": null,
+            "source": null
+        },
+        "trial_name": "python-etl-tool__WjMPKrv",
+        "trials_dir": "jobs/2026-04-26__21-07-31",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "oracle",
+            "import_path": null,
+            "model_name": null,
+            "override_timeout_sec": null,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {},
+            "env": {}
+        },
+        "environment": {
+            "type": "docker",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": null,
+            "override_memory_mb": null,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": false,
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "9fef0823-baf2-4fab-ba1f-c676c813f67e"
+    },
+    "agent_info": {
+        "name": "oracle",
+        "version": "1.0.0",
+        "model_info": null
+    },
+    "agent_result": {
+        "n_input_tokens": null,
+        "n_cache_tokens": null,
+        "n_output_tokens": null,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-04-27T04:07:31.492811Z",
+    "finished_at": "2026-04-27T04:08:08.470276Z",
+    "environment_setup": {
+        "started_at": "2026-04-27T04:07:31.606433Z",
+        "finished_at": "2026-04-27T04:07:35.557129Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-04-27T04:07:35.557155Z",
+        "finished_at": "2026-04-27T04:07:35.557189Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-04-27T04:07:35.557216Z",
+        "finished_at": "2026-04-27T04:07:35.876778Z"
+    },
+    "verifier": {
+        "started_at": "2026-04-27T04:07:35.876886Z",
+        "finished_at": "2026-04-27T04:08:06.315660Z"
+    }
+}

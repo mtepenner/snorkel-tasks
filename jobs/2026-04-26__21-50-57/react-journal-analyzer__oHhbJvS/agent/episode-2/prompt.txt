@@ -1,0 +1,287 @@
+Current terminal state:
+New Terminal Output:
+
+root@aff748b658fe:/app# cat > /app/index.html <<'EOF'
+> <!doctype html>
+> <html lang="en">
+> <head>
+>   <meta charset="UTF-8" />
+>   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+>   <title>Journal Analyzer</title>
+>   <style>
+malizeWhit>     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; }
+>     .container { max-width: 980px; margin: 0 auto; }
+>     h1 { margin: 0 0 16px; font-size: 22px; }
+ >     .panel { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 14px 0; }
+>     .row { display: flex; gap: 16px; flex-wrap: wrap; }
+>     .col { flex: 1 1 280px; }
+>     label { display: inline-block; font-weight: 600; margin-bottom: 6px; }
+>     input[type=file] { width: 100%; }
+>     .status { margin-top: 8px; color: #333; }
+>     .muted { color: #666; }
+>     .kpi { font-size: 26px; font-weight: 700; }
+f>     .kpi-sub { font-size: 12px; color: #555; }
+>     .summary-item { padding: 10px 0; border-bottom: 1px solid #eee; }
+>     .summary-item:last-child { border-bottom: none; }
+er>     .summary-title { font-weight: 700; }
+>     pre { background: #0b1020; color: #e6edf3; padding: 12px; border-radius: 10px; overflow: auto; }
+>     code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+>   </style>
+      if (!> </head>
+currentT> <body>
+>   <div class="container">
+>     <h1>Client-Side Journal Analyzer</h1>
+>     <div id="root"></div>
+>   </div>
+   }
+    >
+>   <!-- React + Babel (no build pipeline) -->
+>   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+>   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+>   <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+>
+>   <!-- PDF.js (for PDF text extraction) -->
+>   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js"></script>
+>
+>   <script type="text/babel">
+>     const { useEffect, useMemo, useState } = React;
+>
+>     function round3(n) {
+>       return Math.round(n * 1000) / 1000;
+>     }
+>
+>     function normalizeWhitespace(s) {
+>       return (s || "").replace(/\r\n/g, "\n").replace(/\t/g, " ");
+>     }
+>
+>     function tokenizeWords(text) {
+>       // Words: sequences of letters/numbers incl apostrophes; keeps it simple and deterministic.
+>       const matches = (text || "").match(/[A-Za-z0-9']+/g);
+>       return matches ? matches : [];
+>     }
+>
+>     function countRegexMatches(text, re) {
+>       if (!text) return 0;
+>       const m = text.match(re);
+>       return m ? m.length : 0;
+>     }
+rn ful>
+l>     function countKeyword(words, keywordLower) {
+>       let c = 0;
+>       for (const w of words) {
+>         if (w.toLowerCase() === keywordLower) c++;
+>       }
+tches(ra>       return c;
+>     }
+>
+ >     function firstSentence(text) {
+>       const t = (text || "").trim();
+>       if (!t) return "";
+>       // First sentence split on . ! ? followed by whitespace/newline/end.
+>       const m = t.match(/^[\s\S]*?[.!?](?:\s|$)/);
+>       if (m) return m[0].trim();
+>       // Fallback: first non-empty line
+>       const line = t.split(/\n+/).map(s => s.trim()).find(Boolean);
+>       return (line || t).trim();
+>     }
+>
+>     function summarizeFromMarkdown(mdText) {
+>       const text = normalizeWhitespace(mdText);
+>       const lines = text.split("\n");
+>
+>       const sections = [];
+>       let current = null;
+{
+        sectionSummaries>       let buffer = [];
+>
+>       function flush() {
+>         if (!current) return;
+>         const body = buffer.join("\n").trim();
+>         const summary = firstSentence(body.replace(/\n+/g, "\n"));
+>         sections.push({ title: current, summary: summary || "" });
+>       }
+    file>
+T>       for (let i = 0; i < lines.length; i++) {
+>         const line = lines[i];
+>         const headerMatch = line.match(/^\s*#+\s+(.*)\s*$/);
+>         if (headerMatch) {
+>           flush();
+>           current = headerMatch[1].trim() || "(Untitled)";
+>           buffer = [];
+>         } else {
+>           if (current) buffer.push(line);
+>         }
+>       }
+>       flush();
+>
+o>       // If no markdown headers exist, make a single section.
+>       if (sections.length === 0) {
+>         const summary = firstSentence(text);
+>         return [{ title: "Document", summary: summary || "" }];
+>       }
+>       return sections;
+>     }
+) r>
+>     function recoverHeadingsFromPdfText(rawText) {
+>       // Heuristic: treat short ALL-CAPS lines or lines ending with ':' as headings.
+>       const text = normalizeWhitespace(rawText);
+>       const lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+>
+>       const out = [];
+>       let currentTitle = null;
+>       let buffer = [];
+>
+>       function isLikelyHeading(line) {
+>         if (!line) return false;
+>         if (line.length > 80) return false;
+>         const ha
+[... output limited to 10000 bytes; 7556 interior bytes omitted ...]
+     )}
+>           </div>
+>
+>           <div className="panel">
+>             <h3 style={{ marginTop: 0 }}>Machine-readable analysis</h3>
+>             {/* CRITICAL FOR TESTS */}
+>             <pre id="analysis-output">{analysisJson}</pre>
+>           </div>
+>         </div>
+>       );
+>     }
+>
+>     const root = ReactDOM.createRoot(document.getElementById('root'));
+>     root.render(<App />);
+>   </script>
+> </body>
+> </html>
+> EOF
+root@aff748b658fe:/app# ls -la /app && wc -l /app/index.html
+total 20
+drwxr-xr-x 1 root root  4096 Apr 27 04:52 .
+drwxr-xr-x 1 root root  4096 Apr 27 04:51 ..
+-rw-r--r-- 1 root root 12115 Apr 27 04:52 index.html
+337 /app/index.html
+root@aff748b658fe:/app# sed -n '1,120p' /app/index.html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Journal Analyzer</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; }
+    .container { max-width: 980px; margin: 0 auto; }
+    h1 { margin: 0 0 16px; font-size: 22px; }
+    .panel { border: 1px solid #ddd; border-radius: 10px; padding: 16px; margin: 14px 0; }
+    .row { display: flex; gap: 16px; flex-wrap: wrap; }
+    .col { flex: 1 1 280px; }
+    label { display: inline-block; font-weight: 600; margin-bottom: 6px; }
+    input[type=file] { width: 100%; }
+    .status { margin-top: 8px; color: #333; }
+    .muted { color: #666; }
+    .kpi { font-size: 26px; font-weight: 700; }
+    .kpi-sub { font-size: 12px; color: #555; }
+    .summary-item { padding: 10px 0; border-bottom: 1px solid #eee; }
+    .summary-item:last-child { border-bottom: none; }
+    .summary-title { font-weight: 700; }
+    pre { background: #0b1020; color: #e6edf3; padding: 12px; border-radius: 10px; overflow: auto; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Client-Side Journal Analyzer</h1>
+    <div id="root"></div>
+  </div>
+
+  <!-- React + Babel (no build pipeline) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+
+  <!-- PDF.js (for PDF text extraction) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js"></script>
+
+  <script type="text/babel">
+    const { useEffect, useMemo, useState } = React;
+
+    function round3(n) {
+      return Math.round(n * 1000) / 1000;
+    }
+
+    function normalizeWhitespace(s) {
+      return (s || "").replace(/\r\n/g, "\n").replace(/\t/g, " ");
+    }
+
+    function tokenizeWords(text) {
+      // Words: sequences of letters/numbers incl apostrophes; keeps it simple and deterministic.
+      const matches = (text || "").match(/[A-Za-z0-9']+/g);
+      return matches ? matches : [];
+    }
+
+    function countRegexMatches(text, re) {
+      if (!text) return 0;
+      const m = text.match(re);
+      return m ? m.length : 0;
+    }
+
+    function countKeyword(words, keywordLower) {
+      let c = 0;
+      for (const w of words) {
+        if (w.toLowerCase() === keywordLower) c++;
+      }
+      return c;
+    }
+
+    function firstSentence(text) {
+      const t = (text || "").trim();
+      if (!t) return "";
+      // First sentence split on . ! ? followed by whitespace/newline/end.
+      const m = t.match(/^[\s\S]*?[.!?](?:\s|$)/);
+      if (m) return m[0].trim();
+      // Fallback: first non-empty line
+      const line = t.split(/\n+/).map(s => s.trim()).find(Boolean);
+      return (line || t).trim();
+    }
+
+    function summarizeFromMarkdown(mdText) {
+      const text = normalizeWhitespace(mdText);
+      const lines = text.split("\n");
+
+      const sections = [];
+      let current = null;
+      let buffer = [];
+
+      function flush() {
+        if (!current) return;
+        const body = buffer.join("\n").trim();
+        const summary = firstSentence(body.replace(/\n+/g, "\n"));
+        sections.push({ title: current, summary: summary || "" });
+      }
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        const headerMatch = line.match(/^\s*#+\s+(.*)\s*$/);
+        if (headerMatch) {
+          flush();
+          current = headerMatch[1].trim() || "(Untitled)";
+          buffer = [];
+        } else {
+          if (current) buffer.push(line);
+        }
+      }
+      flush();
+
+      // If no markdown headers exist, make a single section.
+      if (sections.length === 0) {
+        const summary = firstSentence(text);
+        return [{ title: "Document", summary: summary || "" }];
+      }
+      return sections;
+    }
+
+    function recoverHeadingsFromPdfText(rawText) {
+      // Heuristic: treat short ALL-CAPS lines or lines ending with ':' as headings.
+root@aff748b658fe:/app#
+
+
+Are you sure you want to mark the task as complete? This will trigger your solution to be graded and you won't be able to make any further corrections. If so, include "task_complete": true in your JSON response again.

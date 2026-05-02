@@ -1,0 +1,41 @@
+New Terminal Output:
+root@aff748b658fe:/app# ls -la
+total 8
+drwxr-xr-x 2 root root 4096 Apr 25 04:40 .
+drwxr-xr-x 1 root root 4096 Apr 27 04:51 ..
+root@aff748b658fe:/app# test -f /app/index.html && sed -n '1,200p' /app/index.html || echo "NO_INDEX_HTML"
+NO_INDEX_HTML
+root@aff748b658fe:/app#
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

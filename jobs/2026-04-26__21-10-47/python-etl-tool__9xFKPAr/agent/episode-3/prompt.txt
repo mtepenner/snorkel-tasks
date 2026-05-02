@@ -1,0 +1,27 @@
+New Terminal Output:
+
+root@812fbe5aa575:/app# echo 'name,age,city
+> Alice,30,NYC
+> Bob,25,LA' > /app/workspace/data/input/test.csv
+root@812fbe5aa575:/app# cd /app/workspace/src && python app.py &
+[1] 647
+root@812fbe5aa575:/app#  * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.22.0.2:5000
+Press CTRL+C to quit
+curl -s http://localhost:5000/ | head -5
+bash: curl: command not found
+root@812fbe5aa575:/app# curl -s -X POST http://localhost:5000/trigger
+bash: curl: command not found
+root@812fbe5aa575:/app# curl -s http://localhost:5000/logs
+bash: curl: command not found
+root@812fbe5aa575:/app# curl -s http://localhost:5000/download
+bash: curl: command not found
+root@812fbe5aa575:/app# cat /app/workspace/data/output.json
+cat: /app/workspace/data/output.json: No such file or directory
+root@812fbe5aa575:/app# sqlite3 /app/workspace/data/etl.db "SELECT * FROM records;"
+bash: sqlite3: command not found
+root@812fbe5aa575:/app#

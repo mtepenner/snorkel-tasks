@@ -1,0 +1,491 @@
+[?2004hroot@a242040940e6:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@a242040940e6:/app# clear
+[?2004l[H[J[3J[?2004hroot@a242040940e6:/app# ls -la /app
+[?2004ltotal 8
+drwxr-xr-x 2 root root 4096 Apr 25 04:40 .
+drwxr-xr-x 1 root root 4096 Apr 27 04:40 ..
+[?2004hroot@a242040940e6:/app# cat > /app/index.html <<'HTML'
+[?2004l[?2004h> <!doctype html>
+[?2004l[?2004h> <html lang="en">
+[?2004l[?2004h> <head>
+[?2004l[?2004h>   <meta charset="UTF-8" />
+[?2004l[?2004h>   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+[?2004l[?2004h>   <title>Client-Side Journal Analyzer</title>
+[?2004lntum[?2004h>   <style>
+[?2004l[?2004h>     :root { --bg:#0b1220; --panel:#101a33; --text:#e7ecff; --muted:#a9b4d6; --accent:#6aa6ff; --danger:#ff6a6a; }
+[?2004l[?2004h>     body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); }
+[?2004l[?2004h>     .wrap { max-width: 1100px; margin: 0 auto; padding: 18px; }
+[?2004l[?2004h>     h1 { font-size: 18px; margin: 0 0 10px; }
+[?2004l[?2004h>     .row { display:flex; gap:12px; flex-wrap:wrap; }
+[?2004l[?2004h>     .card { background: var(--panel); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; }
+[?2004l[?2004h>     .card h2 { font-size: 14px; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
+[?2004l[?2004h>     .top { align-items:center; justify-content:space-between; }
+[?2004l[?2004h>     .status { color: var(--muted); font-size: 13px; }
+[?2004l[?2004h>     .status strong { color: var(--text); }
+[?2004l[?2004h>     input[type=file] { color: var(--muted); }
+[?2004l[?2004h>     .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+[?2004l[?2004h>     @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
+[?2004l[?2004h>     .kpi { display:flex; gap:14px; flex-wrap:wrap; }
+[?2004l[?2004h>     .kpi > div { min-width: 170px; }
+[?2004l[?2004h>     .big { font-size: 22px; font-weight: 700; color: var(--text); }
+[?2004l[?2004h>     .small { font-size: 12px; color: var(--muted); }
+[?2004l[?2004h>     .list { display:flex; flex-direction:column; gap:10px; }
+[?2004l[?2004h>     .sec { border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px; background: rgba(255,255,255,0.02); }
+[?2004l[?2004h>     .secTitle { font-weight: 700; margin-bottom: 6px; }
+[?2004l[?2004h>     .secBody { color: var(--muted); font-size: 13px; white-space: pre-wrap; }
+[?2004l[?2004h>     pre { margin:0; background: #070b14; color: #d7e2ff; border-radius: 10px; padding: 12px; overflow:auto; border: 1px solid rgba(255,255,255,0.08); }
+[?2004l[?2004h>     .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+[?2004l[?2004h>     .err { color: var(--danger); }
+[?2004l[?2004h>     a { color: var(--accent); }
+[?2004l[?2004h>   </style>
+[?2004l[?2004h> </head>
+[?2004l[?2004h> <body>
+[?2004l[?2004h>   <div id="root"></div>
+[?2004l[?2004h> 
+[?2004l.[?2004h>   <!-- React + Babel (no build pipeline) -->
+[?2004l[?2004h>   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+[?2004l[?2004h>   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+[?2004l[?2004h>   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+[?2004l[?2004h> 
+[?2004l[?2004h>   <!-- PDF.js for client-side PDF text extraction -->
+[?2004l[?2004h>   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js"></script>
+[?2004l[?2004h> 
+[?2004l[?2004h>   <script type="text/babel">
+[?2004l[?2004h>     const { useEffect, useMemo, useState } = React;
+[?2004l[?2004h> 
+[?2004l[?2004h>     // pdf.js worker setup
+[?2004l[?2004h>     if (window.pdfjsLib) {
+[?2004l[?2004h>       // Use a matching worker from CDN
+[?2004l[?2004h>       window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js";
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function safeLower(s){ return (s || "").toLowerCase(); }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function countBracketCitations(text) {
+[?2004l[?2004h>       // Bracket style citations: [1], [42] etc. (digits only inside brackets)
+[?2004l[?2004h>       const m = (text || "").match(/\[(\d+)\]/g);
+[?2004l[?2004h>       return m ? m.length : 0;
+[?2004l[?2004h>     }
+[?2004ls[?2004h> 
+[?2004l[?2004h>     function tokenizeWords(text) {
+[?2004l[?2004h>       // Keep it simple & robust: letters/numbers/apostrophes; split on non-word.
+[?2004l[?2004h>       // Counts total words for density.
+[?2004l[?2004h>       const normalized = (text || "").replace(/\u00A0/g, " ");
+[?2004l[?2004h>       const tokens = normalized.match(/[A-Za-z0-9']+/g);
+[?2004l[?2004h>       return tokens ? tokens : [];
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function countKeyword(tokens, keyword) {
+[?2004l[?2004h>       const k = safeLower(keyword);
+[?2004l if (sa[?2004h>       let c = 0;
+[?2004l[?2004h>       for (const t of tokens) {
+[?2004l[?2004h>         if (safeLower(t) === k) c++;
+[?2004l[?2004h>       }
+[?2004ly tiny s[?2004h>       return c;
+[?2004l[?2004h>     }
+[?2004lty sum[?2004h> 
+[?2004lm[?2004h>     function round3(x) {
+[?2004l[?2004h>       return Math.round(x * 1000) / 1000;
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function firstNonEmptySentence(text) {
+[?2004l[?2004h>       const t = (text || "").replace(/\s+/g, " ").trim();
+[?2004l[?2004h>       if (!t) return "";
+[?2004l[?2004h>       // Try to pick first sentence end. If none, return whole line chunk.
+[?2004l[?2004h>       const m = t.match(/^(.+?[\.\!\?])(\s|$)/);
+[?2004l[?2004h>       return m ? m[1].trim() : t;
+[?2004l[?2004h>     }
+[?2004lrn {
+ [?2004h> 
+[?2004l[?2004h>     function analyzeCommon(text) {
+[?2004l[?2004h>       const citations = countBracketCitations(text);
+[?2004l[?2004h>       const tokens = tokenizeWords(text);
+[?2004l[?2004h>       const totalWords = tokens.length;
+[?2004l[?2004h>       const quantumCount = countKeyword(tokens, "quantum");
+[?2004l[?2004h>       const entanglementCount = countKeyword(tokens, "entanglement");
+[?2004l[?2004h>       const quantumDensity = totalWords ? round3(quantumCount / totalWords) : 0;
+[?2004l[?2004h>       const entanglementDensity = totalWords ? round3(entanglementCount / totalWords) : 0;
+[?2004l[?2004h> 
+[?2004l[?2004h>       return {
+[?2004l[?2004h>         citations,
+[?2004l[?2004h>         totalWords,
+[?2004l[?2004h>         keywords: {
+[?2004l[?2004h>           quantum: { count: quantumCount, density: quantumDensity },
+[?2004l[?2004h>           entanglement: { count: entanglementCount, density: entanglementDensity },
+[?2004l[?2004h>         }
+[?2004l  }
+      return pageT[?2004h>       };
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function analyzeMarkdown(mdText) {
+[?2004l[?2004h>       const lines = (mdText || "").split(/\r?\n/);
+[?2004l[?2004h>       const sections = [];
+[?2004l[?2004h>       let currentTitle = "(untitled)";
+[?2004l[?2004h>       let buffer = [];
+[?2004l[?2004h> 
+[?2004l[?2004h>       function flush() {
+[?2004l[?2004h>         const body = buffer.join("\n");
+[?2004l[?2004h>         const summary = firstNonEmptySentence(body);
+[?2004l[?2004h>         if (currentTitle || summary) {
+[?2004l[?2004h>           sections.push({ title: currentTitle || "(untitled)", summary: summary || "" });
+[?2004l[?2004h>         }
+[?2004les: []
+   [?2004h>         buffer = [];
+[?2004l[?2004h>       }
+[?2004l[?2004h> 
+[?2004l[?2004h>       let sawAnyHeader = false;
+[?2004l[?2004h> 
+[?2004l[?2004h>       for (const line of lines) {
+[?2004l[?2004h>         const headerMatch = line.match(/^\s*#+\s*(.+?)\s*$/);
+[?2004l[?2004h>         if (headerMatch) {
+[?2004l[?2004h>           if (sawAnyHeader || buffer.join("\n").trim()) flush();
+[?2004l[?2004h>           sawAnyHeader = true;
+[?2004l[?2004h>           currentTitle = headerMatch[1];
+[?2004l[?2004h>           buffer = [];
+[?2004l[?2004h>         } else {
+[?2004l[?2004h>           buffer.push(line);
+[?2004l[?2004h>         }
+[?2004lrCase();
+ [?2004h>       }
+[?2004l[?2004h>       // flush last
+[?2004l[?2004h>       if (sawAnyHeader || buffer.join("\n").trim()) flush();
+[?2004l[?2004h> 
+[?2004l[?2004h>       const common = analyzeCommon(mdText);
+[?2004l[?2004h>       return {
+[?2004l[?2004h>         fileType: "markdown",
+[?2004l[?2004h>         ...common,
+[?2004l[?2004h>         summaries: sections
+[?2004l[?2004h>       };
+[?2004l or .pdf [?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function isLikelyHeadingLine(line) {
+[?2004l[?2004h>       const t = (line || "").trim();
+[?2004l[?2004h>       if (!t) return false;
+[?2004l[?2004h>       // Heuristics for PDF extracted text: headings often short and mostly Title Case/Upper.
+[?2004l[?2004h>       const words = t.split(/\s+/);
+[?2004l[?2004h>       if (words.length > 12) return false;
+[?2004l[?2004h>       if (t.length < 3) return false;
+[?2004l[?2004h>       const letters = (t.match(/[A-Za-z]/g) || []).length;
+[?2004l[?2004h>       if (letters < 3) return false;
+[?2004l[?2004h>       // No ending punctuation typical of body.
+[?2004l[?2004h>       if (/[\.!\?]\s*$/.test(t)) return false;
+[?2004l[?2004h>       // Contains many uppercase letters relative to letters.
+[?2004l[?2004h>       const upp = (t.match(/[A-Z]/g) || []).length;
+[?2004l[?2004h>       const ratio = letters ? (upp / letters) : 0;
+[?2004l[?2004h>       // Or looks like numbered section
+[?2004l[?2004h>       const numbered = /^\s*(\d+|\d+\.\d+|[IVX]+)\.?\s+\S+/.test(t);
+[?2004l[?2004h>       return numbered || ratio > 0.55;
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     function analyzePdfText(extractedText) {
+[?2004l[?2004h>       const text = extractedText || "";
+[?2004l[?2004h>       const lines = text.split(/\r?\n/).map(l => l.replace(/\s+$/g, ""));
+[?2004l[?2004h> 
+[?2004l[?2004h>       const sections = [];
+[?2004l[?2004h>       let currentTitle = "(document)";
+[?2004l [?2004h>       let buffer = [];
+[?2004l[?2004h> 
+[?2004l[?2004h>       function flush() {
+[?2004l[?2004h>         const body = buffer.join("\n");
+[?2004l[?2004h>         const summary = firstNonEmptySentence(body);
+[?2004l[?2004h>         sections.push({ title: currentTitle || "(untitled)", summary: summary || "" });
+[?2004l[?2004h>         buffer = [];
+[?2004l[?2004h>       }
+[?2004l[?2004h> 
+[?2004l[?2004h>       let sawHeading = false;
+[?2004l[?2004h> 
+[?2004l[?2004h>       for (let i = 0; i < lines.length; i++) {
+[?2004l[?2004h>         const line = (lines[i] || "").trim();
+[?2004l[?2004h>         if (!line) {
+[?2004l[?2004h>           buffer.push("");
+[?2004l[?2004h>           continue;
+[?2004l[?2004h>         }
+[?2004l[?2004h>         if (isLikelyHeadingLine(line)) {
+[?2004l[?2004h>           if (sawHeading || buffer.join("\n").trim()) {
+[?2004l[?2004h>             flush();
+[?2004l[?2004h>           }
+[?2004l[?2004h>           sawHeading = true;
+[?2004l[?2004h>           currentTitle = line;
+[?2004l[?2004h>           buffer = [];
+[?2004l[?2004h>         } else {
+[?2004l[?2004h>           buffer.push(line);
+[?2004l[?2004h>         }
+[?2004l[?2004h>       }
+[?2004l[?2004h> 
+[?2004l[?2004h>       if (sawHeading || buffer.join("\n").trim()) flush();
+[?2004l[?2004h> 
+[?2004l[?2004h>       // If heuristic produced too many tiny sections with empty summaries, collapse fallback.
+[?2004l[?2004h>       const nonEmptySummaries = sections.filter(s => (s.summary || "").trim()).length;
+[?2004l[?2004h>       let finalSections = sections;
+[?2004l[?2004h>       if (sections.length > 25 && nonEmptySummaries < 3) {
+[?2004l[?2004h>         finalSections = [{ title: "(document)", summary: firstNonEmptySentence(text) }];
+[?2004l[?2004h>       }
+[?2004l| "—"}[?2004h> 
+[?2004l[?2004h>       const common = analyzeCommon(text);
+[?2004l[?2004h>       return {
+[?2004l[?2004h>         fileType: "pdf",
+[?2004l[?2004h>         ...common,
+[?2004l[?2004h>         summaries: finalSections
+[?2004l[?2004h>       };
+[?2004l     <div[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     async function extractPdfText(arrayBuffer) {
+[?2004l[?2004h>       const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+[?2004l[?2004h>       const pageTexts = [];
+[?2004l[?2004h>       for (let p = 1; p <= pdf.numPages; p++) {
+[?2004l[?2004h>         const page = await pdf.getPage(p);
+[?2004l[?2004h>         const content = await page.getTextContent();
+[?2004l[?2004h>         // Join items with spaces; also add newlines when Y position decreases significantly.
+[?2004l[?2004h>         // Simple approach: keep in reading order as provided.
+[?2004l[?2004h>         const strings = content.items.map(it => (it.str || "").trim()).filter(Boolean);
+[?2004l[?2004h>         pageTexts.push(strings.join(" "));
+[?2004l[?2004h>       }
+[?2004l[?2004h>       return pageTexts.join("\n\n");
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004lr[?2004h>     function App() {
+[?2004l[?2004h>       const [status, setStatus] = useState("Select a .md/.markdown/.pdf file to analyze.");
+[?2004l[?2004h>       const [error, setError] = useState("");
+[?2004l[?2004h>       const [analysis, setAnalysis] = useState({
+[?2004l[?2004h>         fileType: null,
+[?2004l[?2004h>         citations: 0,
+[?2004l[?2004h>         totalWords: 0,
+[?2004l[?2004h>         keywords: {
+[?2004l[?2004h>           quantum: { count: 0, density: 0 },
+[?2004l[?2004h>           entanglement: { count: 0, density: 0 }
+[?2004l[?2004h>         },
+[?2004l[?2004h>         summaries: []
+[?2004l[?2004h>       });
+[?2004l[?2004h> 
+[?2004l[?2004h>       const analysisJson = useMemo(() => {
+[?2004l[?2004h>         // Keep machine-readable JSON always valid.
+[?2004l[?2004h>         return JSON.stringify(analysis, null, 2);
+[?2004l[?2004h>       }, [analysis]);
+[?2004l[?2004h> 
+[?2004l[?2004h>       async function onPickFile(e) {
+[?2004l[?2004h>         setError("");
+[?2004l[?2004h>         const file = e.target.files && e.target.files[0];
+[?2004l[?2004h>         if (!file) return;
+[?2004l[?2004h> 
+[?2004l
+[?2004h>         const name = file.name || "";
+[?2004l[?2004h>         const lower = name.toLowerCase();
+[?2004l[?2004h>         const isMd = lower.endsWith(".md") || lower.endsWith(".markdown");
+[?2004l[?2004h>         const isPdf = lower.endsWith(".pdf");
+[?2004l[?2004h> 
+[?2004l.</[?2004h>         if (!isMd && !isPdf) {
+[?2004l[?2004h>           setError("Unsupported file type. Please select a .md, .markdown, or .pdf file.");
+[?2004l[?2004h>           setStatus("Idle");
+[?2004l[?2004h>           return;
+[?2004l[?2004h>         }
+[?2004l[?2004h> 
+[?2004l[?2004h>         try {
+[?2004l[?2004h>           setStatus(`Loading: ${name}`);
+[?2004l[?2004h>           if (isMd) {
+[?2004l[?2004h>             const text = await file.text();
+[?2004l[?2004h>             const a = analyzeMarkdown(text);
+[?2004l[?2004h>             setAnalysis(a);
+[?2004l[?2004h>             setStatus(`Analyzed Markdown: ${name}`);
+[?2004l[?2004h>           } else {
+[?2004l[?2004h>             if (!window.pdfjsLib) {
+[?2004l[?2004h>               throw new Error("pdf.js failed to load.");
+[?2004l[?2004h>             }
+[?2004l[?2004h>             const buf = await file.arrayBuffer();
+[?2004l[?2004h>             setStatus(`Extracting PDF text: ${name}`);
+[?2004l[?2004h>             const text = await extractPdfText(buf);
+[?2004l[?2004h>             const a = analyzePdfText(text);
+[?2004l[?2004h>             setAnalysis(a);
+[?2004l[?2004h>             setStatus(`Analyzed PDF: ${name}`);
+[?2004l[?2004h>           }
+[?2004l[?2004h>         } catch (err) {
+[?2004l[?2004h>           setError(err && err.message ? err.message : String(err));
+[?2004l[?2004h>           setStatus("Error");
+[?2004l[?2004h>         }
+[?2004l[?2004h>       }
+[?2004l[?2004h> 
+[?2004l[?2004h>       return (
+[?2004l[?2004h>         <div className="wrap">
+[?2004l[?2004h>           <div className="row top" style={{marginBottom: 12}}>
+[?2004l[?2004h>             <div>
+[?2004l[?2004h>               <h1>React Client-Side Journal Analyzer</h1>
+[?2004l[?2004h>               <div className="status">
+[?2004l[?2004h>                 <strong>Status:</strong> {status}{error ? <span className="err"> — {error}</span> : null}
+[?2004l[?2004h>               </div>
+[?2004l[?2004h>             </div>
+[?2004l[?2004h>             <div className="card" style={{minWidth: 360}}>
+[?2004l[?2004h>               <h2>Upload</h2>
+[?2004l[?2004h>               <input
+[?2004l[?2004h>                 type="file"
+[?2004l[?2004h>                 accept=".md,.markdown,.pdf,application/pdf,text/markdown"
+[?2004l[?2004h>                 onChange={onPickFile}
+[?2004l[?2004h>               />
+[?2004l[?2004h>               <div className="hint">Analyzes immediately after load; runs entirely in-browser.</div>
+[?2004l[?2004h>             </div>
+[?2004l[?2004h>           </div>
+[?2004l[?2004h> 
+[?2004l[?2004h>           <div className="grid">
+[?2004l[?2004h>             <div className="card">
+[?2004l[?2004h>               <h2>Citations</h2>
+[?2004l[?2004h>               <div className="kpi">
+[?2004l[?2004h>                 <div>
+[?2004l[?2004h>                   <div className="big">{analysis.citations}</div>
+[?2004l[?2004h>                   <div className="small">Bracket citations like [1], [42]</div>
+[?2004l[?2004h>                 </div>
+[?2004l[?2004h>                 <div>
+[?2004l[?2004h>                   <div className="big">{analysis.totalWords}</div>
+[?2004l[?2004h>                   <div className="small">Total words</div>
+[?2004l[?2004h>                 </div>
+[?2004l[?2004h>                 <div>
+[?2004l[?2004h>                   <div className="big">{analysis.fileType || "—"}</div>
+[?2004l[?2004h>                   <div className="small">File type</div>
+[?2004l[?2004h>                 </div>
+[?2004l[?2004h>               </div>
+[?2004l[?2004h>             </div>
+[?2004l[?2004h> 
+[?2004l[?2004h>             <div className="card">
+[?2004l[?2004h>               <h2>Keywords (frequency &amp; density)</h2>
+[?2004l[?2004h>               <div className="kpi">
+[?2004l[?2004h>                 <div>
+[?2004l[?2004h>                   <div className="big">{analysis.keywords.quantum.count}</div>
+[?2004l[?2004h>                   <div className="small">"quantum" density: {analysis.keywords.quantum.density}</div>
+[?2004l[?2004h>                 </div>
+[?2004l[?2004h>                 <div>
+[?2004l[?2004h>                   <div className="big">{analysis.keywords.entanglement.count}</div>
+[?2004l[?2004h>                   <div className="small">"entanglement" density: {analysis.keywords.entanglement.density}</div>
+[?2004l[?2004h>                 </div>
+[?2004l[?2004h>               </div>
+[?2004l[?2004h>             </div>
+[?2004l[?2004h> 
+[?2004l[?2004h>             <div className="card" style={{gridColumn: "1 / -1"}}>
+[?2004l[?2004h>               <h2>Section summaries</h2>
+[?2004l[?2004h>               <div className="list">
+[?2004l[?2004h>                 {analysis.summaries && analysis.summaries.length ? (
+[?2004l[?2004h>                   analysis.summaries.map((s, idx) => (
+[?2004l[?2004h>                     <div className="sec" key={idx}>
+[?2004l[?2004h>                       <div className="secTitle">{s.title}</div>
+[?2004l[?2004h>                       <div className="secBody">{s.summary || "(no summary found)"}</div>
+[?2004l[?2004h>                     </div>
+[?2004l[?2004h>                   ))
+[?2004l[?2004h>                 ) : (
+[?2004l[?2004h>                   <div className="small">No summaries yet. Upload a file to generate section summaries.</div>
+[?2004l[?2004h>                 )}
+[?2004l[?2004h>               </div>
+[?2004l[?2004h>             </div>
+[?2004l[?2004h> 
+[?2004l[?2004h>             <div className="card" style={{gridColumn: "1 / -1"}}>
+[?2004l[?2004h>               <h2>Machine-readable analysis (for tests)</h2>
+[?2004l[?2004h>               <pre id="analysis-output">{analysisJson}</pre>
+[?2004l[?2004h>               <div className="hint">The JSON above mirrors the dashboard data.</div>
+[?2004l[?2004h>             </div>
+[?2004l[?2004h>           </div>
+[?2004l[?2004h>         </div>
+[?2004l[?2004h>       );
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+[?2004l[?2004h>   </script>
+[?2004l[?2004h> </body>
+[?2004l[?2004h> </html>
+[?2004l[?2004h> HTML
+[?2004l[?2004hroot@a242040940e6:/app# python3 -c "import pathlib; p=pathlib.Path('/app/index.html'); print('index.html exists:', p.exists(), 'size:', p.stat().st_size)"
+[?2004lindex.html exists: True size: 14014
+[?2004hroot@a242040940e6:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> p=Path('/app/index.html')
+[?2004l[?2004h> text=p.read_text(encoding='utf-8', errors='replace')
+[?2004l[?2004h> print('lines', text.count('\n')+1)
+[?2004l[?2004h> # quick sanity checks
+[?2004l[?2004h> checks = {
+[?2004l[?2004h>   'has_root_div': '<div id="root"></div>' in text,
+[?2004l[?2004h>   'has_babel': 'babel.min.js' in text,
+[?2004l[?2004h>   'has_react': 'react@18' in text,
+[?2004l[?2004h>   'has_reactdom': 'react-dom@18' in text,
+[?2004l[?2004h>   'has_pdfjs': 'pdf.min.js' in text,
+[?2004l[?2004h>   'has_analysis_pre': 'id="analysis-output"' in text,
+[?2004l[?2004h> }
+[?2004l[?2004h> print(checks)
+[?2004l[?2004h> # look for heredoc/prompt artifacts that sometimes get inserted
+[?2004l[?2004h> suspects = ['ntum>', 's>', 'if (sa>', 'y tiny s>', 'ty sum>', 'rn {', '.>', '.</>']
+[?2004l[?2004h> found = {s: (s in text) for s in suspects}
+[?2004l[?2004h> print('suspects_found', {k:v for k,v in found.items() if v})
+[?2004l[?2004h> PY
+[?2004llines 377
+{'has_root_div': True, 'has_babel': True, 'has_react': True, 'has_reactdom': True, 'has_pdfjs': True, 'has_analysis_pre': True}
+suspects_found {'rn {': True}
+[?2004hroot@a242040940e6:/app# grep -n "analysis-output" -n /app/index.html
+[?2004l365:              <pre id="analysis-output">{analysisJson}</pre>
+[?2004hroot@a242040940e6:/app# head -n 20 /app/index.html
+[?2004l<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client-Side Journal Analyzer</title>
+  <style>
+    :root { --bg:#0b1220; --panel:#101a33; --text:#e7ecff; --muted:#a9b4d6; --accent:#6aa6ff; --danger:#ff6a6a; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 18px; }
+    h1 { font-size: 18px; margin: 0 0 10px; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; }
+    .card { background: var(--panel); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; }
+    .card h2 { font-size: 14px; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
+    .top { align-items:center; justify-content:space-between; }
+    .status { color: var(--muted); font-size: 13px; }
+    .status strong { color: var(--text); }
+    input[type=file] { color: var(--muted); }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
+[?2004hroot@a242040940e6:/app# tail -n 20 /app/index.html
+[?2004l                ) : (
+                  <div className="small">No summaries yet. Upload a file to generate section summaries.</div>
+                )}
+              </div>
+            </div>
+
+            <div className="card" style={{gridColumn: "1 / -1"}}>
+              <h2>Machine-readable analysis (for tests)</h2>
+              <pre id="analysis-output">{analysisJson}</pre>
+              <div className="hint">The JSON above mirrors the dashboard data.</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
+[?2004hroot@a242040940e6:/app# grep -n "rn {" -n /app/index.html
+[?2004l101:      return {
+143:      return {
+214:      return {
+[?2004hroot@a242040940e6:/app# perl -pi -e 's/\brn \{//g' /app/index.html
+[?2004l[?2004hroot@a242040940e6:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> p=Path('/app/index.html')
+[?2004l[?2004h> text=p.read_text(encoding='utf-8', errors='replace')
+[?2004l[?2004h> # ensure artifact removed
+[?2004l[?2004h> print('contains rn {?', 'rn {' in text)
+[?2004l[?2004h> # ensure key requirements remain
+[?2004l[?2004h> for needle in ['react@18','react-dom@18','babel.min.js','pdf.min.js','id="analysis-output"','accept=".md,.markdown,.pdf']:
+[?2004l[?2004h>     print(needle, needle in text)
+[?2004l[?2004h> PY
+[?2004lcontains rn {? True
+react@18 True
+react-dom@18 True
+babel.min.js True
+pdf.min.js True
+id="analysis-output" True
+accept=".md,.markdown,.pdf True
+[?2004hroot@a242040940e6:/app# python3 - <<'PY'
+[?2004l[?2004h> from pathlib import Path
+[?2004l[?2004h> text=Path('/app/index.html').read_text(encoding='utf-8', errors='replace')
+[?2004l[?2004h> suspects = ['ntum>', 's>', 'if (sa>', 'y tiny s>', 'ty sum>', '.>', '.</>']
+[?2004l[?2004h> found = [s for s in suspects if s in text]
+[?2004l[?2004h> print('found_suspects:', found)
+[?2004l[?2004h> PY
+[?2004lfound_suspects: []
+[?2004hroot@a242040940e6:/app# 

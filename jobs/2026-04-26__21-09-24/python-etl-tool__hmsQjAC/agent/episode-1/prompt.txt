@@ -1,0 +1,173 @@
+New Terminal Output:
+root@7eedf7728f5f:/app# ls -la /app/workspace
+ls: cannot access '/app/workspace': No such file or directory
+root@7eedf7728f5f:/app# find /app/workspace -maxdepth 3 -type d -print
+find: ‘/app/workspace’: No such file or directory
+root@7eedf7728f5f:/app# mkdir -p /app/workspace/src/templates /app/workspace/data/input
+root@7eedf7728f5f:/app# cat > /app/workspace/src/app.py <<'PY'
+> import os
+> import json
+> import csv
+> import sqlite3
+> from datetime import datetime
+>
+> from flask import Flask, render_template, send_file, Response
+>
+> app = Flask(__name__, template_folder="templates")
+>
+> INPUT_DIR = "/app/workspace/data/input/"
+> OUTPUT_JSON = "/app/workspace/data/output.json"
+> DB_PATH = "/app/workspace/data/etl.db"
+> LOG_PATH = "/app/workspace/data/etl.log"
+>
+>
+> def _append_log(line: str) -> None:
+>     os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+>     ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+>     with open(LOG_PATH, "a", encoding="utf-8") as f:
+>         f.write(f"[{ts}] {line}\n")
+>
+>
+> def run_etl() -> None:
+>     try:
+>         os.makedirs(os.path.dirname(OUTPUT_JSON), exist_ok=True)
+>
+>         records = []
+>
+>         if os.path.isdir(INPUT_DIR):
+>             for name in sorted(os.listdir(INPUT_DIR)):
+>                 if not name.endswith(".csv"):
+>                     continue
+>                 path = os.path.join(INPUT_DIR, name)
+>                 with open(path, newline="", encoding="utf-8") as f:
+>                     reader = csv.DictReader(f)
+>                     for row in reader:
+>                         # Preserve all columns; ensure every value is a string
+>                         clean = {}
+>                         for k, v in row.items():
+>                             if v is None:
+>                                 clean[k] = ""
+>                             else:
+>                                 clean[k] = str(v)
+>                         records.append(clean)
+>
+>         # Write output.json as one flat JSON array
+>         with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
+>             json.dump(records, f)
+>
+>         # Insert into sqlite with exact schema
+>         conn = sqlite3.connect(DB_PATH)
+>         try:
+>             cur = conn.cursor()
+>             cur.execute("CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY, data TEXT)")
+>             cur.execute("DELETE FROM records")
+>             for rec in records:
+>                 cur.execute("INSERT INTO records (data) VALUES (?)", (json.dumps(rec),))
+>             conn.commit()
+>         finally:
+>             conn.close()
+>
+>         _append_log(f"SUCCESS: processed {len(records)} records")
+>
+>     except Exception as e:
+>         _append_log(f"ERROR: {type(e).__name__}: {e}")
+>         raise
+>
+>
+> @app.get("/")
+> def index():
+>     return render_template("index.html")
+>
+>
+> @app.post("/trigger")
+> def trigger():
+>     run_etl()
+>     return Response("OK", status=200, mimetype="text/plain")
+>
+>
+> @app.get("/logs")
+> def logs():
+>     if not os.path.exists(LOG_PATH):
+>         return Response("", status=200, mimetype="text/plain")
+>     with open(LOG_PATH, "r", encoding="utf-8") as f:
+>         return Response(f.read(), status=200, mimetype="text/plain")
+>
+>
+> @app.get("/download")
+> def download():
+>     # Serve /app/workspace/data/output.json
+>     if not os.path.exists(OUTPUT_JSON):
+>         # Ensure file exists so browser download doesn't 404 if ETL hasn't run yet
+>         os.makedirs(os.path.dirname(OUTPUT_JSON), exist_ok=True)
+>         with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
+>             f.write("[]")
+>     return send_file(OUTPUT_JSON, as_attachment=True)
+>
+>
+> if __name__ == "__main__":
+>     app.run(host="0.0.0.0", port=5000)
+> PY
+root@7eedf7728f5f:/app# cat > /app/workspace/src/templates/index.html <<'HTML'
+> <!doctype html>
+> <html lang="en">
+> <head>
+>   <meta charset="utf-8" />
+>   <meta name="viewport" content="width=device-width, initial-scale=1" />
+>   <title>ETL Dashboard</title>
+> </head>
+> <body>
+>   <h1>ETL Dashboard</h1>
+>
+>   <button id="triggerBtn" type="button">Trigger ETL</button>
+>
+>   <p>
+>     <a href="/download">Download output.json</a>
+>   </p>
+>
+>   <h2>Logs</h2>
+>   <pre id="logs" style="white-space: pre-wrap;"></pre>
+>
+>   <script>
+>     async function fetchLogs() {
+>       const res = await fetch('/logs');
+>       const text = await res.text();
+>       document.getElementById('logs').textContent = text;
+>     }
+>
+>     async function triggerETL() {
+>       const btn = document.getElementById('triggerBtn');
+>       btn.disabled = true;
+>       try {
+>         await fetch('/trigger', { method: 'POST' });
+>       } finally {
+>         btn.disabled = false;
+>         await fetchLogs();
+>       }
+>     }
+>
+>     window.addEventListener('DOMContentLoaded', () => {
+>       document.getElementById('triggerBtn').addEventListener('click', triggerETL);
+>       fetchLogs();
+>     });
+>   </script>
+> </body>
+> </html>
+> HTML
+root@7eedf7728f5f:/app# python3 -c "import importlib.util; spec=importlib.util.spec_from_file_location('app','/app/workspace/src/app.py'); m=importlib.util.modu
+le_from_spec(spec); spec.loader.exec_module(m); print('loaded', m.app.name)"
+loaded app
+root@7eedf7728f5f:/app# ls -la /app/workspace/src /app/workspace/src/templates
+/app/workspace/src:
+total 20
+drwxr-xr-x 4 root root 4096 Apr 27 04:10 .
+drwxr-xr-x 4 root root 4096 Apr 27 04:10 ..
+drwxr-xr-x 2 root root 4096 Apr 27 04:10 __pycache__
+-rw-r--r-- 1 root root 3177 Apr 27 04:10 app.py
+drwxr-xr-x 2 root root 4096 Apr 27 04:10 templates
+
+/app/workspace/src/templates:
+total 12
+drwxr-xr-x 2 root root 4096 Apr 27 04:10 .
+drwxr-xr-x 4 root root 4096 Apr 27 04:10 ..
+-rw-r--r-- 1 root root 1062 Apr 27 04:10 index.html
+root@7eedf7728f5f:/app#

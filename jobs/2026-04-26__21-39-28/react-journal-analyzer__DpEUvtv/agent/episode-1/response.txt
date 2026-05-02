@@ -1,0 +1,23 @@
+{
+  "analysis": "index.html has been created in /app (size ~14KB). The earlier terminal output shows some odd prompt artifacts while writing via heredoc (e.g., stray fragments like \"ntum>\", \"s>\") which may indicate terminal echo corruption, but the file likely contains the intended HTML/JS. Before marking complete, we should verify the file content integrity: ensure it contains the required file picker accept types, React/ReactDOM/Babel CDNs, pdf.js CDN, analysis logic, and critically a <pre id=\"analysis-output\"> that always contains valid JSON with required fields (fileType, citations, totalWords, keyword counts/densities, summaries).",
+  "plan": "1) Validate the file does not contain unintended prompt artifacts by grepping for suspicious substrings and checking the beginning/end of the file. 2) Ensure <pre id=\"analysis-output\"></pre> exists exactly once. 3) If artifacts are found, rewrite index.html cleanly (same content) to guarantee correctness. Otherwise, mark task complete.",
+  "commands": [
+    {
+      "keystrokes": "python3 - <<'PY'\nfrom pathlib import Path\np=Path('/app/index.html')\ntext=p.read_text(encoding='utf-8', errors='replace')\nprint('lines', text.count('\\n')+1)\n# quick sanity checks\nchecks = {\n  'has_root_div': '<div id=\"root\"></div>' in text,\n  'has_babel': 'babel.min.js' in text,\n  'has_react': 'react@18' in text,\n  'has_reactdom': 'react-dom@18' in text,\n  'has_pdfjs': 'pdf.min.js' in text,\n  'has_analysis_pre': 'id=\"analysis-output\"' in text,\n}\nprint(checks)\n# look for heredoc/prompt artifacts that sometimes get inserted\nsuspects = ['ntum>', 's>', 'if (sa>', 'y tiny s>', 'ty sum>', 'rn {', '.>', '.</>']\nfound = {s: (s in text) for s in suspects}\nprint('suspects_found', {k:v for k,v in found.items() if v})\nPY\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "grep -n \"analysis-output\" -n /app/index.html\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "head -n 20 /app/index.html\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "tail -n 20 /app/index.html\n",
+      "duration": 0.1
+    }
+  ],
+  "task_complete": false
+}

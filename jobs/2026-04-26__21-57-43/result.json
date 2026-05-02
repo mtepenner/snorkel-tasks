@@ -1,0 +1,29 @@
+{
+    "id": "9764ef52-8a5d-4ae1-866b-06a62527b859",
+    "started_at": "2026-04-26T21:57:43.721854",
+    "finished_at": "2026-04-26T22:02:19.713983",
+    "n_total_trials": 1,
+    "stats": {
+        "n_trials": 1,
+        "n_errors": 0,
+        "evals": {
+            "oracle__adhoc": {
+                "n_trials": 1,
+                "n_errors": 0,
+                "metrics": [
+                    {
+                        "mean": 1.0
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "1.0": [
+                            "react-journal-analyzer__eFo5JFy"
+                        ]
+                    }
+                },
+                "exception_stats": {}
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+  "analysis": "All required assets and elements are present (React/ReactDOM/Babel, pdf.js, root div, analysis-output pre). However, the integrity check found an unintended substring \"rn {\" in index.html, likely from terminal prompt corruption during the heredoc write. This could break JavaScript parsing depending on where it appears, so we should remove it (and verify there are no other artifacts) before marking complete.",
+  "plan": "1) Locate the exact line containing the stray \"rn {\" text. 2) Edit index.html to remove the artifact safely (using a targeted in-place substitution). 3) Re-run a quick sanity check to ensure no suspect artifacts remain and that the file still contains required elements. 4) Mark task complete.",
+  "commands": [
+    {
+      "keystrokes": "grep -n \"rn {\" -n /app/index.html\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "perl -pi -e 's/\\brn \\{//g' /app/index.html\n",
+      "duration": 0.1
+    },
+    {
+      "keystrokes": "python3 - <<'PY'\nfrom pathlib import Path\np=Path('/app/index.html')\ntext=p.read_text(encoding='utf-8', errors='replace')\n# ensure artifact removed\nprint('contains rn {?', 'rn {' in text)\n# ensure key requirements remain\nfor needle in ['react@18','react-dom@18','babel.min.js','pdf.min.js','id=\"analysis-output\"','accept=\".md,.markdown,.pdf']:\n    print(needle, needle in text)\nPY\n",
+      "duration": 0.1
+    }
+  ],
+  "task_complete": false
+}

@@ -1,0 +1,145 @@
+[?2004hroot@89d4e656df83:/app/workspace# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@89d4e656df83:/app/workspace# clear
+[?2004l[H[J[3J[?2004hroot@89d4e656df83:/app/workspace# find /app/workspace -type f | head -30
+[?2004l/app/workspace/data/metadata.json
+/app/workspace/data/climate.csv
+[?2004hroot@89d4e656df83:/app/workspace# cat /app/workspace/data/climate.csv
+[?2004lregion_id,year,temperature
+1,2020,14.5
+1,2021,15.0
+2,2020,22.1
+2,2021,22.5
+[?2004hroot@89d4e656df83:/app/workspace# cat /app/workspace/data/metadata.json
+[?2004l{"1": "North America", "2": "Europe"}
+[?2004hroot@89d4e656df83:/app/workspace# ls -la /app/workspace/src/ 2>/dev/null; ls -la /app/workspace/output/ 2>/dev/null
+[?2004ltotal 8
+drwxr-xr-x 2 root root 4096 Apr 27 03:58 .
+drwxr-xr-x 1 root root 4096 Apr 27 03:58 ..
+total 8
+drwxr-xr-x 2 root root 4096 Apr 27 03:58 .
+drwxr-xr-x 1 root root 4096 Apr 27 03:58 ..
+[?2004hroot@89d4e656df83:/app/workspace# which dot 2>/dev/null; pip list 2>/dev/null | grep -i graphviz
+[?2004l/usr/bin/dot
+[?2004hroot@89d4e656df83:/app/workspace# pip install graphviz 2>/dev/null; apt-get install -y graphviz 2>/dev/null | tail -3
+[?2004lCollecting graphviz
+  Downloading graphviz-0.21-py3-none-any.whl (47 kB)
+[?25l     [38;5;237m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m0.0/47.3 kB[0m [31m?[0m eta [36m-:--:--[0m[2K     [38;5;107m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m [32m47.3/47.3 kB[0m [31m6.5 MB/s[0m eta [36m0:00:00[0m
+[?25hInstalling collected packages: graphviz
+Successfully installed graphviz-0.21
+Reading state information...
+graphviz is already the newest version (2.42.4-3).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+[?2004hroot@89d4e656df83:/app/workspace# cat > /app/workspace/src/analyzer.py << 'SCRIPT'
+[?2004l[?2004h> import csv
+[?2004l[?2004h> import json
+[?2004l[?2004h> import os
+[?2004l[?2004h> from collections import defaultdict
+[?2004l[?2004h> 
+[?2004l[?2004h> # Paths
+[?2004l[?2004h> CSV_PATH = "/app/workspace/data/climate.csv"
+[?2004l[?2004h> META_PATH = "/app/workspace/data/metadata.json"
+[?2004l[?2004h> CLEANED_PATH = "/app/workspace/data/cleaned.json"
+[?2004l[?2004h> TRENDS_PATH = "/app/workspace/data/trends.json"
+[?2004l[?2004h> GV_PATH = "/app/workspace/output/climate_graph.gv"
+[?2004l[?2004h> PNG_PATH = "/app/workspace/output/climate_graph.png"
+[?2004l[?2004h> 
+[?2004l[?2004h> # Ensure output dirs exist
+[?2004l[?2004h> os.makedirs(os.path.dirname(CLEANED_PATH), exist_ok=True)
+[?2004l[?2004h> os.makedirs(os.path.dirname(GV_PATH), exist_ok=True)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Load metadata (region_id -> region_name mapping)
+[?2004l[?2004h> with open(META_PATH, "r") as f:
+[?2004l[?2004h>     metadata = json.load(f)
+[?2004l[?2004h> 
+[?2004l[?2004h> # Read CSV and filter to post-2020 rows
+[?2004l[?2004h> cleaned = []
+[?2004l[?2004h> with open(CSV_PATH, "r") as f:
+[?2004l[?2004h>     reader = csv.DictReader(f)
+[?2004l[?2004h>     for row in reader:
+[?2004l[?2004h>         year = int(row["year"])
+[?2004l[?2004h>         if year <= 2020:
+[?2004l[?2004h>             continue
+[?2004l[?2004h>         region_id = str(row["region_id"])
+[?2004l[?2004h>         region_name = metadata[region_id]
+[?2004l[?2004h>         temperature = float(row["temperature"])
+[?2004l[?2004h>         cleaned.append({
+[?2004l[?2004h>             "region": region_name,
+[?2004l[?2004h>             "temperature": temperature,
+[?2004l[?2004h>             "year": year
+[?2004l[?2004h>         })
+[?2004l[?2004h> 
+[?2004l[?2004h> # Phase 1: Write cleaned.json
+[?2004l[?2004h> with open(CLEANED_PATH, "w") as f:
+[?2004l[?2004h>     json.dump(cleaned, f, indent=2)
+[?2004l[?2004h> print(f"Phase 1: Wrote {len(cleaned)} records to {CLEANED_PATH}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Phase 2: Compute mean temperature per region and write trends.json
+[?2004l[?2004h> region_temps = defaultdict(list)
+[?2004l[?2004h> for record in cleaned:
+[?2004l[?2004h>     region_temps[record["region"]].append(record["temperature"])
+[?2004l[?2004h> 
+[?2004l[?2004h> trends = {}
+[?2004l[?2004h> for region, temps in region_temps.items():
+[?2004l[?2004h>     trends[region] = sum(temps) / len(temps)
+[?2004l[?2004h> 
+[?2004l[?2004h> with open(TRENDS_PATH, "w") as f:
+[?2004l[?2004h>     json.dump(trends, f, indent=2)
+[?2004l[?2004h> print(f"Phase 2: Wrote trends for {len(trends)} regions to {TRENDS_PATH}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Phase 3: Generate Graphviz directed graph
+[?2004l[?2004h> lines = ["digraph climate {"]
+[?2004l[?2004h> for region, mean_temp in trends.items():
+[?2004l[?2004h>     # Quote both region name and mean temp so decimal values survive verbatim
+[?2004l[?2004h>     temp_str = str(mean_temp)
+[?2004l[?2004h>     lines.append(f'    "{region}" -> "{temp_str}";')
+[?2004l[?2004h> lines.append("}")
+[?2004l[?2004h> gv_content = "\n".join(lines) + "\n"
+[?2004l[?2004h> 
+[?2004l[?2004h> with open(GV_PATH, "w") as f:
+[?2004l[?2004h>     f.write(gv_content)
+[?2004l[?2004h> print(f"Phase 3: Wrote {GV_PATH}")
+[?2004l[?2004h> 
+[?2004l[?2004h> # Render PNG
+[?2004l[?2004h> import subprocess
+[?2004l[?2004h> result = subprocess.run(["dot", "-Tpng", GV_PATH, "-o", PNG_PATH], capture_output=True, text=True)
+[?2004l[?2004h> if result.returncode == 0:
+[?2004l[?2004h>     print(f"Phase 3: Wrote {PNG_PATH}")
+[?2004l[?2004h> else:
+[?2004l[?2004h>     print(f"Phase 3 ERROR: {result.stderr}")
+[?2004l[?2004h> 
+[?2004l[?2004h> print("Done.")
+[?2004l[?2004h> SCRIPT
+[?2004l[?2004hroot@89d4e656df83:/app/workspace# python3 /app/workspace/src/analyzer.py
+[?2004lPhase 1: Wrote 2 records to /app/workspace/data/cleaned.json
+Phase 2: Wrote trends for 2 regions to /app/workspace/data/trends.json
+Phase 3: Wrote /app/workspace/output/climate_graph.gv
+Phase 3: Wrote /app/workspace/output/climate_graph.png
+Done.
+[?2004hroot@89d4e656df83:/app/workspace# cat /app/workspace/data/cleaned.json
+[?2004l[
+  {
+    "region": "North America",
+    "temperature": 15.0,
+    "year": 2021
+  },
+  {
+    "region": "Europe",
+    "temperature": 22.5,
+    "year": 2021
+  }
+][?2004hroot@89d4e656df83:/app/workspace# cat /app/workspace/data/trends.json
+[?2004l{
+  "North America": 15.0,
+  "Europe": 22.5
+}[?2004hroot@89d4e656df83:/app/workspace# cat /app/workspace/output/climate_graph.gv
+[?2004ldigraph climate {
+    "North America" -> "15.0";
+    "Europe" -> "22.5";
+}
+[?2004hroot@89d4e656df83:/app/workspace# file /app/workspace/output/climate_graph.png
+[?2004lbash: file: command not found
+[?2004hroot@89d4e656df83:/app/workspace# ls -la /app/workspace/output/climate_graph.png
+[?2004l-rw-r--r-- 1 root root 13427 Apr 27 04:01 /app/workspace/output/climate_graph.png
+[?2004hroot@89d4e656df83:/app/workspace# 

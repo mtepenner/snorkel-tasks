@@ -1,0 +1,27 @@
+{
+    "id": "8851e374-f8e6-43e9-8ae9-6ee6af706e25",
+    "started_at": "2026-04-26T21:50:57.337850",
+    "finished_at": "2026-04-26T21:56:33.711623",
+    "n_total_trials": 1,
+    "stats": {
+        "n_trials": 1,
+        "n_errors": 1,
+        "evals": {
+            "terminus-2__@openai-gpt-5.2__adhoc": {
+                "n_trials": 0,
+                "n_errors": 1,
+                "metrics": [
+                    {
+                        "mean": 0.0
+                    }
+                ],
+                "reward_stats": {},
+                "exception_stats": {
+                    "VerifierTimeoutError": [
+                        "react-journal-analyzer__oHhbJvS"
+                    ]
+                }
+            }
+        }
+    }
+}

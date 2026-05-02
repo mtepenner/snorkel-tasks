@@ -1,0 +1,25 @@
+New Terminal Output:
+
+root@a242040940e6:/app# grep -n "rn {" -n /app/index.html
+101:      return {
+143:      return {
+214:      return {
+root@a242040940e6:/app# perl -pi -e 's/\brn \{//g' /app/index.html
+root@a242040940e6:/app# python3 - <<'PY'
+> from pathlib import Path
+> p=Path('/app/index.html')
+> text=p.read_text(encoding='utf-8', errors='replace')
+> # ensure artifact removed
+> print('contains rn {?', 'rn {' in text)
+> # ensure key requirements remain
+> for needle in ['react@18','react-dom@18','babel.min.js','pdf.min.js','id="analysis-output"','accept=".md,.markdown,.pdf']:
+>     print(needle, needle in text)
+> PY
+contains rn {? True
+react@18 True
+react-dom@18 True
+babel.min.js True
+pdf.min.js True
+id="analysis-output" True
+accept=".md,.markdown,.pdf True
+root@a242040940e6:/app#

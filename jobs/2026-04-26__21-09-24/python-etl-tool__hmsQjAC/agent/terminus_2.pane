@@ -1,0 +1,219 @@
+[?2004hroot@7eedf7728f5f:/app# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@7eedf7728f5f:/app# clear
+[?2004l[H[J[3J[?2004hroot@7eedf7728f5f:/app# ls -la /app/workspace
+[?2004lls: cannot access '/app/workspace': No such file or directory
+[?2004hroot@7eedf7728f5f:/app# find /app/workspace -maxdepth 3 -type d -print
+[?2004lfind: ‘/app/workspace’: No such file or directory
+[?2004hroot@7eedf7728f5f:/app# mkdir -p /app/workspace/src/templates /app/workspace/data/input
+[?2004l[?2004hroot@7eedf7728f5f:/app# cat > /app/workspace/src/app.py <<'PY'
+[?2004l[?2004h> import os
+[?2004l[?2004h> import json
+[?2004l[?2004h> import csv
+[?2004l[?2004h> import sqlite3
+[?2004l[?2004h> from datetime import datetime
+[?2004l[?2004h> 
+[?2004l[?2004h> from flask import Flask, render_template, send_file, Response
+[?2004l[?2004h> 
+[?2004l[?2004h> app = Flask(__name__, template_folder="templates")
+[?2004l[?2004h> 
+[?2004l[?2004h> INPUT_DIR = "/app/workspace/data/input/"
+[?2004l[?2004h> OUTPUT_JSON = "/app/workspace/data/output.json"
+[?2004l[?2004h> DB_PATH = "/app/workspace/data/etl.db"
+[?2004l[?2004h> LOG_PATH = "/app/workspace/data/etl.log"
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> def _append_log(line: str) -> None:
+[?2004l[?2004h>     os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+[?2004l[?2004h>     ts = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+[?2004l[?2004h>     with open(LOG_PATH, "a", encoding="utf-8") as f:
+[?2004l[?2004h>         f.write(f"[{ts}] {line}\n")
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> def run_etl() -> None:
+[?2004l[?2004h>     try:
+[?2004l[?2004h>         os.makedirs(os.path.dirname(OUTPUT_JSON), exist_ok=True)
+[?2004l[?2004h> 
+[?2004l[?2004h>         records = []
+[?2004l[?2004h> 
+[?2004l[?2004h>         if os.path.isdir(INPUT_DIR):
+[?2004l[?2004h>             for name in sorted(os.listdir(INPUT_DIR)):
+[?2004l[?2004h>                 if not name.endswith(".csv"):
+[?2004l[?2004h>                     continue
+[?2004l[?2004h>                 path = os.path.join(INPUT_DIR, name)
+[?2004l[?2004h>                 with open(path, newline="", encoding="utf-8") as f:
+[?2004l[?2004h>                     reader = csv.DictReader(f)
+[?2004l[?2004h>                     for row in reader:
+[?2004l[?2004h>                         # Preserve all columns; ensure every value is a string
+[?2004l[?2004h>                         clean = {}
+[?2004l[?2004h>                         for k, v in row.items():
+[?2004l[?2004h>                             if v is None:
+[?2004l[?2004h>                                 clean[k] = ""
+[?2004l[?2004h>                             else:
+[?2004l[?2004h>                                 clean[k] = str(v)
+[?2004l[?2004h>                         records.append(clean)
+[?2004l[?2004h> 
+[?2004l[?2004h>         # Write output.json as one flat JSON array
+[?2004l[?2004h>         with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
+[?2004l[?2004h>             json.dump(records, f)
+[?2004l[?2004h> 
+[?2004l[?2004h>         # Insert into sqlite with exact schema
+[?2004l[?2004h>         conn = sqlite3.connect(DB_PATH)
+[?2004l[?2004h>         try:
+[?2004l[?2004h>             cur = conn.cursor()
+[?2004l[?2004h>             cur.execute("CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY, data TEXT)")
+[?2004l[?2004h>             cur.execute("DELETE FROM records")
+[?2004l[?2004h>             for rec in records:
+[?2004l[?2004h>                 cur.execute("INSERT INTO records (data) VALUES (?)", (json.dumps(rec),))
+[?2004l[?2004h>             conn.commit()
+[?2004l[?2004h>         finally:
+[?2004l[?2004h>             conn.close()
+[?2004l[?2004h> 
+[?2004l[?2004h>         _append_log(f"SUCCESS: processed {len(records)} records")
+[?2004l[?2004h> 
+[?2004l[?2004h>     except Exception as e:
+[?2004l[?2004h>         _append_log(f"ERROR: {type(e).__name__}: {e}")
+[?2004l[?2004h>         raise
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.get("/")
+[?2004l[?2004h> def index():
+[?2004l[?2004h>     return render_template("index.html")
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.post("/trigger")
+[?2004l[?2004h> def trigger():
+[?2004l[?2004h>     run_etl()
+[?2004l[?2004h>     return Response("OK", status=200, mimetype="text/plain")
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.get("/logs")
+[?2004l[?2004h> def logs():
+[?2004l[?2004h>     if not os.path.exists(LOG_PATH):
+[?2004l[?2004h>         return Response("", status=200, mimetype="text/plain")
+[?2004l[?2004h>     with open(LOG_PATH, "r", encoding="utf-8") as f:
+[?2004l[?2004h>         return Response(f.read(), status=200, mimetype="text/plain")
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> @app.get("/download")
+[?2004l[?2004h> def download():
+[?2004l[?2004h>     # Serve /app/workspace/data/output.json
+[?2004l[?2004h>     if not os.path.exists(OUTPUT_JSON):
+[?2004l[?2004h>         # Ensure file exists so browser download doesn't 404 if ETL hasn't run yet
+[?2004l[?2004h>         os.makedirs(os.path.dirname(OUTPUT_JSON), exist_ok=True)
+[?2004l[?2004h>         with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
+[?2004l[?2004h>             f.write("[]")
+[?2004l[?2004h>     return send_file(OUTPUT_JSON, as_attachment=True)
+[?2004l[?2004h> 
+[?2004l[?2004h> 
+[?2004l[?2004h> if __name__ == "__main__":
+[?2004l[?2004h>     app.run(host="0.0.0.0", port=5000)
+[?2004l[?2004h> PY
+[?2004l[?2004hroot@7eedf7728f5f:/app# cat > /app/workspace/src/templates/index.html <<'HTML'
+[?2004l[?2004h> <!doctype html>
+[?2004l[?2004h> <html lang="en">
+[?2004l[?2004h> <head>
+[?2004l[?2004h>   <meta charset="utf-8" />
+[?2004l[?2004h>   <meta name="viewport" content="width=device-width, initial-scale=1" />
+[?2004l[?2004h>   <title>ETL Dashboard</title>
+[?2004l[?2004h> </head>
+[?2004l[?2004h> <body>
+[?2004l[?2004h>   <h1>ETL Dashboard</h1>
+[?2004l[?2004h> 
+[?2004l[?2004h>   <button id="triggerBtn" type="button">Trigger ETL</button>
+[?2004l[?2004h> 
+[?2004l[?2004h>   <p>
+[?2004l[?2004h>     <a href="/download">Download output.json</a>
+[?2004l[?2004h>   </p>
+[?2004l[?2004h> 
+[?2004l[?2004h>   <h2>Logs</h2>
+[?2004l[?2004h>   <pre id="logs" style="white-space: pre-wrap;"></pre>
+[?2004l[?2004h> 
+[?2004l[?2004h>   <script>
+[?2004l[?2004h>     async function fetchLogs() {
+[?2004l[?2004h>       const res = await fetch('/logs');
+[?2004l[?2004h>       const text = await res.text();
+[?2004l[?2004h>       document.getElementById('logs').textContent = text;
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     async function triggerETL() {
+[?2004l[?2004h>       const btn = document.getElementById('triggerBtn');
+[?2004l[?2004h>       btn.disabled = true;
+[?2004l[?2004h>       try {
+[?2004l[?2004h>         await fetch('/trigger', { method: 'POST' });
+[?2004l[?2004h>       } finally {
+[?2004l[?2004h>         btn.disabled = false;
+[?2004l[?2004h>         await fetchLogs();
+[?2004l[?2004h>       }
+[?2004l[?2004h>     }
+[?2004l[?2004h> 
+[?2004l[?2004h>     window.addEventListener('DOMContentLoaded', () => {
+[?2004l[?2004h>       document.getElementById('triggerBtn').addEventListener('click', triggerETL);
+[?2004l[?2004h>       fetchLogs();
+[?2004l[?2004h>     });
+[?2004l[?2004h>   </script>
+[?2004l[?2004h> </body>
+[?2004l[?2004h> </html>
+[?2004l[?2004h> HTML
+[?2004l[?2004hroot@7eedf7728f5f:/app# python3 -c "import importlib.util; spec=importlib.util.spec_from_file_location('app','/app/workspace/src/app.py'); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m); print('loaded', m.app.name)"
+[?2004lloaded app
+[?2004hroot@7eedf7728f5f:/app# ls -la /app/workspace/src /app/workspace/src/templates
+[?2004l/app/workspace/src:
+total 20
+drwxr-xr-x 4 root root 4096 Apr 27 04:10 .
+drwxr-xr-x 4 root root 4096 Apr 27 04:10 ..
+drwxr-xr-x 2 root root 4096 Apr 27 04:10 __pycache__
+-rw-r--r-- 1 root root 3177 Apr 27 04:10 app.py
+drwxr-xr-x 2 root root 4096 Apr 27 04:10 templates
+
+/app/workspace/src/templates:
+total 12
+drwxr-xr-x 2 root root 4096 Apr 27 04:10 .
+drwxr-xr-x 4 root root 4096 Apr 27 04:10 ..
+-rw-r--r-- 1 root root 1062 Apr 27 04:10 index.html
+[?2004hroot@7eedf7728f5f:/app# cat > /app/workspace/data/input/sample.csv <<'CSV'
+[?2004l[?2004h> name,age,zip
+[?2004l[?2004h> Alice,30,02139
+[?2004l[?2004h> Bob,04,00001
+[?2004l[?2004h> CSV
+[?2004l[?2004hroot@7eedf7728f5f:/app# python3 -c "import importlib.util; spec=importlib.util.spec_from_file_location('app','/app/workspace/src/app.py'); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m); m.run_etl(); print('etl_ran')"
+[?2004letl_ran
+[?2004hroot@7eedf7728f5f:/app# ls -la /app/workspace/data && echo '--- output.json ---' && cat /app/workspace/data/output.json && echo '\n--- etl.log ---' && cat /app/workspace/data/etl.log
+[?2004ltotal 28
+drwxr-xr-x 3 root root 4096 Apr 27 04:10 .
+drwxr-xr-x 4 root root 4096 Apr 27 04:10 ..
+-rw-r--r-- 1 root root 8192 Apr 27 04:10 etl.db
+-rw-r--r-- 1 root root   51 Apr 27 04:10 etl.log
+drwxr-xr-x 2 root root 4096 Apr 27 04:10 input
+-rw-r--r-- 1 root root   94 Apr 27 04:10 output.json
+--- output.json ---
+[{"name": "Alice", "age": "30", "zip": "02139"}, {"name": "Bob", "age": "04", "zip": "00001"}]\n--- etl.log ---
+[2026-04-27 04:10:13] SUCCESS: processed 2 records
+[?2004hroot@7eedf7728f5f:/app# python3 - <<'PY'
+[?2004l[?2004h> import sqlite3
+[?2004l[?2004h> DB='/app/workspace/data/etl.db'
+[?2004l[?2004h> con=sqlite3.connect(DB)
+[?2004l[?2004h> cur=con.cursor()
+[?2004l[?2004h> print('tables:', cur.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").fetchall())
+[?2004l[?2004h> print('schema:', cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='records'").fetchone()[0])
+[?2004l[?2004h> print('count:', cur.execute('SELECT COUNT(*) FROM records').fetchone()[0])
+[?2004l[?2004h> print('first:', cur.execute('SELECT id, data FROM records ORDER BY id LIMIT 1').fetchone())
+[?2004l[?2004h> con.close()
+[?2004l[?2004h> PY
+[?2004ltables: [('records',)]
+schema: CREATE TABLE records (id INTEGER PRIMARY KEY, data TEXT)
+count: 2
+first: (1, '{"name": "Alice", "age": "30", "zip": "02139"}')
+[?2004hroot@7eedf7728f5f:/app# python3 /app/workspace/src/app.py > /tmp/flask.out 2>&1 & echo $! > /tmp/flask.pid
+[?2004l[1] 650
+[?2004hroot@7eedf7728f5f:/app# curl -sS -i http://127.0.0.1:5000/ | head
+[?2004lbash: curl: command not found
+[?2004hroot@7eedf7728f5f:/app# curl -sS -i -X POST http://127.0.0.1:5000/trigger | head
+[?2004lbash: curl: command not found
+[?2004hroot@7eedf7728f5f:/app# curl -sS http://127.0.0.1:5000/logs | tail -n 5
+[?2004lbash: curl: command not found
+[?2004hroot@7eedf7728f5f:/app# curl -sS -I http://127.0.0.1:5000/download | head
+[?2004lbash: curl: command not found
+[?2004hroot@7eedf7728f5f:/app# kill $(cat /tmp/flask.pid)
+[?2004l[?2004hroot@7eedf7728f5f:/app# 

@@ -1,0 +1,186 @@
+New Terminal Output:
+
+root@de88dad28b6a:/app/workspace# ls -la src
+total 8
+drwxr-xr-x 2 root root 4096 Apr 27 03:58 .
+drwxr-xr-x 1 root root 4096 Apr 27 03:58 ..
+root@de88dad28b6a:/app/workspace# mkdir -p src output
+root@de88dad28b6a:/app/workspace# cat > src/analyzer.py <<'PY'
+> #!/usr/bin/env python3
+>
+> import csv
+> import json
+> import os
+> import subprocess
+> from collections import defaultdict
+>
+> BASE_DIR = "/app/workspace"
+> DATA_DIR = os.path.join(BASE_DIR, "data")
+> OUT_DIR = os.path.join(BASE_DIR, "output")
+>
+> CLIMATE_CSV = os.path.join(DATA_DIR, "climate.csv")
+> METADATA_JSON = os.path.join(DATA_DIR, "metadata.json")
+>
+> CLEANED_JSON = os.path.join(DATA_DIR, "cleaned.json")
+> TRENDS_JSON = os.path.join(DATA_DIR, "trends.json")
+>
+> GRAPH_GV = os.path.join(OUT_DIR, "climate_graph.gv")
+> GRAPH_PNG = os.path.join(OUT_DIR, "climate_graph.png")
+>
+>
+> def _load_metadata(path: str) -> dict:
+>     with open(path, "r", encoding="utf-8") as f:
+>         meta = json.load(f)
+>     if not isinstance(meta, dict):
+>         raise TypeError("metadata.json must be a JSON object mapping region_id to region name")
+>     # Ensure keys are strings for robust lookup.
+>     return {str(k): str(v) for k, v in meta.items()}
+>
+>
+> def _read_and_clean(climate_csv: str, region_map: dict) -> list:
+>     cleaned = []
+>     with open(climate_csv, "r", encoding="utf-8", newline="") as f:
+>         reader = csv.DictReader(f)
+>         required_cols = {"region_id", "year", "temperature"}
+>         if reader.fieldnames is None or not required_cols.issubset(set(reader.fieldnames)):
+>             raise ValueError(f"climate.csv must contain columns {sorted(required_cols)}")
+>
+>         for row in reader:
+>             year = int(row["year"])
+>             if year < 2021:
+>                 continue  # absolutely no pre-2021 leakage
+>
+>             region_id = str(row["region_id"])
+>             region_name = region_map.get(region_id)
+>             if region_name is None:
+>                 # Unknown region_id; skip rather than hardcoding/guessing.
+>                 continue
+>
+>             temp = float(row["temperature"])
+>             cleaned.append({
+>                 "region": str(region_name),
+>                 "temperature": float(temp),
+>                 "year": int(year),
+>             })
+>     return cleaned
+>
+>
+> def _compute_trends(cleaned_rows: list) -> dict:
+>     sums = defaultdict(float)
+>     counts = defaultdict(int)
+>     for r in cleaned_rows:
+>         region = r["region"]
+>         sums[region] += float(r["temperature"])
+>         counts[region] += 1
+>
+>     trends = {}
+>     for region, total in sums.items():
+>         trends[region] = float(total / counts[region])
+>     return trends
+>
+>
+> def _write_json(path: str, obj) -> None:
+>     with open(path, "w", encoding="utf-8") as f:
+>         json.dump(obj, f, ensure_ascii=False, indent=2)
+>
+>
+> def _write_graph(gv_path: str, png_path: str, trends: dict) -> None:
+>     os.makedirs(os.path.dirname(gv_path), exist_ok=True)
+>
+>     # Deterministic ordering for stable output.
+>     regions = sorted(trends.keys())
+>
+>     lines = []
+>     lines.append("digraph climate {")
+>     lines.append("  rankdir=LR;")
+>
+>     for region in regions:
+>         mean_temp = float(trends[region])
+>         mean_text = str(mean_temp)
+>         # Quote numeric node id so decimals survive verbatim in DOT.
+>         temp_node_id = json.dumps(mean_text)
+>         region_node_id = json.dumps(region)
+>
+>         lines.append(f"  {region_node_id} -> {temp_node_id};")
+>
+>     lines.append("}")
+>
+>     with open(gv_path, "w", encoding="utf-8") as f:
+>         f.write("\n".join(lines) + "\n")
+>
+>     # Render PNG (only required extra file besides .gv)
+>     try:
+>         subprocess.run(["dot", "-Tpng", gv_path, "-o", png_path], check=True)
+>     except FileNotFoundError as e:
+>         raise RuntimeError("Graphviz 'dot' is required to generate climate_graph.png") from e
+>
+>
+> def main() -> None:
+>     region_map = _load_metadata(METADATA_JSON)
+>     cleaned = _read_and_clean(CLIMATE_CSV, region_map)
+>
+>     # Phase 1
+>     _write_json(CLEANED_JSON, cleaned)
+>
+>     # Phase 2
+>     trends = _compute_trends(cleaned)
+>     _write_json(TRENDS_JSON, trends)
+>
+>     # Phase 3
+>     _write_graph(GRAPH_GV, GRAPH_PNG, trends)
+>
+>
+> if __name__ == "__main__":
+>     main()
+> PY
+root@de88dad28b6a:/app/workspace# python3 -m py_compile src/analyzer.py
+root@de88dad28b6a:/app/workspace# python3 src/analyzer.py
+root@de88dad28b6a:/app/workspace# find data output -maxdepth 1 -type f -print -exec ls -l {} \;
+data/cleaned.json
+-rw-r--r-- 1 root root 159 Apr 27 04:00 data/cleaned.json
+data/trends.json
+-rw-r--r-- 1 root root 45 Apr 27 04:00 data/trends.json
+data/metadata.json
+-rw-r--r-- 1 root root 38 Apr 27 03:58 data/metadata.json
+data/climate.csv
+-rw-r--r-- 1 root root 75 Apr 27 03:58 data/climate.csv
+output/climate_graph.png
+-rw-r--r-- 1 root root 15844 Apr 27 04:00 output/climate_graph.png
+output/climate_graph.gv
+-rw-r--r-- 1 root root 85 Apr 27 04:00 output/climate_graph.gv
+root@de88dad28b6a:/app/workspace# echo '--- cleaned.json ---'; cat data/cleaned.json; echo '\n--- trends.json ---'; cat data/trends.json; echo '\n--- climate_gr
+aph.gv ---'; cat output/climate_graph.gv
+--- cleaned.json ---
+[
+  {
+    "region": "North America",
+    "temperature": 15.0,
+    "year": 2021
+  },
+  {
+    "region": "Europe",
+    "temperature": 22.5,
+    "year": 2021
+  }
+]\n--- trends.json ---
+{
+  "North America": 15.0,
+  "Europe": 22.5
+}\n--- climate_graph.gv ---
+digraph climate {
+  rankdir=LR;
+  "Europe" -> "22.5";
+  "North America" -> "15.0";
+}
+root@de88dad28b6a:/app/workspace# python3 - <<'PY'
+> import json
+> with open('data/cleaned.json') as f:
+>     cleaned=json.load(f)
+> assert all(r['year']>=2021 for r in cleaned)
+> with open('data/trends.json') as f:
+>     trends=json.load(f)
+> assert isinstance(trends, dict) and all(isinstance(v, float) for v in trends.values())
+> print('OK: no pre-2021 rows; trends are floats; regions:', sorted(trends.keys()))
+> PY
+OK: no pre-2021 rows; trends are floats; regions: ['Europe', 'North America']
+root@de88dad28b6a:/app/workspace#

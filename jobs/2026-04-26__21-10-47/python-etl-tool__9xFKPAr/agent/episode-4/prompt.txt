@@ -1,0 +1,38 @@
+New Terminal Output:
+
+root@812fbe5aa575:/app# python -c "import urllib.request; r = urllib.request.urlopen('http://localhost:5000/'); print(r.read().decode()[:200])"
+127.0.0.1 - - [27/Apr/2026 04:12:05] "GET / HTTP/1.1" 200 -
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETL Dashboard</title>
+</head>
+<body>
+    <h1>ET
+root@812fbe5aa575:/app# python -c "import urllib.request; req = urllib.request.Request('http://localhost:5000/trigger', method='POST'); r = urllib.request.urlop
+en(req); print(r.read().decode())"
+127.0.0.1 - - [27/Apr/2026 04:12:06] "POST /trigger HTTP/1.1" 200 -
+{"records":2,"status":"success"}
+
+root@812fbe5aa575:/app# python -c "import urllib.request; r = urllib.request.urlopen('http://localhost:5000/logs'); print(r.read().decode())"
+127.0.0.1 - - [27/Apr/2026 04:12:07] "GET /logs HTTP/1.1" 200 -
+2026-04-27 04:12:06 SUCCESS: ETL completed. 2 records processed.
+
+root@812fbe5aa575:/app# cat /app/workspace/data/output.json
+[
+  {
+    "name": "Alice",
+    "age": "30",
+    "city": "NYC"
+  },
+  {
+    "name": "Bob",
+    "age": "25",
+    "city": "LA"
+  }
+]root@812fbe5aa575:/app# python -c "import sqlite3; conn = sqlite3.connect('/app/workspace/data/etl.db'); print(conn.execute('SELECT * FROM records').fetchall()
+)"
+[(1, '{"name": "Alice", "age": "30", "city": "NYC"}'), (2, '{"name": "Bob", "age": "25", "city": "LA"}')]
+root@812fbe5aa575:/app#

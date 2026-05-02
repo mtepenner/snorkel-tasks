@@ -1,0 +1,269 @@
+Current terminal state:
+New Terminal Output:
+root@3211193eec00:/app# ls -la
+total 8
+drwxr-xr-x 2 root root 4096 Apr 25 04:40 .
+drwxr-xr-x 1 root root 4096 Apr 27 05:16 ..
+root@3211193eec00:/app# cat > /app/index.html <<'HTML'
+> <!doctype html>
+> <html lang="en">
+> <head>
+>   <meta charset="UTF-8" />
+>   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+>   <title>Client-Side Journal Analyzer</title>
+>   <style>
+>     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; color: #111; }
+>     .row { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-start; }
+>     .card { border: 1px solid #ddd; border-radius: 10px; padding: 14px 16px; min-width: 280px; flex: 1; }
+>     h1 { margin: 0 0 12px; font-size: 20px; }
+>     h2 { margin: 0 0 10px; font-size: 16px; }
+>     .muted { color: #555; font-size: 13px; }
+>     .status { margin: 10px 0 18px; padding: 10px 12px; border-radius: 8px; background: #f7f7f7; border: 1px solid #e5e5e5; }
+>     .sections ul { margin: 8px 0 0; padding-left: 18px; }
+>     .sections li { margin: 6px 0; }
+a>     pre { background: #0b1020; color: #e6edf3; padding: 12px; border-radius: 10px; overflow: auto; border: 1px solid #1f2a44; }
+>     label { font-weight: 600; }
+>     input[type="file"] { margin-top: 8px; }
+>   </style>
+> </head>
+  > <body>
+>   <div id="root"></div>
+>
+>   <!-- React + ReactDOM + Babel (no build pipeline) -->
+>   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+>   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+>   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+>
+>   <script type="text/babel">
+>     const { useEffect, useMemo, useState } = React;
+>
+>     function round3(n) {
+>       // Ensure numeric and stable rounding to 3 decimals.
+>       const x = Number.isFinite(n) ? n : 0;
+>       return Math.round(x * 1000) / 1000;
+>     }
+>
+>     function countWordsDeterministic(text) {
+>       // Must match behavior of /\b[\w'-]+\b/g
+>       const m = text.match(/\b[\w'-]+\b/g);
+>       return m ? m.length : 0;
+>     }
+>
+>     function countCitations(text) {
+>       // Bracket style citations: [1], [42]
+>       const m = text.match(/\[(\d+)\]/g);
+>       return m ? m.length : 0;
+>     }
+) {
+  >
+>     function countKeyword(text, keyword) {
+>       const re = new RegExp(`\\b${keyword}\\b`, 'gi');
+>       const m = text.match(re);
+>       return m ? m.length : 0;
+>     }
+>
+}
+  >     function firstNonEmptySentence(textBlock) {
+>       const t = (textBlock || '').replace(/\s+/g, ' ').trim();
+>       if (!t) return '';
+>       // Simple sentence split: first chunk ending with . ! ? (or whole line if none)
+>       const m = t.match(/^(.+?[.!?])(\s|$)/);
+>       return m ? m[1].trim() : t;
+>     }
+>
+>     function summarizeMarkdown(mdText) {
+>       const lines = (mdText || '').split(/\r?\n/);
+>       const summaries = [];
+>       let currentTitle = null;
+>       let currentBody = [];
+>
+>       function flush() {
+>         if (currentTitle == null) return;
+>         const body = currentBody.join('\n');
+>         const summary = firstNonEmptySentence(body);
+>         summaries.push({ title: currentTitle, summary });
+>       }
++; break>
+>       for (let i = 0; i < lines.length; i++) {
+>         const line = lines[i];
+>         const headerMatch = line.match(/^\s*#+\s*(.+?)\s*$/);
+>         if (headerMatch) {
+>           flush();
+>           currentTitle = headerMatch[1];
+>           currentBody = [];
+>         } else {
+>           // Keep all lines; summary function will find first non-empty sentence.
+>           if (currentTitle != null) currentBody.push(line);
+>         }
+d = out.jo>       }
+>       flush();
+>
+g>       // If there are no markdown headers, treat entire doc as one section.
+>       if (summaries.length === 0) {
+>         const summary = firstNonEmptySentence(mdText);
+>         return [{ title: 'Document', summary }];
+>       }
+yword(te>
+>       return summaries;
+>     }
+st ent>
+>     function summarizeByHeadingsLoose(text) {
+>       // For PDFs: attempt to recover headings in a lightweight way.
+>       // Heuristics: lines that look like headings (ALL CAPS, or Title Case, or short lines)
+>       const lines = (text || '').split(/\r?\n/).map(l => l.trim());
+>       const isHeading = (l) => {
+>         if (!l) return false;
+>         if (l.length > 80) return false;
+>         // If line ends with punctuation typical of sentences, less likely heading
+>         if (/[.!?]$/.test(l)) return false;
+>         // Contains many letters; avoid pure numbers
+>         if (!/[A-Za-z]/.test(l)) return false;
+>         const alpha = (l.match(/[A-Za-z]/g) || []).length;
+>         if (alpha < 3) return false;
+>         // ALL CAPS headings
+     >         if (l === l.toUpperCase() && /[A-Z]/.test(l)) return true;
+>         // Title-ish: not too many words
+>         const wc = (l.match(/\b[\w'-]+\b/g) || []).length;
+>        
+[... output limited to 10000 bytes; 3631 interior bytes omitted ...]
+lement: {
+>           count: entanglementCount,
+>           density: round3(totalWords ? (entanglementCount / totalWords) : 0)
+>         }
+>       };
+>
+>       const sectionSummaries = (fileType === 'markdown')
+>         ? summarizeMarkdown(text)
+>         : summarizeByHeadingsLoose(text);
+>
+>       return {
+>         fileType,
+>         citations,
+>         totalWords,
+>         keywordDensity,
+>         sectionSummaries
+>       };
+>     }
+>
+>     function App() {
+>       const empty = useMemo(() => ({
+>         fileType: null,
+>         citations: 0,
+>         totalWords: 0,
+>         keywordDensity: {
+>           quantum: { count: 0, density: 0 },
+>           entanglement: { count: 0, density: 0 }
+>         },
+>         sectionSummaries: []
+>       }), []);
+>
+>       const [status, setStatus] = useState('No file loaded.');
+>       const [analysis, setAnalysis] = useState(empty);
+>
+>       async function handleFile(file) {
+>         if (!file) return;
+>         const name = file.name || '';
+>         const ext = name.toLowerCase().split('.').pop();
+>
+>         try {
+>           setStatus(`Loading: ${name}`);
+>
+>           if (ext === 'md' || ext === 'markdown') {
+>             const text = await file.text();
+>             const next = analyzeText(text, 'markdown');
+>             setAnalysis(next);
+>             setStatus(`Loaded ${name} (${next.totalWords} words)`);
+>             return;
+>           }
+>
+>           if (ext === 'pdf') {
+>             const buf = await file.arrayBuffer();
+>             const text = decodePdfLikeText(buf);
+>             const next = analyzeText(text, 'pdf');
+>             setAnalysis(next);
+>             setStatus(`Loaded ${name} (${next.totalWords} words)`);
+>             return;
+>           }
+>
+>           setStatus('Unsupported file type. Please upload .md, .markdown, or .pdf');
+>         } catch (e) {
+>           console.error(e);
+>           setStatus('Error reading file.');
+>         }
+>       }
+>
+>       return (
+>         <div>
+>           <h1>Journal Analyzer</h1>
+>
+>           <div className="card">
+>             <label htmlFor="file">Upload Journal File</label>
+>             <div className="muted">Accepted: .md, .markdown, .pdf</div>
+>             <input
+>               id="file"
+>               type="file"
+>               accept=".md,.markdown,.pdf,application/pdf,text/markdown"
+>               onChange={(e) => handleFile(e.target.files && e.target.files[0])}
+>             />
+>           </div>
+>
+>           <div className="status" aria-live="polite">{status}</div>
+>
+>           <div className="row">
+>             <div className="card">
+>               <h2>Citation Frequency</h2>
+>               <div><strong>Total citations:</strong> {analysis.citations}</div>
+>             </div>
+>
+>             <div className="card">
+>               <h2>Keyword Density</h2>
+>               <div><strong>Total words:</strong> {analysis.totalWords}</div>
+>               <div style={{ marginTop: 8 }}>
+>                 <div><strong>quantum</strong>: {analysis.keywordDensity.quantum.count} (density: {analysis.keywordDensity.quantum.density})</div>
+>                 <div><strong>entanglement</strong>: {analysis.keywordDensity.entanglement.count} (density: {analysis.keywordDensity.entanglement.density})</di
+v>
+>               </div>
+>             </div>
+>
+>             <div className="card sections">
+>               <h2>Section Summaries</h2>
+>               {analysis.sectionSummaries.length === 0 ? (
+>                 <div className="muted">No sections detected yet.</div>
+>               ) : (
+>                 <ul>
+>                   {analysis.sectionSummaries.map((s, idx) => (
+>                     <li key={idx}>
+>                       <strong>{s.title}</strong>
+>                       <div className="muted">{s.summary || '(No summary found)'}</div>
+>                     </li>
+>                   ))}
+>                 </ul>
+>               )}
+>             </div>
+>           </div>
+>
+>           <h2 style={{ marginTop: 18 }}>Analysis JSON</h2>
+>           <pre id="analysis-output">{JSON.stringify(analysis, null, 2)}</pre>
+>         </div>
+>       );
+>     }
+>
+>     ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+>   </script>
+> </body>
+> </html>
+> HTML
+root@3211193eec00:/app# node -e "const fs=require('fs'); const s=fs.readFileSync('/app/index.html','utf8'); console.log('has analysis-output:',/id=\"analysis-ou
+tput\"/.test(s)); console.log('has Citation Frequency:',s.includes('Citation Frequency')); console.log('has Keyword Density:',s.includes('Keyword Density')); co
+nsole.log('has Section Summaries:',s.includes('Section Summaries')); console.log('has .sections:',/className=\"card sections\"/.test(s));"
+has analysis-output: true
+has Citation Frequency: true
+has Keyword Density: true
+has Section Summaries: true
+has .sections: true
+root@3211193eec00:/app# ls -la /app/index.html
+-rw-r--r-- 1 root root 11986 Apr 27 05:17 /app/index.html
+root@3211193eec00:/app#
+
+
+Are you sure you want to mark the task as complete? This will trigger your solution to be graded and you won't be able to make any further corrections. If so, include "task_complete": true in your JSON response again.

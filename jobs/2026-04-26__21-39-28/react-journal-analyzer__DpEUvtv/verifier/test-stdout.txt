@@ -1,0 +1,516 @@
+
+up to date, audited 153 packages in 475ms
+
+40 packages are looking for funding
+  run `npm fund` for details
+
+6 vulnerabilities (5 moderate, 1 critical)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+Installing dependencies...
+Hit:1 http://deb.debian.org/debian bookworm InRelease
+Hit:2 http://deb.debian.org/debian bookworm-updates InRelease
+Hit:3 http://deb.debian.org/debian-security bookworm-security InRelease
+Reading package lists...
+Reading package lists...
+Building dependency tree...
+Reading state information...
+libasound2 is already the newest version (1.2.8-1+b1).
+libatk-bridge2.0-0 is already the newest version (2.46.0-5).
+libatk1.0-0 is already the newest version (2.46.0-5).
+libatspi2.0-0 is already the newest version (2.46.0-5).
+libcairo2 is already the newest version (1.16.0-7).
+libcups2 is already the newest version (2.4.2-3+deb12u9).
+libdbus-1-3 is already the newest version (1.14.10-1~deb12u1).
+libdrm2 is already the newest version (2.4.114-1+b1).
+libgbm1 is already the newest version (22.3.6-1+deb12u1).
+libglib2.0-0 is already the newest version (2.74.6-2+deb12u8).
+libnspr4 is already the newest version (2:4.35-1).
+libnss3 is already the newest version (2:3.87.1-1+deb12u2).
+libpango-1.0-0 is already the newest version (1.50.12+ds-1).
+libx11-6 is already the newest version (2:1.8.4-2+deb12u2).
+libxcb1 is already the newest version (1.15-1).
+libxcomposite1 is already the newest version (1:0.4.5-1).
+libxdamage1 is already the newest version (1:1.1.6-1).
+libxext6 is already the newest version (2:1.3.4-1+b1).
+libxfixes3 is already the newest version (1:6.0.0-2).
+libxkbcommon0 is already the newest version (1.5.0-1).
+libxrandr2 is already the newest version (2:1.5.2-2+b1).
+xvfb is already the newest version (2:21.1.7-3+deb12u11).
+fonts-noto-color-emoji is already the newest version (2.042-0+deb12u1).
+fonts-unifont is already the newest version (1:15.0.01-2).
+libfontconfig1 is already the newest version (2.14.1-4).
+libfreetype6 is already the newest version (2.12.1+dfsg-5+deb12u4).
+xfonts-scalable is already the newest version (1:1.0.3-1.3).
+fonts-liberation is already the newest version (1:1.07.4-11).
+fonts-ipafont-gothic is already the newest version (00303-23).
+fonts-wqy-zenhei is already the newest version (0.9.45-8).
+fonts-tlwg-loma-otf is already the newest version (1:0.7.3-1).
+fonts-freefont-ttf is already the newest version (20120503-10).
+0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+
+> test
+> vitest run
+
+
+ RUN  v2.1.9 /tests
+
+ ❯ unit/analyzer.spec.ts (1 test | 1 failed) 6ms
+   × Static Architecture Checks > creates index.html with react cdns, file picker, and analysis output 6ms
+     → expected '<!doctype html>\n<html lang="en">\n<h…' to match /Citation Frequency/i
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  unit/analyzer.spec.ts > Static Architecture Checks > creates index.html with react cdns, file picker, and analysis output
+AssertionError: expected '<!doctype html>\n<html lang="en">\n<h…' to match /Citation Frequency/i
+
+- Expected: 
+/Citation Frequency/i
+
++ Received: 
+"<!doctype html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"UTF-8\" />
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />
+  <title>Client-Side Journal Analyzer</title>
+  <style>
+    :root { --bg:#0b1220; --panel:#101a33; --text:#e7ecff; --muted:#a9b4d6; --accent:#6aa6ff; --danger:#ff6a6a; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 18px; }
+    h1 { font-size: 18px; margin: 0 0 10px; }
+    .row { display:flex; gap:12px; flex-wrap:wrap; }
+    .card { background: var(--panel); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 12px; }
+    .card h2 { font-size: 14px; margin: 0 0 8px; color: var(--muted); font-weight: 600; }
+    .top { align-items:center; justify-content:space-between; }
+    .status { color: var(--muted); font-size: 13px; }
+    .status strong { color: var(--text); }
+    input[type=file] { color: var(--muted); }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
+    .kpi { display:flex; gap:14px; flex-wrap:wrap; }
+    .kpi > div { min-width: 170px; }
+    .big { font-size: 22px; font-weight: 700; color: var(--text); }
+    .small { font-size: 12px; color: var(--muted); }
+    .list { display:flex; flex-direction:column; gap:10px; }
+    .sec { border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 10px; background: rgba(255,255,255,0.02); }
+    .secTitle { font-weight: 700; margin-bottom: 6px; }
+    .secBody { color: var(--muted); font-size: 13px; white-space: pre-wrap; }
+    pre { margin:0; background: #070b14; color: #d7e2ff; border-radius: 10px; padding: 12px; overflow:auto; border: 1px solid rgba(255,255,255,0.08); }
+    .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .err { color: var(--danger); }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div id=\"root\"></div>
+
+  <!-- React + Babel (no build pipeline) -->
+  <script crossorigin src=\"https://unpkg.com/react@18/umd/react.development.js\"></script>
+  <script crossorigin src=\"https://unpkg.com/react-dom@18/umd/react-dom.development.js\"></script>
+  <script src=\"https://unpkg.com/@babel/standalone/babel.min.js\"></script>
+
+  <!-- PDF.js for client-side PDF text extraction -->
+  <script src=\"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.min.js\"></script>
+
+  <script type=\"text/babel\">
+    const { useEffect, useMemo, useState } = React;
+
+    // pdf.js worker setup
+    if (window.pdfjsLib) {
+      // Use a matching worker from CDN
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = \"https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.2.67/pdf.worker.min.js\";
+    }
+
+    function safeLower(s){ return (s || \"\").toLowerCase(); }
+
+    function countBracketCitations(text) {
+      // Bracket style citations: [1], [42] etc. (digits only inside brackets)
+      const m = (text || \"\").match(/\\[(\\d+)\\]/g);
+      return m ? m.length : 0;
+    }
+
+    function tokenizeWords(text) {
+      // Keep it simple & robust: letters/numbers/apostrophes; split on non-word.
+      // Counts total words for density.
+      const normalized = (text || \"\").replace(/\\u00A0/g, \" \");
+      const tokens = normalized.match(/[A-Za-z0-9']+/g);
+      return tokens ? tokens : [];
+    }
+
+    function countKeyword(tokens, keyword) {
+      const k = safeLower(keyword);
+      let c = 0;
+      for (const t of tokens) {
+        if (safeLower(t) === k) c++;
+      }
+      return c;
+    }
+
+    function round3(x) {
+      return Math.round(x * 1000) / 1000;
+    }
+
+    function firstNonEmptySentence(text) {
+      const t = (text || \"\").replace(/\\s+/g, \" \").trim();
+      if (!t) return \"\";
+      // Try to pick first sentence end. If none, return whole line chunk.
+      const m = t.match(/^(.+?[\\.\\!\\?])(\\s|$)/);
+      return m ? m[1].trim() : t;
+    }
+
+    function analyzeCommon(text) {
+      const citations = countBracketCitations(text);
+      const tokens = tokenizeWords(text);
+      const totalWords = tokens.length;
+      const quantumCount = countKeyword(tokens, \"quantum\");
+      const entanglementCount = countKeyword(tokens, \"entanglement\");
+      const quantumDensity = totalWords ? round3(quantumCount / totalWords) : 0;
+      const entanglementDensity = totalWords ? round3(entanglementCount / totalWords) : 0;
+
+      return {
+        citations,
+        totalWords,
+        keywords: {
+          quantum: { count: quantumCount, density: quantumDensity },
+          entanglement: { count: entanglementCount, density: entanglementDensity },
+        }
+      };
+    }
+
+    function analyzeMarkdown(mdText) {
+      const lines = (mdText || \"\").split(/\\r?\\n/);
+      const sections = [];
+      let currentTitle = \"(untitled)\";
+      let buffer = [];
+
+      function flush() {
+        const body = buffer.join(\"\\n\");
+        const summary = firstNonEmptySentence(body);
+        if (currentTitle || summary) {
+          sections.push({ title: currentTitle || \"(untitled)\", summary: summary || \"\" });
+        }
+        buffer = [];
+      }
+
+      let sawAnyHeader = false;
+
+      for (const line of lines) {
+        const headerMatch = line.match(/^\\s*#+\\s*(.+?)\\s*$/);
+        if (headerMatch) {
+          if (sawAnyHeader || buffer.join(\"\\n\").trim()) flush();
+          sawAnyHeader = true;
+          currentTitle = headerMatch[1];
+          buffer = [];
+        } else {
+          buffer.push(line);
+        }
+      }
+      // flush last
+      if (sawAnyHeader || buffer.join(\"\\n\").trim()) flush();
+
+      const common = analyzeCommon(mdText);
+      return {
+        fileType: \"markdown\",
+        ...common,
+        summaries: sections
+      };
+    }
+
+    function isLikelyHeadingLine(line) {
+      const t = (line || \"\").trim();
+      if (!t) return false;
+      // Heuristics for PDF extracted text: headings often short and mostly Title Case/Upper.
+      const words = t.split(/\\s+/);
+      if (words.length > 12) return false;
+      if (t.length < 3) return false;
+      const letters = (t.match(/[A-Za-z]/g) || []).length;
+      if (letters < 3) return false;
+      // No ending punctuation typical of body.
+      if (/[\\.!\\?]\\s*$/.test(t)) return false;
+      // Contains many uppercase letters relative to letters.
+      const upp = (t.match(/[A-Z]/g) || []).length;
+      const ratio = letters ? (upp / letters) : 0;
+      // Or looks like numbered section
+      const numbered = /^\\s*(\\d+|\\d+\\.\\d+|[IVX]+)\\.?\\s+\\S+/.test(t);
+      return numbered || ratio > 0.55;
+    }
+
+    function analyzePdfText(extractedText) {
+      const text = extractedText || \"\";
+      const lines = text.split(/\\r?\\n/).map(l => l.replace(/\\s+$/g, \"\"));
+
+      const sections = [];
+      let currentTitle = \"(document)\";
+      let buffer = [];
+
+      function flush() {
+        const body = buffer.join(\"\\n\");
+        const summary = firstNonEmptySentence(body);
+        sections.push({ title: currentTitle || \"(untitled)\", summary: summary || \"\" });
+        buffer = [];
+      }
+
+      let sawHeading = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = (lines[i] || \"\").trim();
+        if (!line) {
+          buffer.push(\"\");
+          continue;
+        }
+        if (isLikelyHeadingLine(line)) {
+          if (sawHeading || buffer.join(\"\\n\").trim()) {
+            flush();
+          }
+          sawHeading = true;
+          currentTitle = line;
+          buffer = [];
+        } else {
+          buffer.push(line);
+        }
+      }
+
+      if (sawHeading || buffer.join(\"\\n\").trim()) flush();
+
+      // If heuristic produced too many tiny sections with empty summaries, collapse fallback.
+      const nonEmptySummaries = sections.filter(s => (s.summary || \"\").trim()).length;
+      let finalSections = sections;
+      if (sections.length > 25 && nonEmptySummaries < 3) {
+        finalSections = [{ title: \"(document)\", summary: firstNonEmptySentence(text) }];
+      }
+
+      const common = analyzeCommon(text);
+      return {
+        fileType: \"pdf\",
+        ...common,
+        summaries: finalSections
+      };
+    }
+
+    async function extractPdfText(arrayBuffer) {
+      const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const pageTexts = [];
+      for (let p = 1; p <= pdf.numPages; p++) {
+        const page = await pdf.getPage(p);
+        const content = await page.getTextContent();
+        // Join items with spaces; also add newlines when Y position decreases significantly.
+        // Simple approach: keep in reading order as provided.
+        const strings = content.items.map(it => (it.str || \"\").trim()).filter(Boolean);
+        pageTexts.push(strings.join(\" \"));
+      }
+      return pageTexts.join(\"\\n\\n\");
+    }
+
+    function App() {
+      const [status, setStatus] = useState(\"Select a .md/.markdown/.pdf file to analyze.\");
+      const [error, setError] = useState(\"\");
+      const [analysis, setAnalysis] = useState({
+        fileType: null,
+        citations: 0,
+        totalWords: 0,
+        keywords: {
+          quantum: { count: 0, density: 0 },
+          entanglement: { count: 0, density: 0 }
+        },
+        summaries: []
+      });
+
+      const analysisJson = useMemo(() => {
+        // Keep machine-readable JSON always valid.
+        return JSON.stringify(analysis, null, 2);
+      }, [analysis]);
+
+      async function onPickFile(e) {
+        setError(\"\");
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        const name = file.name || \"\";
+        const lower = name.toLowerCase();
+        const isMd = lower.endsWith(\".md\") || lower.endsWith(\".markdown\");
+        const isPdf = lower.endsWith(\".pdf\");
+
+        if (!isMd && !isPdf) {
+          setError(\"Unsupported file type. Please select a .md, .markdown, or .pdf file.\");
+          setStatus(\"Idle\");
+          return;
+        }
+
+        try {
+          setStatus(`Loading: ${name}`);
+          if (isMd) {
+            const text = await file.text();
+            const a = analyzeMarkdown(text);
+            setAnalysis(a);
+            setStatus(`Analyzed Markdown: ${name}`);
+          } else {
+            if (!window.pdfjsLib) {
+              throw new Error(\"pdf.js failed to load.\");
+            }
+            const buf = await file.arrayBuffer();
+            setStatus(`Extracting PDF text: ${name}`);
+            const text = await extractPdfText(buf);
+            const a = analyzePdfText(text);
+            setAnalysis(a);
+            setStatus(`Analyzed PDF: ${name}`);
+          }
+        } catch (err) {
+          setError(err && err.message ? err.message : String(err));
+          setStatus(\"Error\");
+        }
+      }
+
+      return (
+        <div className=\"wrap\">
+          <div className=\"row top\" style={{marginBottom: 12}}>
+            <div>
+              <h1>React Client-Side Journal Analyzer</h1>
+              <div className=\"status\">
+                <strong>Status:</strong> {status}{error ? <span className=\"err\"> — {error}</span> : null}
+              </div>
+            </div>
+            <div className=\"card\" style={{minWidth: 360}}>
+              <h2>Upload</h2>
+              <input
+                type=\"file\"
+                accept=\".md,.markdown,.pdf,application/pdf,text/markdown\"
+                onChange={onPickFile}
+              />
+              <div className=\"hint\">Analyzes immediately after load; runs entirely in-browser.</div>
+            </div>
+          </div>
+
+          <div className=\"grid\">
+            <div className=\"card\">
+              <h2>Citations</h2>
+              <div className=\"kpi\">
+                <div>
+                  <div className=\"big\">{analysis.citations}</div>
+                  <div className=\"small\">Bracket citations like [1], [42]</div>
+                </div>
+                <div>
+                  <div className=\"big\">{analysis.totalWords}</div>
+                  <div className=\"small\">Total words</div>
+                </div>
+                <div>
+                  <div className=\"big\">{analysis.fileType || \"—\"}</div>
+                  <div className=\"small\">File type</div>
+                </div>
+              </div>
+            </div>
+
+            <div className=\"card\">
+              <h2>Keywords (frequency &amp; density)</h2>
+              <div className=\"kpi\">
+                <div>
+                  <div className=\"big\">{analysis.keywords.quantum.count}</div>
+                  <div className=\"small\">\"quantum\" density: {analysis.keywords.quantum.density}</div>
+                </div>
+                <div>
+                  <div className=\"big\">{analysis.keywords.entanglement.count}</div>
+                  <div className=\"small\">\"entanglement\" density: {analysis.keywords.entanglement.density}</div>
+                </div>
+              </div>
+            </div>
+
+            <div className=\"card\" style={{gridColumn: \"1 / -1\"}}>
+              <h2>Section summaries</h2>
+              <div className=\"list\">
+                {analysis.summaries && analysis.summaries.length ? (
+                  analysis.summaries.map((s, idx) => (
+                    <div className=\"sec\" key={idx}>
+                      <div className=\"secTitle\">{s.title}</div>
+                      <div className=\"secBody\">{s.summary || \"(no summary found)\"}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className=\"small\">No summaries yet. Upload a file to generate section summaries.</div>
+                )}
+              </div>
+            </div>
+
+            <div className=\"card\" style={{gridColumn: \"1 / -1\"}}>
+              <h2>Machine-readable analysis (for tests)</h2>
+              <pre id=\"analysis-output\">{analysisJson}</pre>
+              <div className=\"hint\">The JSON above mirrors the dashboard data.</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
+"
+
+ ❯ unit/analyzer.spec.ts:18:25
+     16|     expect(htmlContent).toMatch(/accept=["'][^"']*\.md[^"']*\.pdf[^"']…
+     17|     expect(htmlContent).toMatch(/id=["']analysis-output["']/);
+     18|     expect(htmlContent).toMatch(/Citation Frequency/i);
+       |                         ^
+     19|     expect(htmlContent).toMatch(/Keyword Density/i);
+     20|     expect(htmlContent).toMatch(/Section Summaries/i);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  04:44:59
+   Duration  1.72s (transform 216ms, setup 0ms, collect 25ms, tests 6ms, environment 296ms, prepare 712ms)
+
+
+> test:e2e
+> playwright test
+
+
+Running 2 tests using 1 worker
+
+  ✘  1 [chromium] › e2e/analyzer.spec.ts:39:1 › markdown upload analyzes citations, keyword density, and section summaries (870ms)
+  ✘  2 [chromium] › e2e/analyzer.spec.ts:88:1 › pdf upload parses text-based pdf files and updates the dashboard (15.7s)
+
+
+  1) [chromium] › e2e/analyzer.spec.ts:39:1 › markdown upload analyzes citations, keyword density, and section summaries 
+
+    TypeError: Cannot read properties of undefined (reading 'quantum')
+
+      62 |   expect(analysis.citations).toBe(expected.citations);
+      63 |   expect(analysis.totalWords).toBe(expected.totalWords);
+    > 64 |   expect(analysis.keywordDensity.quantum).toEqual(expected.keywordDensity.quantum);
+         |                                  ^
+      65 |   expect(analysis.keywordDensity.entanglement).toEqual(expected.keywordDensity.entanglement);
+      66 |
+      67 |   expect(analysis.sectionSummaries).toEqual([
+        at /tests/e2e/analyzer.spec.ts:64:34
+
+    Error Context: test-results/analyzer-markdown-upload-a-f4e8e-nsity-and-section-summaries-chromium/error-context.md
+
+  2) [chromium] › e2e/analyzer.spec.ts:88:1 › pdf upload parses text-based pdf files and updates the dashboard 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"pdf"[39m
+    Received: [31mnull[39m
+
+    Call Log:
+    - Timeout 15000ms exceeded while waiting on the predicate
+
+      93 |   const output = page.locator('#analysis-output');
+      94 |   let analysis: any;
+    > 95 |   await expect
+         |   ^
+      96 |     .poll(async () => {
+      97 |       const text = await output.textContent();
+      98 |       if (!text) return "";
+        at /tests/e2e/analyzer.spec.ts:95:3
+
+    Error Context: test-results/analyzer-pdf-upload-parses-b8823-s-and-updates-the-dashboard-chromium/error-context.md
+
+  2 failed
+    [chromium] › e2e/analyzer.spec.ts:39:1 › markdown upload analyzes citations, keyword density, and section summaries 
+    [chromium] › e2e/analyzer.spec.ts:88:1 › pdf upload parses text-based pdf files and updates the dashboard 
