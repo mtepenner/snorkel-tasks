@@ -6,6 +6,12 @@ if [ "$PWD" = "/" ]; then
     exit 1
 fi
 
+# Install UV if not present
+if ! command -v uvx &> /dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.local/bin:$PATH"
+fi
+
 uvx \
   -p 3.13 \
   -w pytest==8.4.1 \
