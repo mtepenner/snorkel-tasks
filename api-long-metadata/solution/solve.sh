@@ -9,7 +9,7 @@ import sys
 import urllib.request
 
 try:
-    with urllib.request.urlopen("http://localhost:8000/static/index.html", timeout=1) as response:
+    with urllib.request.urlopen("http://localhost:8000/docs", timeout=1) as response:
         raise SystemExit(0 if response.status == 200 else 1)
 except Exception:
     raise SystemExit(1)

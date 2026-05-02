@@ -17,7 +17,7 @@ Guys, support is already yelling at me. Big PDFs are blowing up the extractor an
     * Fallbacks: If missing, use exactly `"Unknown Author"` and `"Untitled"`.
 * **Text parsing:**
     * Parse the body text and split it into chunks capped at exactly 1000 words each.
-    * Derive `topics` from the parsed content. I need 3 to 10 *meaningful*, non-empty keyword strings. No obvious stop-words, no generic filler. It needs to actually reflect the document.
+    * Derive `topics` from the parsed content. I need 3 to 10 *meaningful*, **single-word** keyword tokens — no multi-word phrases. Each keyword must be **at least 4 characters** long. Exclude obvious stop-words (e.g. the, to, a, an, is, in, and, of, for, it, this, that, with, from). No generic filler. **Return topics sorted by descending term frequency** (most frequent word first). Topics must actually reflect the document content.
 * **Response Payload:** Return ONE flat JSON object. Do not rename *anything*—downstream is incredibly brittle right now. Must contain exactly:
     * `author` (str)
     * `title` (str)

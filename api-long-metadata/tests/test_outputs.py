@@ -9,7 +9,13 @@ API_PATH = Path("/app/workspace/src/api.py")
 UI_PATH = Path("/app/workspace/src/static/index.html")
 BASE_URL = "http://localhost:8000"
 EXPECTED_KEYS = {"author", "title", "topics", "total_chunks", "filename", "total_words"}
-STOP_WORDS = {"the", "to", "a", "an", "is", "in", "and", "of", "for", "it"}
+STOP_WORDS = {
+    "the", "to", "a", "an", "is", "in", "and", "of", "for", "it",
+    "this", "that", "was", "are", "were", "with", "from", "but",
+    "or", "not", "have", "has", "had", "been", "being",
+    "will", "would", "could", "should", "about", "which",
+    "there", "their", "they", "then", "than", "them",
+}
 PDF_TOPIC_WORDS = {"dummy", "long", "context", "line", "test", "chunking", "mechanisms"}
 
 
@@ -115,6 +121,12 @@ def test_extraction_fallback_and_chunking():
     assert all(isinstance(topic, str) and topic.strip() for topic in data["topics"]), (
         "topics must be valid non-empty strings."
     )
+    assert all(" " not in topic for topic in data["topics"]), (
+        "Topics must be single-word tokens — multi-word phrases are not allowed."
+    )
+    assert all(len(topic) >= 4 for topic in data["topics"]), (
+        "Each topic keyword must be at least 4 characters long."
+    )
 
     found_topics = {topic.lower() for topic in data["topics"]}
     assert not found_topics & STOP_WORDS, f"Topics contain obvious stop words: {sorted(found_topics & STOP_WORDS)}"
@@ -152,3 +164,35 @@ def test_extraction_positive_metadata():
 
     assert data["author"] == "Jane Doe", "Failed to extract correct author from metadata."
     assert data["title"] == "My Report", "Failed to extract correct title from metadata."
+
+
+def create_frequency_pdf(path):
+    """Generate a PDF with controlled word frequencies for ordering validation.
+
+    'elephant' appears 150 times, 'tiger' 60 times, 'python' 20 times.
+    All are >= 4 chars and are not stop-words.
+    """
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    words = ["elephant"] * 150 + ["tiger"] * 60 + ["python"] * 20
+    for start in range(0, len(words), 15):
+        pdf.multi_cell(190, 8, " ".join(words[start:start + 15]))
+    pdf.output(path)
+
+
+def test_topics_sorted_by_frequency():
+    """8. Topics must be sorted by descending term frequency (most frequent word first)."""
+    pdf_path = "/tmp/frequency_test.pdf"
+    create_frequency_pdf(pdf_path)
+
+    response = post_extract(pdf_path, "frequency_test.pdf")
+    assert response.status_code == 200, "API endpoint failed."
+    data = response.json()
+
+    topics = [t.lower() for t in data["topics"]]
+    assert "elephant" in topics, "High-frequency word 'elephant' (150\u00d7) must appear in topics."
+    assert "tiger" in topics, "Mid-frequency word 'tiger' (60\u00d7) must appear in topics."
+    assert topics.index("elephant") < topics.index("tiger"), (
+        "Topics must be sorted by descending frequency: 'elephant' (150\u00d7) must appear before 'tiger' (60\u00d7)."
+    )
