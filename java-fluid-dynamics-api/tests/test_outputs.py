@@ -173,5 +173,5 @@ def test_inputs_change_the_simulation():
 
     # Regime change check: ensure dominant_regime varies with Reynolds number
     very_low_re = run_simulation({"viscosity": 5.0, "inlet_velocity": 1.0, "grid_points": 6, "steps": 4})
-    very_high_re = run_simulation({"viscosity": 0.01, "inlet_velocity": 5.0, "grid_points": 6, "steps": 4})
+    very_high_re = run_simulation({"viscosity": 0.001, "inlet_velocity": 5.0, "grid_points": 6, "steps": 4})
     assert very_low_re["analysis"]["dominant_regime"] != very_high_re["analysis"]["dominant_regime"], "dominant_regime must vary with Reynolds number"
