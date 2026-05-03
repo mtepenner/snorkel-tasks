@@ -13,7 +13,7 @@ describe("Static Architecture Checks", () => {
     expect(htmlContent).toMatch(/babel/i);
 
     expect(htmlContent).toMatch(/type=["']file["']/i);
-    expect(htmlContent).toMatch(/accept=["'][^"']*\.md[^"']*\.pdf[^"']*["']/i);
+    expect(htmlContent).toMatch(/accept=["'][^"']*\.md[^"']*\.markdown[^"']*\.pdf[^"']*["']/i);
     expect(htmlContent).toMatch(/id=["']analysis-output["']/);
     expect(htmlContent).toMatch(/Citation Frequency/i);
     expect(htmlContent).toMatch(/Keyword Density/i);

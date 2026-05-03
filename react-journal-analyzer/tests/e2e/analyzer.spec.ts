@@ -107,7 +107,17 @@ test("pdf upload parses text-based pdf files and updates the dashboard", async (
 
   const expected = analyzeText(pdfExtractedText);
   expect(analysis.citations).toBe(expected.citations);
+  expect(analysis.totalWords).toBe(expected.totalWords);
   expect(analysis.keywordDensity.quantum).toEqual(expected.keywordDensity.quantum);
   expect(analysis.keywordDensity.entanglement).toEqual(expected.keywordDensity.entanglement);
-  expect(analysis.sectionSummaries.length).toBeGreaterThanOrEqual(1);
+  expect(analysis.sectionSummaries).toEqual([
+    {
+      title: 'Introduction',
+      summary: 'Quantum entanglement appears in the introduction [1].',
+    },
+    {
+      title: 'Conclusion',
+      summary: 'Entanglement stabilizes the quantum result [2].',
+    },
+  ]);
 });
