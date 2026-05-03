@@ -1,23 +1,36 @@
-# [SIM-88] Fluid Dynamics API (Java)
+# [SIM-88] Fluid Dynamics API (Java) — need this by EOD
 
-**Description:**
-Need this quickly. The engineers are doing repeated manual flow checks whenever viscosity or inlet speed changes and we need to automate it. 
+yo we keep doing these pipe-flow calculations by hand every time someone tweaks viscosity or inlet speed and it's killing us, just automate it already
 
-**System Architecture:**
-The system must consist of a Java HTTP service (`/app/workspace/src/FluidDynamicsApi.java`) bound to `0.0.0.0:8080`. 
+**Where to put it:** Single Java file at `/app/workspace/src/FluidDynamicsApi.java`. Compile with javac using `--add-modules jdk.httpserver` — no Maven, no Gradle, no external jars, standard JDK only. Bind to `0.0.0.0:8080`. Make sure `/app/workspace/data/` exists before any writes.
 
-**Endpoint: POST /simulate**
-Accepts a JSON payload with `viscosity`, `inlet_velocity`, `grid_points`, and `steps`.
-The endpoint must return a JSON response with the following observable behaviors:
-* The JSON response must contain exactly these top-level fields: `viscosity` (echoed from request), `inlet_velocity` (echoed from request), `grid_points` (echoed from request), `steps` (echoed from request), `reynolds_number`, `velocity_profile`, `pressure_profile`, and `analysis`.
-* Includes `velocity_profile` and `pressure_profile` arrays (length must be exactly `grid_points`) that satisfy basic physical laws: pressure must drop along the pipe, and velocity must be higher at the inlet than at the outlet.
-* Includes a `reynolds_number` field. The system must dynamically react to inputs: e.g., a higher input viscosity must produce a lower Reynolds number and lower mean velocity.
-* Includes an `analysis` object with these exact computed fields: `mean_velocity`, `velocity_stddev` (population standard deviation using all grid points), `pressure_drop`, and `dominant_regime` (must evaluate to exactly `"laminar"`, `"transitional"`, or `"turbulent"` based on the Reynolds number).
+**POST /simulate**
 
-**Offline Analysis Script:**
-We have legacy CLI tools that need to run the math offline, so we also need a standalone Python script at `/app/workspace/src/postprocess.py`. It must accept the path to a raw simulation JSON file as a CLI argument, compute the exact same `analysis` fields mentioned above, and print the resulting JSON object to `stdout`. 
+Takes JSON body: `viscosity` (float), `inlet_velocity` (float), `grid_points` (int), `steps` (int).
 
-**Persistence & Extra Endpoints:**
-* `POST /simulate` must write its raw simulation output to `/app/workspace/data/latest_simulation.json` and its analysis object to `/app/workspace/data/latest_analysis.json`.
-* `GET /latest-report` must return the saved analysis JSON.
-* `GET /health` must return `{"status": "ok"}` for the harness readiness check.
+Must return EXACTLY these top-level keys — no extras, no missing:
+- `viscosity` — echo back what came in
+- `inlet_velocity` — echo back what came in
+- `grid_points` — echo back what came in
+- `steps` — echo back what came in
+- `reynolds_number` — Re = (inlet_velocity * grid_points) / viscosity (that's our simplified pipe model, don't swap in the standard textbook formula)
+- `velocity_profile` — float array of length exactly `grid_points`, inlet value must be greater than outlet value
+- `pressure_profile` — float array of length exactly `grid_points`, must be non-increasing (pressure drops along pipe, every element >= the next)
+- `analysis` — sub-object with these exact field names:
+  - `mean_velocity`: arithmetic mean of the full velocity_profile array
+  - `velocity_stddev`: **population** standard deviation of velocity_profile (divide by N, NOT N-1)
+  - `pressure_drop`: pressure_profile[0] minus pressure_profile[grid_points-1]
+  - `dominant_regime`: `"laminar"` when Re < 50, `"transitional"` when Re is 50–149, `"turbulent"` when Re >= 150
+
+The simulation must be physically reactive — a run with higher viscosity at the same inlet speed must produce a lower Reynolds number AND a lower mean_velocity compared to a lower-viscosity run. Same deal the other way: higher inlet_velocity must produce a higher Reynolds number AND higher mean_velocity.
+
+**GET /health** → `{"status": "ok"}`
+
+**GET /latest-report** → return the analysis sub-object saved from the last /simulate call
+
+**Persistence (both files required after every /simulate):**
+- `/app/workspace/data/latest_simulation.json` — the full 8-field response
+- `/app/workspace/data/latest_analysis.json` — just the analysis sub-object
+
+**Offline script:** also need `/app/workspace/src/postprocess.py`. Takes a simulation JSON file path as a CLI argument, reads it, computes the same `mean_velocity`, `velocity_stddev`, `pressure_drop`, and `dominant_regime` using the identical formulas, and prints the resulting JSON object to stdout. Output must match the API numerically for the same input data.
+
