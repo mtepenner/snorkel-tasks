@@ -165,10 +165,10 @@ cat > /app/index.html << 'EOF'
     <script type="text/babel">
                 const { useState } = React;
 
-                if (window.pdfjsLib) {
-                    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-                        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                }
+                // if (window.pdfjsLib) {
+                //     window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+                //         'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                // }
 
                 function countWords(text) {
                     return (text.match(/\b[\w'-]+\b/g) || []).length;

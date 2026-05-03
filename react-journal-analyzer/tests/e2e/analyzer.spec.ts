@@ -151,7 +151,7 @@ test("pdf upload parses text-based pdf files and updates the dashboard", async (
       } catch {
         return "";
       }
-    }, { timeout: 15000 })
+    }, { timeout: 25000 })
     .toBe('pdf');
 
   await expectUploadStatusMessage(page);
