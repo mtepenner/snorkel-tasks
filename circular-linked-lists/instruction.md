@@ -1,75 +1,72 @@
-# [TRAVEL-622] group itinerary desk is still doing this by hand and it is breaking assignments
+The travel desk is still tracking group itineraries by hand, and I need a small C++17 CLI to take that over.
 
-Need a standalone C++17 CLI under `/app/workspace/src/travel_groups.cpp`. Tiny helper files in the same folder are fine, but the harness compiles `/app/workspace/src/*.cpp`, so keep the deliverable there.
+Put the main program in `/app/workspace/src/travel_groups.cpp`. Small helper files in the same folder are fine, but the harness compiles `/app/workspace/src/*.cpp`, so anything that needs to build has to live there.
 
-The booking desk wants an array of **exactly 3** circular linked lists. The three array slots are fixed travel groups in this exact order: `scotland`, `hamburg`, `moscow`. Each node is one traveler itinerary. This is not a `std::map` exercise and it is not a vector pretending to be a ring.
+Use an array of exactly 3 circular linked lists. The slots are fixed in this order: `scotland`, `hamburg`, `moscow`. Each node is one itinerary with `booking_id`, `traveler_name`, `group`, `nights`, and `transport`.
 
-Every itinerary stores `booking_id`, `traveler_name`, `group`, `nights`, and `transport`. Allowed transports are `flight`, `train`, and `ferry`. `nights` must be a positive integer.
+Valid transports are `flight`, `train`, and `ferry`. `nights` must be a positive integer.
 
-Use `stdin` commands with `|` separators. Ignore blank lines and lines beginning with `#`.
+Please use a real circular linked-list structure with `next` pointers and wraparound behavior. Do not solve this with `std::map`, and do not fake the ring with a vector.
 
-## Command contract
+Read commands from `stdin`, split on `|`, and ignore blank lines or lines that start with `#`.
 
-- `BOOK|booking_id|traveler_name|group|nights|transport` inserts a traveler at the tail of that group's circular list.
-- `SHOW|booking_id` returns one line describing the matching itinerary or `MISSING <booking_id>`.
-- `ADVANCE|group|steps` moves that group's current pointer forward by `steps` around the circular list and prints the new current itinerary. Wraparound is required.
-- `CANCEL|booking_id` removes the matching node from whatever group contains it.
-- `GROUP_REPORT` prints one line for each group in array order.
-- `TRANSPORT_REPORT` prints the aggregate transport summary block shown below.
+Commands:
 
-Reject duplicates and bad inputs with these exact strings:
+- `BOOK|booking_id|traveler_name|group|nights|transport` appends a traveler to the tail of that group's circular list.
+- `SHOW|booking_id` prints the matching itinerary or `MISSING <booking_id>`.
+- `ADVANCE|group|steps` moves that group's current pointer forward by `steps` and prints the new current itinerary. Wraparound is required.
+- `CANCEL|booking_id` removes the matching node from whichever group contains it.
+- `GROUP_REPORT` prints one line per group in array order.
+- `TRANSPORT_REPORT` prints the transport summary block.
 
-```text
-ERROR duplicate booking <booking_id>
-ERROR invalid group <value>
-ERROR invalid nights <value>
-ERROR invalid transport <value>
-```
+Each group also has a current pointer, and the tests expect these rules:
 
-Successful inserts use this exact string:
+- When a group gets its first booking, that new node becomes current.
+- Later `BOOK` commands append at the tail and do not move current.
+- `ADVANCE` starts from the current node and walks forward around the ring.
+- If `CANCEL` removes a node that is not current, current stays where it was.
+- If `CANCEL` removes the current node and the group still has other nodes, current moves to the previous node in the ring.
+- If `CANCEL` removes the only node in the group, the group becomes empty and current becomes `EMPTY`.
 
-```text
-BOOKED <booking_id> GROUP <group>
-```
+Use these exact errors:
 
-`SHOW` must print this exact shape:
+	ERROR duplicate booking <booking_id>
+	ERROR invalid group <value>
+	ERROR invalid nights <value>
+	ERROR invalid transport <value>
 
-```text
-FOUND <booking_id> | traveler=<traveler_name> | group=<group> | nights=<nights> | transport=<transport>
-```
+A successful `BOOK` prints:
 
-`ADVANCE` must print this exact shape when the group is non-empty:
+	BOOKED <booking_id> GROUP <group>
 
-```text
-CURRENT <group> <booking_id> <traveler_name>
-```
+`SHOW` prints:
+
+	FOUND <booking_id> | traveler=<traveler_name> | group=<group> | nights=<nights> | transport=<transport>
+
+`ADVANCE` on a non-empty group prints:
+
+	CURRENT <group> <booking_id> <traveler_name>
 
 If `ADVANCE` is called on an empty group, print:
 
-```text
-EMPTY <group>
-```
+	EMPTY <group>
 
-`CANCEL` must print either `CANCELLED <booking_id> GROUP <group>` or `MISSING <booking_id>`.
+`CANCEL` prints either `CANCELLED <booking_id> GROUP <group>` or `MISSING <booking_id>`.
 
-`GROUP_REPORT` prints these exact three lines in this order:
+`GROUP_REPORT` must print exactly these three lines in this order:
 
-```text
-GROUP scotland=<count> CURRENT=<booking_id_or_EMPTY>
-GROUP hamburg=<count> CURRENT=<booking_id_or_EMPTY>
-GROUP moscow=<count> CURRENT=<booking_id_or_EMPTY>
-```
+	GROUP scotland=<count> CURRENT=<booking_id_or_EMPTY>
+	GROUP hamburg=<count> CURRENT=<booking_id_or_EMPTY>
+	GROUP moscow=<count> CURRENT=<booking_id_or_EMPTY>
 
-`TRANSPORT_REPORT` prints this exact five-line block:
+`TRANSPORT_REPORT` must print exactly this five-line block:
 
-```text
-TOTAL_BOOKINGS=<count>
-SCOTLAND_FAVORITE_TRANSPORT=<transport_or_NONE>
-HAMBURG_FAVORITE_TRANSPORT=<transport_or_NONE>
-MOSCOW_FAVORITE_TRANSPORT=<transport_or_NONE>
-OVERALL_FAVORITE_TRANSPORT=<transport_or_NONE>
-```
+	TOTAL_BOOKINGS=<count>
+	SCOTLAND_FAVORITE_TRANSPORT=<transport_or_NONE>
+	HAMBURG_FAVORITE_TRANSPORT=<transport_or_NONE>
+	MOSCOW_FAVORITE_TRANSPORT=<transport_or_NONE>
+	OVERALL_FAVORITE_TRANSPORT=<transport_or_NONE>
 
-Favorite transport means the most-booked transport in that scope; ties break alphabetically.
+Favorite transport means the most-booked transport in that scope, with alphabetical tiebreaks.
 
-Compile cleanly with `g++ -std=c++17 -Wall -Wextra -pedantic`. Use an actual circular linked-list structure with `next` pointers and wraparound behavior.
+Build it with `g++ -std=c++17 -Wall -Wextra -pedantic`, and it should compile with no warnings.

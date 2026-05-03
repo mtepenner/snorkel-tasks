@@ -27,6 +27,12 @@ class CircularLinkedListTaskTests(unittest.TestCase):
             f"STDOUT:\n{compile_result.stdout}\n"
             f"STDERR:\n{compile_result.stderr}"
         )
+        assert compile_result.stdout.strip() == "" and compile_result.stderr.strip() == "", (
+            "Compilation emitted output. The task requires a warning-free build with:\n"
+            "g++ -std=c++17 -Wall -Wextra -pedantic\n"
+            f"STDOUT:\n{compile_result.stdout}\n"
+            f"STDERR:\n{compile_result.stderr}"
+        )
 
     def run_program(self, commands: str) -> list[str]:
         process = subprocess.run(
