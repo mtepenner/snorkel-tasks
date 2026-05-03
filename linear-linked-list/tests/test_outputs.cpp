@@ -152,6 +152,58 @@ void expectNotRegex(const std::string& text, const std::string& pattern, const s
     }
 }
 
+std::vector<std::string> collectMatches(const std::string& source, const std::regex& pattern, int groupIndex) {
+    std::vector<std::string> matches;
+    for (std::sregex_iterator it(source.begin(), source.end(), pattern), end; it != end; ++it) {
+        matches.push_back((*it)[groupIndex].str());
+    }
+    return matches;
+}
+
+bool usesCelebrityVirtualDispatch(const std::string& source) {
+    std::vector<std::string> virtualMethodNames = collectMatches(
+        source,
+        std::regex(R"(virtual\s+[^;{}()]+\s+([A-Za-z_]\w*)\s*\()"),
+        1
+    );
+
+    const std::vector<std::string> overrideMethods = collectMatches(
+        source,
+        std::regex(R"(([A-Za-z_]\w*)\s*\([^;{}]*\)\s*(?:const\s*)?override\b)"),
+        1
+    );
+    virtualMethodNames.insert(virtualMethodNames.end(), overrideMethods.begin(), overrideMethods.end());
+
+    std::vector<std::string> celebrityHandles;
+    const std::array<std::regex, 6> handlePatterns = {
+        std::regex(R"((?:std::)?unique_ptr\s*<\s*Celebrity\s*>\s*([A-Za-z_]\w*))"),
+        std::regex(R"((?:std::)?shared_ptr\s*<\s*Celebrity\s*>\s*([A-Za-z_]\w*))"),
+        std::regex(R"((?:const\s+)?Celebrity\s*\*\s*([A-Za-z_]\w*))"),
+        std::regex(R"((?:const\s+)?Celebrity\s*&\s*([A-Za-z_]\w*))"),
+        std::regex(R"((?:std::)?unique_ptr\s*<\s*Celebrity\s*>\s*&\s*([A-Za-z_]\w*))"),
+        std::regex(R"((?:std::)?shared_ptr\s*<\s*Celebrity\s*>\s*&\s*([A-Za-z_]\w*))")
+    };
+
+    for (const auto& pattern : handlePatterns) {
+        const std::vector<std::string> matches = collectMatches(source, pattern, 1);
+        celebrityHandles.insert(celebrityHandles.end(), matches.begin(), matches.end());
+    }
+
+    for (const std::string& handle : celebrityHandles) {
+        for (const std::string& methodName : virtualMethodNames) {
+            const std::regex arrowCall("\\b" + handle + R"(\s*->\s*)" + methodName + R"(\s*\())");
+            const std::regex dotCall("\\b" + handle + R"(\s*\.\s*)" + methodName + R"(\s*\())");
+            const std::regex derefCall(R"(\(\s*\*\s*)" + handle + R"(\s*\)\s*\.\s*)" + methodName + R"(\s*\())");
+
+            if (std::regex_search(source, arrowCall) || std::regex_search(source, dotCall) || std::regex_search(source, derefCall)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 int bucketFor(const std::string& ticketId) {
     int total = 0;
     for (unsigned char character : ticketId) {
@@ -228,7 +280,7 @@ void testSourceUsesLinkedListsAndVirtualDispatch() {
     expectRegex(source, R"(class\s+LiveActionActor\s*:\s*public\s+Celebrity)", "Must define LiveActionActor inheriting from Celebrity.");
     expectRegex(source, R"(virtual\b)", "Celebrity must declare at least one virtual method.");
     expectTrue(
-        source.find("celebrity->typeLabel()") != std::string::npos || source.find("celebrity->detailSummary()") != std::string::npos,
+        usesCelebrityVirtualDispatch(source),
         "Source must use virtual dispatch when formatting LOOKUP output."
     );
 
