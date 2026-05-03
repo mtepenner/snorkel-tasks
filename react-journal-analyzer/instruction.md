@@ -5,18 +5,3 @@ For every successful upload, read the raw document text and compute the analysis
 For Markdown files, treat lines starting with `#` as section headings and summarize each section with the first non-empty sentence under that heading. For PDF files, extract text client-side and then recover headings from the extracted text. The verifier PDF is a simple text-based fixture whose extracted text preserves standalone heading lines such as `Introduction` and `Conclusion` followed by ordinary sentence text on later lines. Preserve line breaks if your parser provides them, and treat a short standalone title-case line, roughly 1 to 4 words made of letters, numbers, spaces, or hyphens, as a heading for the PDF path. If a PDF upload succeeds, update the JSON mirror with `fileType: "pdf"` and the parsed counts from that PDF. Do not leave the initial empty state behind after a PDF upload, and do not invent section titles when no heading-like lines were found.
 
 Show a visible upload control and a status message. Render dashboard sections titled exactly `Citation Frequency`, `Keyword Density`, and `Section Summaries`. Render the section summaries inside a `.sections` container, and render each section title in a `<strong>` element so the titles are easy to scan in the visible UI. Also render a machine-readable mirror of the current analysis in a `<pre id="analysis-output"></pre>`. The JSON in that `<pre>` must stay valid and must expose the same analysis the dashboard shows; do not hide required information in visual-only markup.
-
-# Rubric 1
-Agent creates /app/index.html using React, ReactDOM, and Babel loaded from CDN scripts with no local build pipeline or package manager invocations, +3
-Agent implements a file input accepting .md, .markdown, and .pdf that triggers automatic analysis immediately on file load without requiring a separate submit action, +3
-Agent renders <pre id="analysis-output"> containing valid JSON with all required top-level fields: fileType, citations, totalWords, keywordDensity (with quantum and entanglement sub-objects each containing count and density), and sectionSummaries (array of title/summary objects), +5
-Agent implements citation counting using a bracket-digit pattern and word counting using the /\b[\w'-]+\b/g regex, matching the deterministic counting semantics specified in the instructions, +2
-Agent computes keyword density as count / totalWords rounded to exactly 3 decimal places for both 'quantum' and 'entanglement', +2
-Agent renders visible dashboard sections with headings titled exactly 'Citation Frequency', 'Keyword Density', and 'Section Summaries', +2
-Agent renders each section title in a <strong> element placed inside a .sections container, +2
-Agent implements markdown heading detection that matches only # -prefixed lines and extracts the first non-empty sentence below each heading as the summary, +3
-Agent implements a client-side PDF text extraction path that correctly sets fileType to 'pdf' and attempts to recover heading structure from the extracted text, +2
-Agent verifies that the output file exists and has non-zero size after each write operation, +1
-Agent declares the task complete without validating that the PDF section extraction path produces at least one sectionSummary entry, -2
-Agent performs a second identical write without diagnosing or adapting the implementation after noticing a potential output issue, -1
-Agent sets the file input accept attribute without .markdown, omitting the required third file extension despite the instruction explicitly requiring .md, .markdown, and .pdf, -1

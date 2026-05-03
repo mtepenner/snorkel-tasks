@@ -39,7 +39,19 @@ function analyzeText(text: string) {
 test("markdown upload analyzes citations, keyword density, and section summaries", async ({ page }) => {
   await page.goto("/");
 
+  const statusMessage = page.locator('.status, [role="status"], [aria-live]').first();
+  await expect(statusMessage).toBeVisible();
+  const initialStatus = ((await statusMessage.textContent()) || '').trim();
+  expect(initialStatus.length).toBeGreaterThan(0);
+
   await page.setInputFiles('input[type="file"]', '/app/test-fixtures/paper.md');
+
+  await expect
+    .poll(async () => {
+      const text = ((await statusMessage.textContent()) || '').trim();
+      return text.length > 0 && text !== initialStatus;
+    }, { timeout: 15000 })
+    .toBe(true);
 
   const output = page.locator('#analysis-output');
   await expect(output).toBeVisible({ timeout: 15000 });
