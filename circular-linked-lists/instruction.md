@@ -10,63 +10,12 @@ Please use a real circular linked-list structure with `next` pointers and wrapar
 
 Read commands from `stdin`, split on `|`, and ignore blank lines or lines that start with `#`.
 
-Commands:
+The input language is small. A booking request arrives as `BOOK|booking_id|traveler_name|group|nights|transport` and should append that itinerary to the tail of the named group's circular list. If the booking id already exists anywhere in the structure, print `ERROR duplicate booking <booking_id>`. If the group name is anything other than `scotland`, `hamburg`, or `moscow`, print `ERROR invalid group <value>`. If `nights` is not a positive integer, print `ERROR invalid nights <value>`, and if `transport` is not one of `flight`, `train`, or `ferry`, print `ERROR invalid transport <value>`. A successful booking must print `BOOKED <booking_id> GROUP <group>`.
 
-- `BOOK|booking_id|traveler_name|group|nights|transport` appends a traveler to the tail of that group's circular list.
-- `SHOW|booking_id` prints the matching itinerary or `MISSING <booking_id>`.
-- `ADVANCE|group|steps` moves that group's current pointer forward by `steps` and prints the new current itinerary. Wraparound is required.
-- `CANCEL|booking_id` removes the matching node from whichever group contains it.
-- `GROUP_REPORT` prints one line per group in array order.
-- `TRANSPORT_REPORT` prints the transport summary block.
+Each group keeps a current pointer as well as the ring itself. When a group receives its first booking, that new node becomes current. Later `BOOK` commands still append at the tail, but they do not change current. An `ADVANCE|group|steps` request starts from the current node for that group, walks forward by `steps` with wraparound, and prints `CURRENT <group> <booking_id> <traveler_name>` for the new current node. If that group's ring is empty, the exact response is `EMPTY <group>`.
 
-Each group also has a current pointer, and the tests expect these rules:
+A `SHOW|booking_id` request either prints `MISSING <booking_id>` or returns one line in the exact form `FOUND <booking_id> | traveler=<traveler_name> | group=<group> | nights=<nights> | transport=<transport>`. A `CANCEL|booking_id` request removes the matching node from whichever group contains it and prints either `CANCELLED <booking_id> GROUP <group>` or `MISSING <booking_id>`. If the cancelled node is not current, current stays where it was. If the cancelled node is current and the group still has other nodes, current moves to the previous node in the ring. If the cancelled node was the only node, that group becomes empty and current becomes `EMPTY`.
 
-- When a group gets its first booking, that new node becomes current.
-- Later `BOOK` commands append at the tail and do not move current.
-- `ADVANCE` starts from the current node and walks forward around the ring.
-- If `CANCEL` removes a node that is not current, current stays where it was.
-- If `CANCEL` removes the current node and the group still has other nodes, current moves to the previous node in the ring.
-- If `CANCEL` removes the only node in the group, the group becomes empty and current becomes `EMPTY`.
-
-Use these exact errors:
-
-	ERROR duplicate booking <booking_id>
-	ERROR invalid group <value>
-	ERROR invalid nights <value>
-	ERROR invalid transport <value>
-
-A successful `BOOK` prints:
-
-	BOOKED <booking_id> GROUP <group>
-
-`SHOW` prints:
-
-	FOUND <booking_id> | traveler=<traveler_name> | group=<group> | nights=<nights> | transport=<transport>
-
-`ADVANCE` on a non-empty group prints:
-
-	CURRENT <group> <booking_id> <traveler_name>
-
-If `ADVANCE` is called on an empty group, print:
-
-	EMPTY <group>
-
-`CANCEL` prints either `CANCELLED <booking_id> GROUP <group>` or `MISSING <booking_id>`.
-
-`GROUP_REPORT` must print exactly these three lines in this order:
-
-	GROUP scotland=<count> CURRENT=<booking_id_or_EMPTY>
-	GROUP hamburg=<count> CURRENT=<booking_id_or_EMPTY>
-	GROUP moscow=<count> CURRENT=<booking_id_or_EMPTY>
-
-`TRANSPORT_REPORT` must print exactly this five-line block:
-
-	TOTAL_BOOKINGS=<count>
-	SCOTLAND_FAVORITE_TRANSPORT=<transport_or_NONE>
-	HAMBURG_FAVORITE_TRANSPORT=<transport_or_NONE>
-	MOSCOW_FAVORITE_TRANSPORT=<transport_or_NONE>
-	OVERALL_FAVORITE_TRANSPORT=<transport_or_NONE>
-
-Favorite transport means the most-booked transport in that scope, with alphabetical tiebreaks.
+`GROUP_REPORT` prints exactly three lines in array order, one for `scotland`, then one for `hamburg`, then one for `moscow`. Those lines must be `GROUP scotland=<count> CURRENT=<booking_id_or_EMPTY>`, `GROUP hamburg=<count> CURRENT=<booking_id_or_EMPTY>`, and `GROUP moscow=<count> CURRENT=<booking_id_or_EMPTY>`. `TRANSPORT_REPORT` prints a five-line summary in this exact order: `TOTAL_BOOKINGS=<count>`, `SCOTLAND_FAVORITE_TRANSPORT=<transport_or_NONE>`, `HAMBURG_FAVORITE_TRANSPORT=<transport_or_NONE>`, `MOSCOW_FAVORITE_TRANSPORT=<transport_or_NONE>`, and `OVERALL_FAVORITE_TRANSPORT=<transport_or_NONE>`. Favorite transport means the most-booked transport in that scope, with alphabetical tiebreaks.
 
 Build it with `g++ -std=c++17 -Wall -Wextra -pedantic`, and it should compile with no warnings.
