@@ -61,10 +61,7 @@ uvx \
   -p 3.12 \
   -w pytest==8.4.1 \
   -w pytest-json-ctrf==0.3.5 \
-  -w flask==3.0.0 \
-  -w pandas==2.1.4 \
   -w numpy==1.26.4 \
-  -w scikit-learn==1.3.2 \
   -w beautifulsoup4==4.12.3 \
   pytest --ctrf /logs/verifier/ctrf.json "${TEST_FILES[@]}" -rA
 

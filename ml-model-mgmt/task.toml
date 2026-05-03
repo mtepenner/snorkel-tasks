@@ -13,12 +13,12 @@ number_of_milestones = 3
 # Size of the codebase: minimal -> 0-20 files, small -> 20+ files, large -> 200+ files
 codebase_size = "minimal"
 # Coding languages used in the oracle solution or required by the agent
-languages = ["python", "javascript", "html"]
+languages = ["c++", "javascript", "html", "bash"]
 # Must be exactly 3-6 tags
-tags = ["python", "flask", "machine-learning", "web-development"]
+tags = ["c++", "http-server", "json-parsing", "csv-processing", "web-development"]
 # Estimated time to complete (minutes)
-expert_time_estimate_min = 60
-junior_time_estimate_min = 120
+expert_time_estimate_min = 150
+junior_time_estimate_min = 300
 
 # Verifier: runs the test script to check task completion
 [verifier]

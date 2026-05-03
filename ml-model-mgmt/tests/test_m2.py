@@ -1,9 +1,15 @@
 import os
 from bs4 import BeautifulSoup
 
-def test_m2_ui_files_exist():
-    """Verify that the required index.html file is present at the expected path."""
+def test_m2_ui_files_exist(client):
+    """Verify that the required index.html file is present at the expected path and served by the C++ binary."""
     assert os.path.exists('/app/workspace/src/templates/index.html'), "index.html missing"
+    assert client is not None, "Server not implemented"
+
+    response = client.get('/')
+    assert response.status_code == 200, "GET / must serve the dashboard"
+    assert 'text/html' in response.headers.get('content-type', '').lower(), "GET / must return HTML"
+    assert '<html' in response.text.lower(), "GET / did not return HTML content"
 
 def test_m2_ui_content():
     """Verify dashboard layout includes config form, chart area, navigation, dropdown, slider, and viewport meta tag."""

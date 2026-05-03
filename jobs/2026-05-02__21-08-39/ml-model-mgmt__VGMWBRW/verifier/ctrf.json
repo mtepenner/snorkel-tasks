@@ -1,0 +1,83 @@
+{
+    "results": {
+        "tool": {
+            "name": "pytest",
+            "version": "8.4.1"
+        },
+        "summary": {
+            "tests": 7,
+            "passed": 7,
+            "failed": 0,
+            "skipped": 0,
+            "pending": 0,
+            "other": 0,
+            "start": 1777781365.290737,
+            "stop": 1777781367.9436133
+        },
+        "tests": [
+            {
+                "name": "test_m1.py::test_m1_upload_endpoint_exists",
+                "status": "passed",
+                "duration": 2.22689126899877,
+                "start": 1777781365.7040448,
+                "stop": 1777781367.931505,
+                "retries": 0,
+                "file_path": "test_m1.py"
+            },
+            {
+                "name": "test_m1.py::test_m1_preprocessing_and_retrieval",
+                "status": "passed",
+                "duration": 0.0013598799996543676,
+                "start": 1777781367.9316843,
+                "stop": 1777781367.933368,
+                "retries": 0,
+                "file_path": "test_m1.py"
+            },
+            {
+                "name": "test_m1.py::test_m1_error_handling",
+                "status": "passed",
+                "duration": 0.0022358060004989966,
+                "start": 1777781367.9335268,
+                "stop": 1777781367.9361079,
+                "retries": 0,
+                "file_path": "test_m1.py"
+            },
+            {
+                "name": "test_m2.py::test_m2_ui_files_exist",
+                "status": "passed",
+                "duration": 0.0006384410007740371,
+                "start": 1777781367.936749,
+                "stop": 1777781367.9376807,
+                "retries": 0,
+                "file_path": "test_m2.py"
+            },
+            {
+                "name": "test_m2.py::test_m2_ui_content",
+                "status": "passed",
+                "duration": 0.0016759420004746062,
+                "start": 1777781367.93782,
+                "stop": 1777781367.9398139,
+                "retries": 0,
+                "file_path": "test_m2.py"
+            },
+            {
+                "name": "test_m3.py::test_m3_inference_endpoint",
+                "status": "passed",
+                "duration": 0.001027003999297449,
+                "start": 1777781367.9403987,
+                "stop": 1777781367.941699,
+                "retries": 0,
+                "file_path": "test_m3.py"
+            },
+            {
+                "name": "test_m3.py::test_m3_frontend_fetch_logic",
+                "status": "passed",
+                "duration": 0.0012636750007004593,
+                "start": 1777781367.9418352,
+                "stop": 1777781367.9433718,
+                "retries": 0,
+                "file_path": "test_m3.py"
+            }
+        ]
+    }
+}

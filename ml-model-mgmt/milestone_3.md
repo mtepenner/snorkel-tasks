@@ -1,6 +1,6 @@
 # milestone 3: hook up the model inference api to the frontend
 
-- add a dummy prediction route POST `/api/v1/predict` in the python api. it must accept json like `{"features": [1, 2, 3]}` and return a json response with the key `prediction` (e.g., `{"prediction": 6}`).
+- add a dummy prediction route POST `/api/v1/predict` in the c++ server. it must accept json like `{"features": [1, 2, 3]}` and return a json response with the key `prediction` (e.g., `{"prediction": 6}`).
 - the prediction must come from the submitted features, stay deterministic for the same input, and change when the input features change. no hardcoded constant, no randomness, no time-based nonsense.
 - write fetch logic in the frontend to grab user input from the ui and hit `/api/v1/predict` exactly.
 - absolutely no full page reloads when they click the 'run prediction' button (use `e.preventDefault()`).

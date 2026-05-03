@@ -4,10 +4,8 @@ WORKDIR /app/workspace
 
 COPY src/ /app/workspace/src/
 
-RUN pip install --no-cache-dir \
-    flask==3.0.0 \
-    pandas==2.1.4 \
-    scikit-learn==1.3.2 \
-    numpy==1.26.4
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends g++ \
+    && rm -rf /var/lib/apt/lists/*
 
 CMD ["tail", "-f", "/dev/null"]
