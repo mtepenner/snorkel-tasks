@@ -22,12 +22,12 @@ public class TestOutputs {
     @BeforeAll
     static void setupAll() throws Exception {
         Path javaFile  = Path.of("/app/workspace/src/FluidDynamicsApi.java");
-        Path pythonFile = Path.of("/app/workspace/src/postprocess.py");
+        Path helperFile = Path.of("/app/workspace/src/PostProcess.java");
         assertTrue(Files.exists(javaFile),   "FluidDynamicsApi.java is missing");
-        assertTrue(Files.exists(pythonFile), "postprocess.py is missing");
+        assertTrue(Files.exists(helperFile), "PostProcess.java is missing");
 
         Process compile = new ProcessBuilder(
-            "javac", "--add-modules", "jdk.httpserver", javaFile.toString()
+            "javac", "--add-modules", "jdk.httpserver", javaFile.toString(), helperFile.toString()
         ).directory(new File("/app/workspace/src")).inheritIO().start();
         assertEquals(0, compile.waitFor(), "javac compilation failed");
 
@@ -92,7 +92,7 @@ public class TestOutputs {
         JsonObject health = GSON.fromJson(resp.body(), JsonObject.class);
         assertEquals("ok", health.get("status").getAsString());
         assertTrue(Files.exists(Path.of("/app/workspace/src/FluidDynamicsApi.java")));
-        assertTrue(Files.exists(Path.of("/app/workspace/src/postprocess.py")));
+        assertTrue(Files.exists(Path.of("/app/workspace/src/PostProcess.java")));
     }
 
     @Test
@@ -141,8 +141,8 @@ public class TestOutputs {
 
     @Test
     @Order(3)
-    void test_python_postprocess_matches_api_analysis_and_latest_report() throws Exception {
-        /** Verify that running postprocess.py directly reproduces the API analysis, and that
+    void test_java_postprocess_matches_api_analysis_and_latest_report() throws Exception {
+        /** Verify that running PostProcess directly reproduces the API analysis, and that
             /latest-report serves the same analysis. */
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("viscosity", 0.18);
@@ -152,10 +152,10 @@ public class TestOutputs {
         JsonObject data = runSimulation(payload);
 
         Process proc = new ProcessBuilder(
-            "python3", "/app/workspace/src/postprocess.py", SIMULATION_FILE.toString()
+            "java", "-cp", "/app/workspace/src", "PostProcess", SIMULATION_FILE.toString()
         ).start();
         String stdout = new String(proc.getInputStream().readAllBytes()).strip();
-        assertEquals(0, proc.waitFor(), "postprocess.py exited with non-zero code");
+        assertEquals(0, proc.waitFor(), "PostProcess exited with non-zero code");
 
         JsonObject helperAnalysis = GSON.fromJson(stdout, JsonObject.class);
         assertAnalysisClose(helperAnalysis, data.getAsJsonObject("analysis"));

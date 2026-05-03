@@ -72,8 +72,10 @@ public class FluidDynamicsApi {
                 Files.writeString(SIMULATION_FILE, result.toSimulationJson());
 
                 Process process = new ProcessBuilder(
-                    pythonCommand(),
-                        "/app/workspace/src/postprocess.py",
+                    "java",
+                        "-cp",
+                        "/app/workspace/src",
+                        "PostProcess",
                         SIMULATION_FILE.toString(),
                         ANALYSIS_FILE.toString()
                 ).redirectErrorStream(true).start();
@@ -82,11 +84,11 @@ public class FluidDynamicsApi {
                 try {
                     int exitCode = process.waitFor();
                     if (exitCode != 0 || analysisJson.isEmpty()) {
-                        throw new IllegalStateException("python post-process failed");
+                        throw new IllegalStateException("java post-process failed");
                     }
                 } catch (InterruptedException interruptedException) {
                     Thread.currentThread().interrupt();
-                    throw new IllegalStateException("python post-process interrupted");
+                    throw new IllegalStateException("java post-process interrupted");
                 }
 
                 writeJson(exchange, 200, result.toResponseJson(analysisJson));
@@ -165,14 +167,6 @@ public class FluidDynamicsApi {
 
     private static String formatDouble(double value) {
         return String.format(Locale.US, "%.6f", value);
-    }
-
-    private static String pythonCommand() {
-        String osName = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-        if (osName.contains("win")) {
-            return "python";
-        }
-        return "python3";
     }
 
     private record SimulationResult(

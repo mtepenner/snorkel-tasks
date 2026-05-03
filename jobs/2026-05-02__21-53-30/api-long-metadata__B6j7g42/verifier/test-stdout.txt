@@ -1,0 +1,64 @@
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.FileSystemFontProvider loadDiskCache
+WARNING: New fonts found, font cache will be re-built
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.FileSystemFontProvider <init>
+WARNING: Building on-disk font cache, this may take a while
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.FileSystemFontProvider <init>
+WARNING: Finished building on-disk font cache, found 6 fonts
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Times-Roman
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Times-Bold
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Times-Italic
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Times-BoldItalic
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Helvetica
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Helvetica-Bold
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Helvetica-Oblique
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Helvetica-BoldOblique
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Courier
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Courier-Bold
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Courier-Oblique
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Courier-BoldOblique
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font Symbol
+May 03, 2026 4:54:29 AM org.apache.pdfbox.pdmodel.font.PDType1Font <init>
+WARNING: Using fallback font LiberationSans for base font ZapfDingbats
+
+Thanks for using JUnit! Support its development at https://junit.org/sponsoring
+
+[36m.[0m
+[36m+--[0m [36mJUnit Vintage[0m [32m[OK][0m
+[36m+--[0m [36mJUnit Platform Suite[0m [32m[OK][0m
+[36m'--[0m [36mJUnit Jupiter[0m [32m[OK][0m
+[36m  '--[0m [36mTestOutputs[0m [32m[OK][0m
+[36m    +--[0m [34mtest_required_files_exist()[0m [32m[OK][0m
+[36m    +--[0m [34mtest_static_ui_accessible_and_functional()[0m [32m[OK][0m
+[36m    +--[0m [34mtest_extract_rejects_get_requests()[0m [32m[OK][0m
+[36m    +--[0m [34mtest_extraction_fallback_and_chunking()[0m [32m[OK][0m
+[36m    +--[0m [34mtest_chunk_boundary_uses_1000_word_cap()[0m [32m[OK][0m
+[36m    +--[0m [34mtest_extraction_positive_metadata()[0m [32m[OK][0m
+[36m    '--[0m [34mtest_topics_sorted_by_frequency()[0m [32m[OK][0m
+
+Test run finished after 2413 ms
+[         4 containers found      ]
+[         0 containers skipped    ]
+[         4 containers started    ]
+[         0 containers aborted    ]
+[         4 containers successful ]
+[         0 containers failed     ]
+[         7 tests found           ]
+[         0 tests skipped         ]
+[         7 tests started         ]
+[         0 tests aborted         ]
+[         7 tests successful      ]
+[         0 tests failed          ]
+

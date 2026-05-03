@@ -2,7 +2,7 @@
 
 yo we keep doing these pipe-flow calculations by hand every time someone tweaks viscosity or inlet speed and it's killing us, just automate it already
 
-**Where to put it:** Single Java file at `/app/workspace/src/FluidDynamicsApi.java`. Compile with javac using `--add-modules jdk.httpserver` — no Maven, no Gradle, no external jars, standard JDK only. Bind to `0.0.0.0:8080`. Make sure `/app/workspace/data/` exists before any writes.
+**Where to put it:** Main API entrypoint goes in `/app/workspace/src/FluidDynamicsApi.java`, and the offline CLI helper goes in `/app/workspace/src/PostProcess.java`. Compile with javac using `--add-modules jdk.httpserver` — no Maven, no Gradle, no external jars, standard JDK only. Bind to `0.0.0.0:8080`. Make sure `/app/workspace/data/` exists before any writes.
 
 **POST /simulate**
 
@@ -32,5 +32,5 @@ The simulation must be physically reactive — a run with higher viscosity at th
 - `/app/workspace/data/latest_simulation.json` — the full 8-field response
 - `/app/workspace/data/latest_analysis.json` — just the analysis sub-object
 
-**Offline script:** also need `/app/workspace/src/postprocess.py`. Takes a simulation JSON file path as a CLI argument, reads it, computes the same `mean_velocity`, `velocity_stddev`, `pressure_drop`, and `dominant_regime` using the identical formulas, and prints the resulting JSON object to stdout. Output must match the API numerically for the same input data.
+**Offline helper:** also need `/app/workspace/src/PostProcess.java`. The harness is going to compile and run it as `java -cp /app/workspace/src PostProcess <simulation-json> [output-json]`. It must read the simulation JSON file, compute the same `mean_velocity`, `velocity_stddev`, `pressure_drop`, and `dominant_regime` using the identical formulas, and print the resulting JSON object to stdout. Output must match the API numerically for the same input data.
 

@@ -1,7 +1,9 @@
-FROM python:3.10-slim
+FROM debian:bookworm-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     default-jdk-headless \
+    junit5 \
+    libgoogle-gson-java \
     libpdfbox2-java \
     && rm -rf /var/lib/apt/lists/*
 

@@ -108,6 +108,7 @@ public class TestOutputs {
 
         String html = response.body().toLowerCase();
         assertTrue(html.contains("type=\"file\""), "UI missing file upload.");
+        assertTrue(html.contains("<button") || html.contains("type=\"submit\"") || html.contains("type=\"button\""), "UI missing submit button.");
         assertTrue(html.contains("fetch("), "UI missing API call logic.");
         assertTrue(
             html.contains("json.stringify") || html.contains("textcontent") || html.contains("innerhtml") || html.contains("innertext"),

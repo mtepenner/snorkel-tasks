@@ -1,0 +1,10 @@
+test_add_lookup_and_bucket_collisions (__main__.LinearLinkedListTaskTests.test_add_lookup_and_bucket_collisions) ... ok
+test_category_report_handles_ties_and_missing_categories (__main__.LinearLinkedListTaskTests.test_category_report_handles_ties_and_missing_categories) ... ok
+test_category_report_with_full_roster (__main__.LinearLinkedListTaskTests.test_category_report_with_full_roster) ... ok
+test_remove_duplicate_and_invalid_pass (__main__.LinearLinkedListTaskTests.test_remove_duplicate_and_invalid_pass) ... ok
+test_source_uses_linked_list_and_polymorphism (__main__.LinearLinkedListTaskTests.test_source_uses_linked_list_and_polymorphism) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.632s
+
+OK

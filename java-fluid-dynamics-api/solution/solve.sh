@@ -5,4 +5,4 @@ mkdir -p /app/workspace/src
 mkdir -p /app/workspace/data
 
 cp /solution/FluidDynamicsApi.java /app/workspace/src/FluidDynamicsApi.java
-cp /solution/postprocess.py /app/workspace/src/postprocess.py
+cp /solution/PostProcess.java /app/workspace/src/PostProcess.java
