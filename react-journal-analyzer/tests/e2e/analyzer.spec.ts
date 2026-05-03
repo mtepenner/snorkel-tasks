@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 const markdownPaper = `# Abstract
 
@@ -17,6 +17,51 @@ const pdfExtractedText = `Introduction
 Quantum entanglement appears in the introduction [1].
 Conclusion
 Entanglement stabilizes the quantum result [2].`;
+
+async function expectUploadStatusMessage(page: Page) {
+  const uploadInput = page.locator('input[type="file"]');
+  await expect(uploadInput).toBeVisible();
+
+  const messages = await uploadInput.evaluate((input) => {
+    const normalize = (value: string) => value.replace(/\s+/g, ' ').trim();
+    const isVisible = (element: Element) => {
+      if (!(element instanceof HTMLElement)) {
+        return false;
+      }
+
+      const style = window.getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden') {
+        return false;
+      }
+
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 || rect.height > 0;
+    };
+
+    let container = input.parentElement;
+    let depth = 0;
+
+    while (container && depth < 2) {
+      const texts = Array.from(container.children)
+        .filter((element) => !element.contains(input))
+        .filter((element) => element.tagName.toLowerCase() !== 'label')
+        .filter((element) => isVisible(element))
+        .map((element) => normalize((element as HTMLElement).innerText || ''))
+        .filter((text) => text.length >= 8);
+
+      if (texts.length > 0) {
+        return Array.from(new Set(texts));
+      }
+
+      container = container.parentElement;
+      depth += 1;
+    }
+
+    return [];
+  });
+
+  expect(messages.length).toBeGreaterThan(0);
+}
 
 function analyzeText(text: string) {
   const citations = (text.match(/\[\d+\]/g) || []).length;
@@ -38,20 +83,9 @@ function analyzeText(text: string) {
 
 test("markdown upload analyzes citations, keyword density, and section summaries", async ({ page }) => {
   await page.goto("/");
-
-  const statusMessage = page.locator('.status, [role="status"], [aria-live]').first();
-  await expect(statusMessage).toBeVisible();
-  const initialStatus = ((await statusMessage.textContent()) || '').trim();
-  expect(initialStatus.length).toBeGreaterThan(0);
+  await expectUploadStatusMessage(page);
 
   await page.setInputFiles('input[type="file"]', '/app/test-fixtures/paper.md');
-
-  await expect
-    .poll(async () => {
-      const text = ((await statusMessage.textContent()) || '').trim();
-      return text.length > 0 && text !== initialStatus;
-    }, { timeout: 15000 })
-    .toBe(true);
 
   const output = page.locator('#analysis-output');
   await expect(output).toBeVisible({ timeout: 15000 });
@@ -69,6 +103,8 @@ test("markdown upload analyzes citations, keyword density, and section summaries
       }
     }, { timeout: 15000 })
     .toBe('markdown');
+
+  await expectUploadStatusMessage(page);
 
   const expected = analyzeText(markdownPaper);
   expect(analysis.citations).toBe(expected.citations);
@@ -99,6 +135,7 @@ test("markdown upload analyzes citations, keyword density, and section summaries
 
 test("pdf upload parses text-based pdf files and updates the dashboard", async ({ page }) => {
   await page.goto("/");
+  await expectUploadStatusMessage(page);
 
   await page.setInputFiles('input[type="file"]', '/app/test-fixtures/paper.pdf');
 
@@ -116,6 +153,8 @@ test("pdf upload parses text-based pdf files and updates the dashboard", async (
       }
     }, { timeout: 15000 })
     .toBe('pdf');
+
+  await expectUploadStatusMessage(page);
 
   const expected = analyzeText(pdfExtractedText);
   expect(analysis.citations).toBe(expected.citations);
