@@ -22,45 +22,46 @@ async function expectUploadStatusMessage(page: Page) {
   const uploadInput = page.locator('input[type="file"]');
   await expect(uploadInput).toBeVisible();
 
-  const messages = await uploadInput.evaluate((input) => {
-    const normalize = (value: string) => value.replace(/\s+/g, ' ').trim();
-    const isVisible = (element: Element) => {
-      if (!(element instanceof HTMLElement)) {
-        return false;
+  await expect.poll(async () => {
+    const messages = await uploadInput.evaluate((input) => {
+      const normalize = (value: string) => value.replace(/\s+/g, ' ').trim();
+      const isVisible = (element: Element) => {
+        if (!(element instanceof HTMLElement)) {
+          return false;
+        }
+
+        const style = window.getComputedStyle(element);
+        if (style.display === 'none' || style.visibility === 'hidden') {
+          return false;
+        }
+
+        const rect = element.getBoundingClientRect();
+        return rect.width > 0 || rect.height > 0;
+      };
+
+      let container = input.parentElement;
+      let depth = 0;
+
+      while (container && depth < 2) {
+        const texts = Array.from(container.children)
+          .filter((element) => !element.contains(input))
+          .filter((element) => element.tagName.toLowerCase() !== 'label')
+          .filter((element) => isVisible(element))
+          .map((element) => normalize((element as HTMLElement).innerText || element.textContent || ''))
+          .filter((text) => text.length >= 8);
+
+        if (texts.length > 0) {
+          return Array.from(new Set(texts));
+        }
+
+        container = container.parentElement;
+        depth += 1;
       }
 
-      const style = window.getComputedStyle(element);
-      if (style.display === 'none' || style.visibility === 'hidden') {
-        return false;
-      }
-
-      const rect = element.getBoundingClientRect();
-      return rect.width > 0 || rect.height > 0;
-    };
-
-    let container = input.parentElement;
-    let depth = 0;
-
-    while (container && depth < 2) {
-      const texts = Array.from(container.children)
-        .filter((element) => !element.contains(input))
-        .filter((element) => element.tagName.toLowerCase() !== 'label')
-        .filter((element) => isVisible(element))
-        .map((element) => normalize((element as HTMLElement).innerText || ''))
-        .filter((text) => text.length >= 8);
-
-      if (texts.length > 0) {
-        return Array.from(new Set(texts));
-      }
-
-      container = container.parentElement;
-      depth += 1;
-    }
-
-    return [];
-  });
-
-  expect(messages.length).toBeGreaterThan(0);
+      return [];
+    });
+    return messages;
+  }).not.toHaveLength(0);
 }
 
 function analyzeText(text: string) {
