@@ -1,0 +1,10 @@
+test_booking_show_and_wrapped_advance (__main__.CircularLinkedListTaskTests.test_booking_show_and_wrapped_advance) ... ok
+test_cancel_duplicate_and_invalid_input_paths (__main__.CircularLinkedListTaskTests.test_cancel_duplicate_and_invalid_input_paths) ... ok
+test_removal_preserves_ring_and_current_pointer (__main__.CircularLinkedListTaskTests.test_removal_preserves_ring_and_current_pointer) ... ok
+test_source_uses_actual_circular_list_structure (__main__.CircularLinkedListTaskTests.test_source_uses_actual_circular_list_structure) ... ok
+test_transport_report_uses_alphabetical_tiebreaks (__main__.CircularLinkedListTaskTests.test_transport_report_uses_alphabetical_tiebreaks) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.434s
+
+OK

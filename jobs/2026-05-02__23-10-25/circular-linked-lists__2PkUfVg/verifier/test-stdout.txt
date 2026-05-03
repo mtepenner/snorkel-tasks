@@ -1,0 +1,41 @@
+test_booking_show_and_wrapped_advance (__main__.CircularLinkedListTaskTests.test_booking_show_and_wrapped_advance) ... ok
+test_cancel_duplicate_and_invalid_input_paths (__main__.CircularLinkedListTaskTests.test_cancel_duplicate_and_invalid_input_paths) ... ok
+test_removal_preserves_ring_and_current_pointer (__main__.CircularLinkedListTaskTests.test_removal_preserves_ring_and_current_pointer) ... ok
+test_source_uses_actual_circular_list_structure (__main__.CircularLinkedListTaskTests.test_source_uses_actual_circular_list_structure) ... ok
+test_transport_report_uses_alphabetical_tiebreaks (__main__.CircularLinkedListTaskTests.test_transport_report_uses_alphabetical_tiebreaks) ... FAIL
+
+======================================================================
+FAIL: test_transport_report_uses_alphabetical_tiebreaks (__main__.CircularLinkedListTaskTests.test_transport_report_uses_alphabetical_tiebreaks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tests/test_outputs.py", line 132, in test_transport_report_uses_alphabetical_tiebreaks
+    self.assertEqual(lines[-5:], [
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+        "TOTAL_BOOKINGS=6",
+        ^^^^^^^^^^^^^^^^^^^
+    ...<3 lines>...
+        "OVERALL_FAVORITE_TRANSPORT=flight",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ])
+    ^^
+AssertionError: Lists differ: ['TOT[99 chars]AVORITE_TRANSPORT=flight', 'OVERALL_FAVORITE_TRANSPORT=ferry'] != ['TOT[99 chars]AVORITE_TRANSPORT=flight', 'OVERALL_FAVORITE_TRANSPORT=flight']
+
+First differing element 4:
+'OVERALL_FAVORITE_TRANSPORT=ferry'
+'OVERALL_FAVORITE_TRANSPORT=flight'
+
+  ['TOTAL_BOOKINGS=6',
+   'SCOTLAND_FAVORITE_TRANSPORT=flight',
+   'HAMBURG_FAVORITE_TRANSPORT=ferry',
+   'MOSCOW_FAVORITE_TRANSPORT=flight',
+-  'OVERALL_FAVORITE_TRANSPORT=ferry']
+?                               ^^^^
+
++  'OVERALL_FAVORITE_TRANSPORT=flight']
+?                               ^^^^^
+
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.453s
+
+FAILED (failures=1)

@@ -1,0 +1,127 @@
+test_booking_show_and_wrapped_advance (__main__.CircularLinkedListTaskTests.test_booking_show_and_wrapped_advance) ... FAIL
+test_cancel_duplicate_and_invalid_input_paths (__main__.CircularLinkedListTaskTests.test_cancel_duplicate_and_invalid_input_paths) ... ok
+test_removal_preserves_ring_and_current_pointer (__main__.CircularLinkedListTaskTests.test_removal_preserves_ring_and_current_pointer) ... FAIL
+test_source_uses_actual_circular_list_structure (__main__.CircularLinkedListTaskTests.test_source_uses_actual_circular_list_structure) ... ok
+test_transport_report_uses_alphabetical_tiebreaks (__main__.CircularLinkedListTaskTests.test_transport_report_uses_alphabetical_tiebreaks) ... FAIL
+
+======================================================================
+FAIL: test_booking_show_and_wrapped_advance (__main__.CircularLinkedListTaskTests.test_booking_show_and_wrapped_advance)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tests/test_outputs.py", line 65, in test_booking_show_and_wrapped_advance
+    lines = self.run_program(
+        "\n".join(
+    ...<9 lines>...
+        + "\n"
+    )
+  File "/tests/test_outputs.py", line 39, in run_program
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        process.returncode,
+        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+        ),
+        ^^
+    )
+    ^
+AssertionError: -6 != 0 : Program exited non-zero.
+STDOUT:
+BOOKED B100 GROUP scotland
+BOOKED B101 GROUP scotland
+BOOKED B102 GROUP scotland
+FOUND B101 | traveler=Ben Kline | group=scotland | nights=7 | transport=train
+CURRENT scotland B102 Carla Mendez
+GROUP scotland=3 CURRENT=B102
+GROUP hamburg=0 CURRENT=EMPTY
+GROUP moscow=0 CURRENT=EMPTY
+
+STDERR:
+terminate called after throwing an instance of 'std::length_error'
+  what():  basic_string::_M_create
+
+
+======================================================================
+FAIL: test_removal_preserves_ring_and_current_pointer (__main__.CircularLinkedListTaskTests.test_removal_preserves_ring_and_current_pointer)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tests/test_outputs.py", line 141, in test_removal_preserves_ring_and_current_pointer
+    lines = self.run_program(
+        "\n".join(
+    ...<11 lines>...
+        + "\n"
+    )
+  File "/tests/test_outputs.py", line 39, in run_program
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        process.returncode,
+        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+        ),
+        ^^
+    )
+    ^
+AssertionError: -6 != 0 : Program exited non-zero.
+STDOUT:
+BOOKED B400 GROUP moscow
+BOOKED B401 GROUP moscow
+BOOKED B402 GROUP moscow
+CURRENT moscow B401 Pia Reed
+CANCELLED B401 GROUP moscow
+CURRENT moscow B400 Owen Pike
+GROUP scotland=0 CURRENT=EMPTY
+GROUP hamburg=0 CURRENT=EMPTY
+GROUP moscow=2 CURRENT=B400
+TOTAL_BOOKINGS=2
+SCOTLAND_FAVORITE_TRANSPORT=NONE
+HAMBURG_FAVORITE_TRANSPORT=NONE
+MOSCOW_FAVORITE_TRANSPORT=flight
+OVERALL_FAVORITE_TRANSPORT=flight
+
+STDERR:
+terminate called after throwing an instance of 'std::length_error'
+  what():  basic_string::_M_create
+
+
+======================================================================
+FAIL: test_transport_report_uses_alphabetical_tiebreaks (__main__.CircularLinkedListTaskTests.test_transport_report_uses_alphabetical_tiebreaks)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/tests/test_outputs.py", line 117, in test_transport_report_uses_alphabetical_tiebreaks
+    lines = self.run_program(
+        "\n".join(
+    ...<10 lines>...
+        + "\n"
+    )
+  File "/tests/test_outputs.py", line 39, in run_program
+    self.assertEqual(
+    ~~~~~~~~~~~~~~~~^
+        process.returncode,
+        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+        ),
+        ^^
+    )
+    ^
+AssertionError: -6 != 0 : Program exited non-zero.
+STDOUT:
+BOOKED B300 GROUP scotland
+BOOKED B301 GROUP scotland
+BOOKED B302 GROUP hamburg
+BOOKED B303 GROUP hamburg
+BOOKED B304 GROUP moscow
+BOOKED B305 GROUP moscow
+TOTAL_BOOKINGS=6
+SCOTLAND_FAVORITE_TRANSPORT=flight
+HAMBURG_FAVORITE_TRANSPORT=ferry
+MOSCOW_FAVORITE_TRANSPORT=flight
+OVERALL_FAVORITE_TRANSPORT=ferry
+
+STDERR:
+terminate called after throwing an instance of 'std::length_error'
+  what():  basic_string::_M_create
+
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.487s
+
+FAILED (failures=3)
