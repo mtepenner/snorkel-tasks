@@ -29,6 +29,11 @@ struct TestCase {
     std::function<void()> body;
 };
 
+struct RegexCapture {
+    std::regex pattern;
+    int groupIndex;
+};
+
 [[noreturn]] void fail(const std::string& message) {
     throw std::runtime_error(message);
 }
@@ -169,25 +174,25 @@ bool usesCelebrityVirtualDispatch(const std::string& source) {
 
     const std::vector<std::string> overrideMethods = collectMatches(
         source,
-        std::regex(R"(([A-Za-z_]\w*)\s*\([^;{}]*\)\s*(?:const\s*)?override\b)"),
+        std::regex(R"(([A-Za-z_]\w*)\s*\([^;{}]*\)\s*(const\s*)?override\b)"),
         1
     );
     virtualMethodNames.insert(virtualMethodNames.end(), overrideMethods.begin(), overrideMethods.end());
 
     std::vector<std::string> celebrityHandles;
-    const std::array<std::regex, 6> handlePatterns = {
-        std::regex(R"((?:std::)?unique_ptr\s*<\s*Celebrity\s*>\s*([A-Za-z_]\w*))"),
-        std::regex(R"((?:std::)?shared_ptr\s*<\s*Celebrity\s*>\s*([A-Za-z_]\w*))"),
-        std::regex(R"((?:const\s+)?Celebrity\s*\*\s*([A-Za-z_]\w*))"),
-        std::regex(R"((?:const\s+)?Celebrity\s*&\s*([A-Za-z_]\w*))"),
-        std::regex(R"((?:std::)?unique_ptr\s*<\s*Celebrity\s*>\s*&\s*([A-Za-z_]\w*))"),
-        std::regex(R"((?:std::)?shared_ptr\s*<\s*Celebrity\s*>\s*&\s*([A-Za-z_]\w*))")
-    };
+    const std::array<RegexCapture, 6> handlePatterns = {{
+        {std::regex(R"((std::)?unique_ptr\s*<\s*Celebrity\s*>\s*([A-Za-z_]\w*))"), 2},
+        {std::regex(R"((std::)?shared_ptr\s*<\s*Celebrity\s*>\s*([A-Za-z_]\w*))"), 2},
+        {std::regex(R"((const\s+)?Celebrity\s*\*\s*([A-Za-z_]\w*))"), 2},
+        {std::regex(R"((const\s+)?Celebrity\s*&\s*([A-Za-z_]\w*))"), 2},
+        {std::regex(R"((std::)?unique_ptr\s*<\s*Celebrity\s*>\s*&\s*([A-Za-z_]\w*))"), 2},
+        {std::regex(R"((std::)?shared_ptr\s*<\s*Celebrity\s*>\s*&\s*([A-Za-z_]\w*))"), 2}
+    }};
 
-    for (const auto& pattern : handlePatterns) {
-        const std::vector<std::string> matches = collectMatches(source, pattern, 1);
+    for (const auto& entry : handlePatterns) {
+        const std::vector<std::string> matches = collectMatches(source, entry.pattern, entry.groupIndex);
         celebrityHandles.insert(celebrityHandles.end(), matches.begin(), matches.end());
-    }
+    };
 
     for (const std::string& handle : celebrityHandles) {
         for (const std::string& methodName : virtualMethodNames) {
