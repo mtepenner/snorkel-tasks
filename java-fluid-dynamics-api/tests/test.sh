@@ -35,10 +35,8 @@ java -cp "/tmp/test-classes:$JUNIT_JAR:$GSON_JAR" \
     --select-class=TestOutputs \
     --fail-if-no-tests
 
-RESULT=$?
-
-if [ "$RESULT" -eq 0 ]; then
-    echo 1 > /logs/verifier/reward.txt
+if [ $? -eq 0 ]; then
+  echo 1 > /logs/verifier/reward.txt
 else
-    echo 0 > /logs/verifier/reward.txt
+  echo 0 > /logs/verifier/reward.txt
 fi
