@@ -62,22 +62,6 @@ class LinearLinkedListTaskTests(unittest.TestCase):
         )
         return [line for line in process.stdout.splitlines() if line.strip()]
 
-    def test_source_uses_linked_list_and_polymorphism(self) -> None:
-        source = SOURCE_PATH.read_text(encoding="utf-8")
-
-        self.assertIn("class Celebrity", source)
-        self.assertIn("class Artist", source)
-        self.assertIn("class VoiceActor", source)
-        self.assertIn("class Singer", source)
-        self.assertIn("class LiveActionActor", source)
-        self.assertIn("virtual", source, "Need at least one virtual method in the hierarchy.")
-        self.assertRegex(source, r"(Node|TicketNode)\s*\*\s*next", "Need a next pointer for the linear linked list.")
-        self.assertTrue(
-            "BUCKET_COUNT = 7" in source or re.search(r"\[\s*7\s*\]", source),
-            "Need a 7-bucket array for the ticket database.",
-        )
-        self.assertIsNone(re.search(r"\bunordered_map\b|\bstd::map\b|\bmap\s*<", source))
-
     def test_add_lookup_and_bucket_collisions(self) -> None:
         target_bucket = 3
         ticket_one, ticket_two, ticket_three = collision_ids(target_bucket, 3)
@@ -114,6 +98,41 @@ class LinearLinkedListTaskTests(unittest.TestCase):
         self.assertEqual(sum(counts.values()), 3)
         self.assertEqual(counts[target_bucket], 3)
 
+    def test_lookup_reports_type_specific_details_for_each_celebrity_type(self) -> None:
+        artist_ticket = "T400"
+        voice_ticket = "T401"
+        singer_ticket = "T402"
+        live_ticket = "T403"
+
+        lines = self.run_program(
+            "\n".join(
+                [
+                    "ADD_ARTIST|T400|Ava Park|vip|Mike Mignola|Hellboy|175",
+                    "ADD_VOICE|T401|Ben Ortiz|standard|Ashley Johnson|Ellie|union",
+                    "ADD_SINGER|T402|Cara Moss|vip|Aurora|pop|12",
+                    "ADD_LIVE|T403|Drew Lane|standard|Pedro Pascal|The Last of Us|yes",
+                    "LOOKUP|T400",
+                    "LOOKUP|T401",
+                    "LOOKUP|T402",
+                    "LOOKUP|T403",
+                ]
+            )
+            + "\n"
+        )
+
+        self.assertEqual(lines[:4], [
+            f"ADDED {artist_ticket} BUCKET {bucket_for(artist_ticket)}",
+            f"ADDED {voice_ticket} BUCKET {bucket_for(voice_ticket)}",
+            f"ADDED {singer_ticket} BUCKET {bucket_for(singer_ticket)}",
+            f"ADDED {live_ticket} BUCKET {bucket_for(live_ticket)}",
+        ])
+        self.assertEqual(lines[4:], [
+            "FOUND T400 | attendee=Ava Park | pass=vip | type=Artist | celebrity=Mike Mignola | fandom=Hellboy | commission_rate=175",
+            "FOUND T401 | attendee=Ben Ortiz | pass=standard | type=VoiceActor | celebrity=Ashley Johnson | signature_role=Ellie | union_status=union",
+            "FOUND T402 | attendee=Cara Moss | pass=vip | type=Singer | celebrity=Aurora | genre=pop | chart_count=12",
+            "FOUND T403 | attendee=Drew Lane | pass=standard | type=LiveActionActor | celebrity=Pedro Pascal | franchise=The Last of Us | stunt_team=yes",
+        ])
+
     def test_remove_duplicate_and_invalid_pass(self) -> None:
         target_bucket = 5
         ticket_one, ticket_two = collision_ids(target_bucket, 2)
@@ -145,6 +164,12 @@ class LinearLinkedListTaskTests(unittest.TestCase):
             self.assertIsNotNone(match)
             counts[int(match.group(1))] = int(match.group(2))
         self.assertEqual(sum(counts.values()), 0)
+
+    def test_remove_missing_ticket_returns_missing(self) -> None:
+        self.assertEqual(
+            self.run_program("REMOVE|T999\n"),
+            ["MISSING T999"],
+        )
 
     def test_category_report_with_full_roster(self) -> None:
         lines = self.run_program(

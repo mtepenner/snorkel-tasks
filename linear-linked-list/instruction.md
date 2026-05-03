@@ -11,7 +11,7 @@ Read commands from `stdin`, one per line, using `|` as the separator. Ignore bla
 - Add commands all use the same pattern: `ADD_<TYPE>|ticket_id|attendee_name|pass_type|celebrity_name|field_a|field_b`. The type-specific fields are `ARTIST => fandom|commission_rate`, `VOICE => signature_role|union_status`, `SINGER => genre|chart_count`, and `LIVE => franchise|stunt_team`. `commission_rate` and `chart_count` are integers.
 - `LOOKUP|ticket_id` returns either a single `FOUND ...` line or `MISSING <ticket_id>`.
 - `REMOVE|ticket_id` returns either `REMOVED <ticket_id> BUCKET <bucket_index>` or `MISSING <ticket_id>`.
-- `BUCKET_REPORT` prints seven lines in order using the exact shape `BUCKET i=<count>` for `i = 0..6`.
+- `BUCKET_REPORT` prints seven lines in order using the exact shape `BUCKET i=<count>` for `i = 0..6`. For example, if bucket 0 currently holds three tickets, the line must be `BUCKET 0=3`.
 - `CATEGORY_REPORT` prints the exact eight summary lines shown in the reference block below.
 
 Duplicate IDs and invalid pass types are rejected with these exact strings:
