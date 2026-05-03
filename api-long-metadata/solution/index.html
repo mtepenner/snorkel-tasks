@@ -3,59 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Long Document Metadata Extractor</title>
+    <title>PDF Metadata Extractor</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h1 { font-size: 1.5em; color: #333; }
-        input[type="file"] { margin: 20px 0; }
-        button { background-color: #0056b3; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
-        button:hover { background-color: #004494; }
-        pre { background-color: #eef; padding: 15px; border-radius: 4px; overflow-x: auto; margin-top: 20px; }
+        body { font-family: Arial, sans-serif; margin: 2rem; background: #f5f6fa; color: #1f2933; }
+        .panel { max-width: 720px; margin: 0 auto; background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); }
+        button { margin-top: 1rem; padding: 0.7rem 1rem; border: 0; border-radius: 8px; background: #0f766e; color: white; cursor: pointer; }
+        pre { margin-top: 1rem; padding: 1rem; background: #e2e8f0; border-radius: 8px; overflow-x: auto; white-space: pre-wrap; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Upload PDF for Extraction</h1>
-        <p>This tool chunks documents over 50k tokens to extract deep metadata.</p>
+    <div class="panel">
+        <h1>Manual PDF Check</h1>
+        <p>Upload one PDF and inspect the raw extractor JSON.</p>
         <input type="file" id="pdfInput" accept="application/pdf">
-        <br>
-        <button onclick="uploadPdf()">Extract Metadata</button>
-        
-        <div id="resultContainer" style="display: none;">
-            <h3>Extraction Results:</h3>
-            <pre id="output"></pre>
+        <div>
+            <button id="submitButton" type="button">Extract</button>
         </div>
+        <pre id="output">Waiting for upload...</pre>
     </div>
 
     <script>
         async function uploadPdf() {
-            const fileInput = document.getElementById('pdfInput');
+            const fileInput = document.getElementById("pdfInput");
             const file = fileInput.files[0];
+
             if (!file) {
-                alert("Please select a valid PDF document first.");
+                document.getElementById("output").textContent = "Pick a PDF first.";
                 return;
             }
-            
+
             const formData = new FormData();
             formData.append("file", file);
-            
-            document.getElementById('output').innerText = "Processing chunks...";
-            document.getElementById('resultContainer').style.display = "block";
+            document.getElementById("output").textContent = "Working...";
 
             try {
-                // Pointing to the FastAPI backend running on port 8000
-                const response = await fetch("http://localhost:8000/extract", {
+                const response = await fetch("/extract", {
                     method: "POST",
                     body: formData
                 });
-                
                 const data = await response.json();
-                document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+                document.getElementById("output").textContent = JSON.stringify(data, null, 2);
             } catch (error) {
-                document.getElementById('output').innerText = "Error: " + error.message;
+                document.getElementById("output").textContent = "Error: " + error.message;
             }
         }
+
+        document.getElementById("submitButton").addEventListener("click", uploadPdf);
     </script>
 </body>
 </html>

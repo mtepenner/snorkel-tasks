@@ -1,9 +1,10 @@
 FROM python:3.10-slim
 
-RUN pip install --no-cache-dir \
-    fastapi==0.115.5 \
-    uvicorn==0.32.1 \
-    PyPDF2==3.0.1 \
-    python-multipart==0.0.20
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    default-jdk-headless \
+    libpdfbox2-java \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app/workspace
+
+RUN mkdir -p /app/workspace/src/static

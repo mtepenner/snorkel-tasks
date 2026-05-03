@@ -1,52 +1,33 @@
 #!/bin/bash
+set -e
 
-# Bootstrap uv into the container without shelling out to curl.
-python3 -m pip install --no-cache-dir uv==0.7.13
-
-server_ready() {
-  python3 - <<'PY'
-import sys
-import urllib.request
-
-try:
-    with urllib.request.urlopen("http://localhost:8000/docs", timeout=1) as response:
-        raise SystemExit(0 if response.status == 200 else 1)
-except Exception:
-    raise SystemExit(1)
-PY
-}
+apt-get update -qq
+apt-get install -y --no-install-recommends curl
 
 if [ "$PWD" = "/" ]; then
   echo "Error: No working directory set."
   exit 1
 fi
 
-SERVER_PID=""
-trap 'if [ -n "$SERVER_PID" ]; then kill "$SERVER_PID" 2>/dev/null || true; fi' EXIT
+JUNIT_JAR=/tmp/junit-platform-console-standalone-1.11.4.jar
+GSON_JAR=/tmp/gson-2.10.1.jar
 
-if ! server_ready; then
-  cd /app/workspace/src
-  python3 -m uvicorn api:app --host 0.0.0.0 --port 8000 > /tmp/uvicorn.log 2>&1 &
-  SERVER_PID=$!
+curl -fsSL --retry 3 \
+  "https://repo1.maven.org/maven2/org/junit/platform/junit-platform-console-standalone/1.11.4/junit-platform-console-standalone-1.11.4.jar" \
+  -o "$JUNIT_JAR"
+curl -fsSL --retry 3 \
+  "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.10.1/gson-2.10.1.jar" \
+  -o "$GSON_JAR"
 
-  for i in $(seq 1 15); do
-    sleep 1
-    server_ready && break
-  done
+mkdir -p /tmp/test-classes
+javac -cp "/usr/share/java/*:$JUNIT_JAR:$GSON_JAR" /tests/TestOutputs.java -d /tmp/test-classes
 
-  cd - > /dev/null
-fi
+set +e
+java -cp "/tmp/test-classes:/usr/share/java/*:$JUNIT_JAR:$GSON_JAR" \
+  org.junit.platform.console.ConsoleLauncher \
+  --select-class=TestOutputs \
+  --fail-if-no-tests
 
-# Run tests using pinned dependencies and the correct harness mount path
-uvx \
-  -p 3.13 \
-  --with pytest==8.4.1 \
-  --with pytest-json-ctrf==0.3.5 \
-  --with requests==2.32.3 \
-  --with fpdf2==2.8.3 \
-  pytest --ctrf /logs/verifier/ctrf.json /tests/test_outputs.py -rA
-
-# Produce reward file (REQUIRED)
 if [ $? -eq 0 ]; then
   echo 1 > /logs/verifier/reward.txt
 else

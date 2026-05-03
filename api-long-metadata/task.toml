@@ -14,12 +14,12 @@ number_of_milestones = 0
 # Size of the codebase: minimal -> 0-20 files, small -> 20+ files, large -> 200+ files
 codebase_size = "minimal"
 # Coding languages used in the oracle solution or required by the agent
-languages = [ "python", "html", "javascript", "bash" ]
+languages = [ "java", "html", "javascript", "bash" ]
 # For tool_specific, api_integration, and db_interaction subcategories, please include specific tool, api framework, or database software
-tags = [ "fastapi", "pypdf2", "file-uploads", "chunking", "metadata-extraction" ]
+tags = [ "java", "pdfbox", "file-uploads", "chunking", "metadata-extraction" ]
 # Estimated time to complete (minutes)
-expert_time_estimate_min = 90
-junior_time_estimate_min = 180
+expert_time_estimate_min = 150
+junior_time_estimate_min = 300
 
 # Verifier: runs the test script to check task completion
 [verifier]
