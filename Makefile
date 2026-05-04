@@ -56,7 +56,11 @@ upload:
 pre_submit: test_oracle test_ci
 	stb harbor view jobs
 
-# 5. Zip a task
+# 5. View jobs
+view:
+	stb harbor view jobs
+
+# 6. Zip a task
 zip:
 ifndef TASK
 	$(error TASK is not set. Please specify a task folder, e.g., make zip TASK=name-of-task)
