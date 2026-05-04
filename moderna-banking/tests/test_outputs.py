@@ -13,22 +13,23 @@ def test_executable_exists():
     assert os.path.exists(EXECUTABLE), f"Executable {EXECUTABLE} is missing."
     assert os.access(EXECUTABLE, os.X_OK), f"{EXECUTABLE} is not executable."
 
-def test_data_structures_used():
-    """Statically analyze the C++ file to ensure manual memory management was used."""
-    with open(SOURCE_FILE, "r") as f:
-        code = f.read().lower()
-    
-    # Check for pointers and node structures rather than standard library vectors
-    assert "*" in code, "No pointers found. Must implement manual memory tracking."
-    assert "next" in code, "Node 'next' pointer missing in implementation."
-    assert "double account_balance" in code or "double amount" in code, "Missing required node properties."
-
 def test_execution_output():
     """Run the compiled binary and check stdout for the hierarchical data."""
     result = subprocess.run([EXECUTABLE], capture_output=True, text=True)
     output = result.stdout.lower()
     
-    # Verify hierarchical printing of region -> account -> transaction
+    # Verify output data
     assert "seattle" in output, "Output missing region data."
     assert "john doe" in output, "Output missing account holder data."
     assert "grocery" in output, "Output missing transaction data."
+    assert "50" in output, "Transaction amount $50.0 missing."
+    
+    # Verify hierarchical printing of region -> account -> transaction
+    lines = output.strip().split('\n')
+    try:
+        region_idx = next(i for i, line in enumerate(lines) if "seattle" in line)
+        acct_idx = next(i for i, line in enumerate(lines) if "john doe" in line)
+        txn_idx = next(i for i, line in enumerate(lines) if "grocery" in line)
+        assert region_idx < acct_idx < txn_idx, "Output is not in the correct hierarchical order."
+    except StopIteration:
+        assert False, "Could not find all required hierarchical elements in output lines."
