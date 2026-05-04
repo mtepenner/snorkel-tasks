@@ -168,13 +168,13 @@ std::vector<std::string> collectMatches(const std::string& source, const std::re
 bool usesCelebrityVirtualDispatch(const std::string& source) {
     std::vector<std::string> virtualMethodNames = collectMatches(
         source,
-        std::regex(R"(virtual\s+[^;{}()]+\s+([A-Za-z_]\w*)\s*[(])"),
+        std::regex(R"RE(virtual\s+[^;{}()]+\s+([A-Za-z_]\w*)\s*[(])RE"),
         1
     );
 
     const std::vector<std::string> overrideMethods = collectMatches(
         source,
-        std::regex(R"(([A-Za-z_]\w*)\s*[(][^;{}]*[)]\s*(const\s*)?override\b)"),
+        std::regex(R"RE(([A-Za-z_]\w*)\s*[(][^;{}]*[)]\s*(const\s*)?override\b)RE"),
         1
     );
     virtualMethodNames.insert(virtualMethodNames.end(), overrideMethods.begin(), overrideMethods.end());
@@ -197,11 +197,11 @@ bool usesCelebrityVirtualDispatch(const std::string& source) {
     for (const std::string& handle : celebrityHandles) {
         for (const std::string& methodName : virtualMethodNames) {
             std::cout << "TESTING arrow\n";
-            const std::regex arrowCall("\\b" + handle + R"(\s*->\s*)" + methodName + R"(\s*[(])");
+            const std::regex arrowCall("\\b" + handle + R"RE(\s*->\s*)RE" + methodName + R"RE(\s*[(])RE");
             std::cout << "TESTING dot\n";
-            const std::regex dotCall("\\b" + handle + R"(\s*\.\s*)" + methodName + R"(\s*[(])");
+            const std::regex dotCall("\\b" + handle + R"RE(\s*\.\s*)RE" + methodName + R"RE(\s*[(])RE");
             std::cout << "TESTING deref\n";
-            const std::regex derefCall(R"([(]\s*\*\s*)" + handle + R"(\s*[)]\s*\.\s*)" + methodName + R"(\s*[(])");
+            const std::regex derefCall(R"RE([(]\s*\*\s*)RE" + handle + R"RE(\s*[)]\s*\.\s*)RE" + methodName + R"RE(\s*[(])RE");
 
             if (std::regex_search(source, arrowCall) || std::regex_search(source, dotCall) || std::regex_search(source, derefCall)) {
                 return true;
