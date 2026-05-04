@@ -1,5 +1,3 @@
-# [VENUE-417] Portland comicon survey + ticket database is blocking roster planning
-
 Need a standalone C++17 CLI under `/app/workspace/src/comicon_roster.cpp`. If you want tiny helper files in the same folder, fine, but the main deliverable has to stay there because the harness compiles `/app/workspace/src/*.cpp`.
 
 This is not a `std::map` exercise. The real ticket store has to be an array of **exactly 7** linear linked lists, keyed by `ticket_id` with `sum of raw ASCII values in ticket_id % 7`. Also need a real celebrity hierarchy: `Celebrity` base class plus `Artist`, `VoiceActor`, `Singer`, and `LiveActionActor`. The base class needs at least one virtual method that is actually used when formatting output.
