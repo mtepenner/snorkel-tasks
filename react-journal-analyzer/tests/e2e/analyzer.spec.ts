@@ -172,4 +172,9 @@ test("pdf upload parses text-based pdf files and updates the dashboard", async (
       summary: 'Entanglement stabilizes the quantum result [2].',
     },
   ]);
+
+  await expect(page.getByRole('heading', { name: 'Citation Frequency' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Keyword Density' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Section Summaries' })).toBeVisible();
+  await expect(page.locator('.sections strong').filter({ hasText: 'Introduction' })).toBeVisible();
 });
