@@ -27,10 +27,3 @@ if [ $? -eq 0 ]; then
 else
   echo 0 > /logs/verifier/reward.txt
 fi
-
-# Produce reward file (REQUIRED)
-if [ $? -eq 0 ]; then
-  echo 1 > /logs/verifier/reward.txt
-else
-  echo 0 > /logs/verifier/reward.txt
-fi

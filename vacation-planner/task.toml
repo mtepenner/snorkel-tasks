@@ -14,9 +14,9 @@ number_of_milestones = 0
 # Size of the codebase: minimal -> 0-20 files, small -> 20+ files, large -> 200+ files
 codebase_size = "minimal"
 # Coding languages used in the oracle solution or required by the agent
-languages = [ "bash" ]
+languages = [ "cpp" ]
 # For tool_specific, api_integration, and db_interaction subcategories, please include specific tool, api framework, or database software
-tags = [ "file-operations",]
+tags = [ "cpp", "oop", "linked-list", "data-structures", "inheritance" ]
 # Estimated time to complete (minutes)
 expert_time_estimate_min = 60
 junior_time_estimate_min = 120
