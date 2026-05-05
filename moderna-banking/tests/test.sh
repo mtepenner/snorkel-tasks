@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Install test dependencies
+apt-get update && apt-get install -y python3 python3-pip
 pip3 install pytest==8.4.1
 
 # Run pytest with the required -rA flag against the absolute path

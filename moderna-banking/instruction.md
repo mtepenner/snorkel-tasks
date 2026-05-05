@@ -2,5 +2,7 @@ Moderna Banking Networks is expanding into the Pacific Northwest and needs a new
 
 
 
-The system needs a feature to output this data hierarchically to standard output (e.g., Region -> Account -> Transactions) to verify regional groupings and transaction histories are properly linked. To demonstrate the hierarchy works, the application should initialize with a sample Region ('Seattle'), Account ('John Doe'), and a $50.0 'Grocery' transaction. For integration with our CI pipeline, please implement the source code at `/app/workspace/src/moderna\_banking.cpp` and output the compiled executable to `/usr/local/bin/moderna-app` so our automated systems can run the report.
+The system needs a feature to output this data hierarchically to standard output (e.g., Region -> Account -> Transactions) to verify regional groupings and transaction histories are properly linked. To demonstrate the hierarchy works, the application should initialize with a sample Region ('Seattle'), Account ('John Doe', membership '2023-01-01', FICO 750, expires '2030-01-01'), and two transactions in order: a $50.0 'Grocery' transaction and a $20.0 'Gas' transaction. To demonstrate the circular linked list correctly wraps around, the application should iterate the transactions array to print at least 3 transactions, meaning it prints 'Grocery', then 'Gas', and then intentionally loops back and prints 'Grocery' again.
+
+For integration with our CI pipeline, please implement the source code at `/app/workspace/src/moderna_banking.cpp` and output the compiled executable to `/usr/local/bin/moderna-app` so our automated systems can run the report.
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 mkdir -p /app/workspace/src
 cp /solution/moderna_banking.cpp /app/workspace/src/moderna_banking.cpp
 
