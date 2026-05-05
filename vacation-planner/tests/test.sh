@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Install curl
+# Install dependencies
 apt-get update
-apt-get install -y curl
+apt-get install -y curl g++
 
 # Install uv
 curl -LsSf https://astral.sh/uv/0.9.5/install.sh | sh
@@ -15,8 +15,6 @@ if [ "$PWD" = "/" ]; then
     exit 1
 fi
 
-# Don't change anything below this line except for adding additional Python dependencies, e.g., pandas
-# Run tests
 uvx \
   -p 3.13 \
   -w pytest==8.4.1 \
