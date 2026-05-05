@@ -1,7 +1,6 @@
 import os
 import subprocess
 import glob
-from pathlib import Path
 
 def test_source_code_structures():
     """Test that the C++ code contains a class hierarchy and array of linked lists."""
