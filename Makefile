@@ -54,7 +54,6 @@ upload:
 
 # 4. Helper to run everything before committing
 pre_submit: test_oracle test_ci
-	stb harbor view jobs
 
 # 5. View jobs
 view:
