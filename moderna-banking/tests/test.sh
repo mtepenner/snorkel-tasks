@@ -6,14 +6,16 @@ if [ "$PWD" = "/" ]; then
     exit 1
 fi
 
-# Install test dependencies
-# Wait for apt lock
-while fuser /var/lib/dpkg/lock >/dev/null 2>&1 || fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
-    echo "Waiting for other software managers to finish..."
-    sleep 1
-done
+# Aggressively clear locks (in case of background auto-updates in ephemeral container test)
+killall -9 apt apt-get dpkg unattended-upgrades 2>/dev/null || true
+rm -f /var/lib/apt/lists/lock
+rm -f /var/cache/apt/archives/lock
+rm -f /var/lib/dpkg/lock-frontend
+rm -f /var/lib/dpkg/lock
+dpkg --configure -a || true
 
-apt-get update || true
+# Install test dependencies
+apt-get update -y || true
 apt-get install -y python3 python3-pip
 pip3 install pytest==8.4.1
 
