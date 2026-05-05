@@ -7,17 +7,18 @@ if [ "$PWD" = "/" ]; then
 fi
 
 # Install test dependencies
-rm -f /var/lib/apt/lists/lock
-rm -f /var/cache/apt/archives/lock
-rm -f /var/lib/dpkg/lock*
-apt-get update && apt-get install -y curl
+# Wait for apt lock
+while fuser /var/lib/dpkg/lock >/dev/null 2>&1 || fuser /var/lib/apt/lists/lock >/dev/null 2>&1; do
+    echo "Waiting for other software managers to finish..."
+    sleep 1
+done
 
-# Install uv
-curl -LsSf https://astral.sh/uv/0.9.5/install.sh | sh
-source $HOME/.local/bin/env
+apt-get update || true
+apt-get install -y python3 python3-pip
+pip3 install pytest==8.4.1
 
-# Run pytest using uvx
-uvx -p 3.13 -w pytest==8.4.1 pytest -rA /tests/test_outputs.py
+# Run pytest with the required -rA flag against the absolute path
+pytest -rA /tests/test_outputs.py
 
 # Strict binary reward logic writing exactly to the requested path
 if [ $? -eq 0 ]; then
