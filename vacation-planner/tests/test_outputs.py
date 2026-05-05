@@ -23,7 +23,7 @@ def test_executable_output():
     assert len(cpp_files) > 0, "No C++ source files found."
     
     # Try to find a compiled executable or compile it for the test
-    executable = "/app/workspace/vacation-app"
+    executable = "/usr/local/bin/vacation-app"
     if not os.path.exists(executable):
         # Fallback compilation if an agent named it differently or just left the source code
         subprocess.run(["g++", "-O3", cpp_files[0], "-o", executable])
