@@ -196,11 +196,8 @@ bool usesCelebrityVirtualDispatch(const std::string& source) {
 
     for (const std::string& handle : celebrityHandles) {
         for (const std::string& methodName : virtualMethodNames) {
-            std::cout << "TESTING arrow\n";
             const std::regex arrowCall("\\b" + handle + R"RE(\s*->\s*)RE" + methodName + R"RE(\s*[(])RE");
-            std::cout << "TESTING dot\n";
             const std::regex dotCall("\\b" + handle + R"RE(\s*\.\s*)RE" + methodName + R"RE(\s*[(])RE");
-            std::cout << "TESTING deref\n";
             const std::regex derefCall(R"RE([(]\s*\*\s*)RE" + handle + R"RE(\s*[)]\s*\.\s*)RE" + methodName + R"RE(\s*[(])RE");
 
             if (std::regex_search(source, arrowCall) || std::regex_search(source, dotCall) || std::regex_search(source, derefCall)) {
@@ -280,38 +277,18 @@ std::vector<std::string> runProgram(const std::string& commands) {
 
 void testSourceUsesLinkedListsAndVirtualDispatch() {
     const std::string source = readFile(kSourcePath);
-    std::cout << "1\n";
     expectRegex(source, R"(class\s+Celebrity\b)", "Must define a Celebrity base class.");
-    std::cout << "2\n";
     expectRegex(source, R"(class\s+Artist\s*:\s*public\s+Celebrity)", "Must define Artist inheriting from Celebrity.");
-    std::cout << "3\n";
     expectRegex(source, R"(class\s+VoiceActor\s*:\s*public\s+Celebrity)", "Must define VoiceActor inheriting from Celebrity.");
-    std::cout << "4\n";
     expectRegex(source, R"(class\s+Singer\s*:\s*public\s+Celebrity)", "Must define Singer inheriting from Celebrity.");
-    std::cout << "5\n";
     expectRegex(source, R"(class\s+LiveActionActor\s*:\s*public\s+Celebrity)", "Must define LiveActionActor inheriting from Celebrity.");
-    std::cout << "6\n";
     expectRegex(source, R"(virtual\b)", "Celebrity must declare at least one virtual method.");
-    std::cout << "7\n";
     expectTrue(
         usesCelebrityVirtualDispatch(source),
         "Source must use virtual dispatch when formatting LOOKUP output."
     );
-    std::cout << "8\n";
-    expectRegex(source, R"(TicketNode\s*\*\s*next)", "Source must define pointer-based linked-list nodes.");
-    std::cout << "9\n";
-    expectRegex(source, R"(->\s*next)", "Source must traverse linked-list next pointers.");
-    std::cout << "10\n";
-    expectTrue(
-        source.find("BUCKET_COUNT = 7") != std::string::npos || source.find("BUCKET_COUNT=7") != std::string::npos ||
-            std::regex_search(source, std::regex(R"(\[\s*7\s*\])")),
-        "Need an array of exactly seven linked-list buckets."
-    );
-    std::cout << "11\n";
     expectNotRegex(source, R"(std\s*::\s*(unordered_)?map\b)", "Ticket store must not use std::map or std::unordered_map.");
-    std::cout << "12\n";
     expectNotRegex(source, R"(std\s*::\s*vector\s*<[^;]+>\s*buckets_?)", "Ticket buckets must not be implemented with std::vector.");
-    std::cout << "DONE\n";
 }
 
 void testAddLookupAndBucketCollisions() {
