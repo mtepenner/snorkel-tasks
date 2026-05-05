@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Check if we're in a valid working directory
+if [ "$PWD" = "/" ]; then
+    echo "Error: No WORKDIR set. Add WORKDIR to your Dockerfile."
+    exit 1
+fi
+
 # Install test dependencies
 apt-get update && apt-get install -y python3 python3-pip
 pip3 install pytest==8.4.1

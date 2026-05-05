@@ -13,7 +13,11 @@ def test_source_code_structures():
     with open(SOURCE_FILE) as f:
         src = f.read().lower()
     assert "struct" in src or "class" in src, "No struct/class defined in the source code."
-    assert "next" in src or "circular" in src or "list" in src, "No linked list implementation found in the source code."
+    
+    import re
+    assert re.search(r"(struct|class)\s+\w+\s*\{[^}]*\*\s*next", src, re.DOTALL), "No linked list node with next pointer found."
+    assert "new " in src or "malloc" in src, "No dynamic allocation found."
+    assert re.search(r"->\s*next\s*=", src) or re.search(r"\.\s*next\s*=", src), "No linked list linking found."
 
 def test_executable_exists():
     """Verify the agent compiled the code to the requested binary path."""
@@ -28,6 +32,8 @@ def test_execution_output():
     # Verify output data
     assert "seattle" in output, "Output missing region data."
     assert "john doe" in output, "Output missing account holder data."
+    
+    assert "balance" in output or "$" in output, "Account balance not displayed in output."
     
     assert "fico" in output or "750" in output, "Account FICO score not displayed in output."
     assert "membership" in output or "2023" in output, "Membership date not in output."
@@ -52,6 +58,14 @@ def test_execution_output():
     # Verify circular nature by seeing if they printed transaction 1, then transaction 2, then transaction 1 again
     txn_lines = [line for line in lines if "transaction:" in line or "grocery" in line or "gas" in line]
     assert len(txn_lines) >= 3, "Output did not print at least 3 transactions to demonstrate the circular loop."
+    
+    txn_content = " ".join(txn_lines)
+    assert re.search(r"\d{4}-\d{2}-\d{2}", txn_content), "Transaction dates not displayed in output."
+    
+    with open(SOURCE_FILE) as f:
+        src = f.read().lower()
+    assert re.search(r"while\s*\(.*->next", src) or re.search(r"do\s*\{.*->next", src) or re.search(r"for\s*\(.*->next", src), "No traversal loop using ->next found in source."
+    
     assert "grocery" in txn_lines[0], "First transaction printed was not Grocery."
     assert "gas" in txn_lines[1], "Second transaction printed was not Gas."
     assert "grocery" in txn_lines[2], "Third transaction printed was not Grocery (failed to demonstrate circular wrapper)."
