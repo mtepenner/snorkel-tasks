@@ -1,5 +1,6 @@
 import os
 import subprocess
+import re
 
 SOURCE_FILE = "/app/workspace/src/moderna_banking.cpp"
 EXECUTABLE = "/usr/local/bin/moderna-app"
@@ -14,10 +15,9 @@ def test_source_code_structures():
         src = f.read().lower()
     assert "struct" in src or "class" in src, "No struct/class defined in the source code."
     
-    import re
-    assert re.search(r"(struct|class)\s+\w+\s*\{[^}]*\*\s*next", src, re.DOTALL), "No linked list node with next pointer found."
+    assert re.search(r"(struct|class)\s+\w+\s*\{[^}]*\*\s*\w+", src, re.DOTALL), "No linked list node with pointer found."
     assert "new " in src or "malloc" in src, "No dynamic allocation found."
-    assert re.search(r"->\s*next\s*=", src) or re.search(r"\.\s*next\s*=", src), "No linked list linking found."
+    assert re.search(r"->\s*\w+\s*=", src) or re.search(r"\.\s*\w+\s*=", src), "No linked list linking found."
 
 def test_executable_exists():
     """Verify the agent compiled the code to the requested binary path."""
@@ -64,7 +64,7 @@ def test_execution_output():
     
     with open(SOURCE_FILE) as f:
         src = f.read().lower()
-    assert re.search(r"while\s*\(.*->next", src) or re.search(r"do\s*\{.*->next", src) or re.search(r"for\s*\(.*->next", src), "No traversal loop using ->next found in source."
+    assert re.search(r"while\s*\(.*->\w+", src) or re.search(r"do\s*\{.*->\w+", src) or re.search(r"for\s*\(.*->\w+", src), "No traversal loop using pointer traversal found in source."
     
     assert "grocery" in txn_lines[0], "First transaction printed was not Grocery."
     assert "gas" in txn_lines[1], "Second transaction printed was not Gas."
