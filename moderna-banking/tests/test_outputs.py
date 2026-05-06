@@ -19,6 +19,14 @@ def test_source_code_structures():
     assert "new " in src or "malloc" in src, "No dynamic allocation found."
     assert re.search(r"->\s*\w+\s*=", src) or re.search(r"\.\s*\w+\s*=", src), "No linked list linking found."
 
+    assert re.search(r"(struct|class)\s+\w*(account|profile)\w*\s*\{", src, re.IGNORECASE), "No Account struct/class found"
+    assert re.search(r"(struct|class)\s+\w*(region|area)\w*\s*\{", src, re.IGNORECASE), "No Region struct/class found"
+    
+    assert re.search(r"while\s*\(.*->\w+", src) or re.search(r"do\s*\{.*->\w+", src) or re.search(r"for\s*\(.*->\w+", src), "No traversal loop using pointer traversal found in source."
+
+    loop_match = re.search(r"(while|for|do)\s*[\({].*->\w+.*?(cout|printf|print)", src, re.DOTALL)
+    assert loop_match, "Traversal loop must contain print statements"
+
 def test_executable_exists():
     """Verify the agent compiled the code to the requested binary path."""
     assert os.path.exists(EXECUTABLE), f"Executable {EXECUTABLE} is missing."
@@ -33,7 +41,7 @@ def test_execution_output():
     assert "seattle" in output, "Output missing region data."
     assert "john doe" in output, "Output missing account holder data."
     
-    assert "balance" in output or "$" in output, "Account balance not displayed in output."
+    assert "balance" in output and "$" in output, "Account balance not displayed in output."
     
     assert "fico" in output or "750" in output, "Account FICO score not displayed in output."
     assert "membership" in output or "2023" in output, "Membership date not in output."
@@ -61,10 +69,6 @@ def test_execution_output():
     
     txn_content = " ".join(txn_lines)
     assert re.search(r"\d{4}-\d{2}-\d{2}", txn_content), "Transaction dates not displayed in output."
-    
-    with open(SOURCE_FILE) as f:
-        src = f.read().lower()
-    assert re.search(r"while\s*\(.*->\w+", src) or re.search(r"do\s*\{.*->\w+", src) or re.search(r"for\s*\(.*->\w+", src), "No traversal loop using pointer traversal found in source."
     
     assert "grocery" in txn_lines[0], "First transaction printed was not Grocery."
     assert "gas" in txn_lines[1], "Second transaction printed was not Gas."

@@ -75,7 +75,7 @@ int main() {
         if (curr_trans != nullptr) {
             // Print 3 transactions to demonstrate circular loop
             for (int i = 0; i < 3; i++) {
-                cout << "    Transaction: " << curr_trans->transaction_name << " | Amount: $" << curr_trans->amount << endl;
+                cout << "    Transaction: " << curr_trans->transaction_name << " | Amount: $" << curr_trans->amount << " | Date: " << curr_trans->date << endl;
                 curr_trans = curr_trans->next;
             }
         }
