@@ -1,6 +1,8 @@
-Need a standalone C++17 CLI under `/app/workspace/src/comicon_roster.cpp`. If you want tiny helper files in the same folder, fine, but the main deliverable has to stay there because the harness compiles `/app/workspace/src/*.cpp`.
+# ComicCon Ticket Roster
 
-This is not a `std::map` exercise. The real ticket store has to be an array of **exactly 7** linear linked lists, keyed by `ticket_id` with `sum of raw ASCII values in ticket_id % 7`. Also need a real celebrity hierarchy: `Celebrity` base class plus `Artist`, `VoiceActor`, `Singer`, and `LiveActionActor`. The base class needs at least one virtual method that is actually used when formatting output.
+Implement a standalone C++17 CLI at `/app/workspace/src/comicon_roster.cpp`. The harness compiles all `*.cpp` files in that directory, so you may add small helper files alongside it.
+
+**Ticket store requirement:** use an array of exactly 7 linear linked lists. The bucket index for a ticket is computed as the sum of raw ASCII (unsigned char) values of `ticket_id` modulo 7. You must implement a real celebrity class hierarchy: `Celebrity` base class plus `Artist`, `VoiceActor`, `Singer`, and `LiveActionActor`. The base class needs at least one virtual method that is actually used when formatting output.
 
 Read commands from `stdin`, one per line, using `|` as the separator. Ignore blank lines and lines starting with `#`. Every stored ticket tracks `ticket_id`, `attendee_name`, `pass_type`, and one celebrity object. `pass_type` can only be `standard` or `vip`.
 

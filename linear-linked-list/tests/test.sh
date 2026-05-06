@@ -6,10 +6,10 @@ if [ "$PWD" = "/" ]; then
     exit 1
 fi
 
-g++ -std=c++17 -Wall -Wextra -pedantic /tests/test_outputs.cpp -o /tmp/linear_linked_list_verifier
+uv pip install --system pytest
 
 set +e
-/tmp/linear_linked_list_verifier
+pytest /tests/test_outputs.py -rA
 
 if [ $? -eq 0 ]; then
   echo 1 > /logs/verifier/reward.txt
