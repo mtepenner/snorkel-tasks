@@ -187,16 +187,15 @@ cat > /app/index.html << 'EOF'
 
                 function extractSummary(block) {
                     const compact = block.replace(/\s+/g, ' ').trim();
-                    if (!compact) {
-                        return 'No summary available.';
+                    if (!compact) return 'No summary available.';
+                    const matches = compact.match(/[^.!?]+[.!?]/g);
+                    if (!matches) return compact.split(/\s+/).slice(0, 20).join(' ');
+                    let longest = '';
+                    for (const m of matches) {
+                        const s = m.trim();
+                        if (s.length > longest.length) longest = s;
                     }
-
-                    const firstSentence = compact.match(/.*?[.!?](?=\s|$)/);
-                    if (firstSentence) {
-                        return firstSentence[0].trim();
-                    }
-
-                    return compact.split(/\s+/).slice(0, 20).join(' ');
+                    return longest || compact;
                 }
 
                 function extractMarkdownSections(text) {
