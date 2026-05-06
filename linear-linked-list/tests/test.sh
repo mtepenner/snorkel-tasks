@@ -6,9 +6,8 @@ if [ "$PWD" = "/" ]; then
     exit 1
 fi
 
-uv pip install --system pytest
-
 set +e
+
 pytest /tests/test_outputs.py -rA
 
 if [ $? -eq 0 ]; then
