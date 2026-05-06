@@ -22,6 +22,8 @@ Our quantum measurement pipeline tracks entanglement in repeated trials [3].
 Entanglement improves the final quantum estimate [4].
 EOF
 
+cp /app/test-fixtures/paper.md /app/test-fixtures/paper.markdown
+
 node <<'EOF'
 const fs = require('fs');
 

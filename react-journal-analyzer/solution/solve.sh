@@ -11,10 +11,13 @@ cat > /app/index.html << 'EOF'
     <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Scientific Journal Analyzer</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="/app/vendor/react.js"></script>
+    <script src="/app/vendor/react-dom.js"></script>
+    <script src="/app/vendor/babel.js"></script>
+    <script src="/app/vendor/pdf.js"></script>
+    <script>
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "/app/vendor/pdf.worker.js";
+    </script>
     <style>
                 :root {
                     color-scheme: light;

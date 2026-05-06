@@ -134,6 +134,58 @@ test("markdown upload analyzes citations, keyword density, and section summaries
   await expect(page.locator('.sections strong').filter({ hasText: 'Abstract' })).toBeVisible();
 });
 
+test("markdown upload analyzes .markdown file correctly", async ({ page }) => {
+  await page.goto("/");
+  await expectUploadStatusMessage(page);
+
+  await page.setInputFiles('input[type="file"]', '/app/test-fixtures/paper.markdown');
+
+  const output = page.locator('#analysis-output');
+  await expect(output).toBeVisible({ timeout: 15000 });
+
+  let analysis: any;
+  await expect
+    .poll(async () => {
+      const text = await output.textContent();
+      if (!text) return "";
+      try {
+        analysis = JSON.parse(text);
+        return analysis.fileType;
+      } catch {
+        return "";
+      }
+    }, { timeout: 15000 })
+    .toBe('markdown');
+
+  await expectUploadStatusMessage(page);
+
+  const expected = analyzeText(markdownPaper);
+  expect(analysis.citations).toBe(expected.citations);
+  expect(analysis.totalWords).toBe(expected.totalWords);
+  expect(analysis.keywordDensity.quantum).toEqual(expected.keywordDensity.quantum);
+  expect(analysis.keywordDensity.entanglement).toEqual(expected.keywordDensity.entanglement);
+
+  expect(analysis.sectionSummaries).toEqual([
+    {
+      title: 'Abstract',
+      summary: 'Quantum entanglement lets quantum systems share information across experiments [1].',
+    },
+    {
+      title: 'Results',
+      summary: 'Our quantum measurement pipeline tracks entanglement in repeated trials [3].',
+    },
+    {
+      title: 'Conclusion',
+      summary: 'Entanglement improves the final quantum estimate [4].',
+    },
+  ]);
+
+  await expect(page.getByRole('heading', { name: 'Citation Frequency' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Keyword Density' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Section Summaries' })).toBeVisible();
+  await expect(page.locator('.sections strong').filter({ hasText: 'Abstract' })).toBeVisible();
+});
+
 test("pdf upload parses text-based pdf files and updates the dashboard", async ({ page }) => {
   await page.goto("/");
   await expectUploadStatusMessage(page);

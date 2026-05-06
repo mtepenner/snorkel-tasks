@@ -9,8 +9,10 @@ describe("Static Architecture Checks", () => {
 
     const htmlContent = readFileSync(filePath, 'utf-8');
     
-    expect(htmlContent).toMatch(/react/i);
-    expect(htmlContent).toMatch(/babel/i);
+    expect(htmlContent).toMatch(/\/app\/vendor\/[^"']*react[^"']*\.js/i);
+    expect(htmlContent).toMatch(/\/app\/vendor\/[^"']*react-dom[^"']*\.js/i);
+    expect(htmlContent).toMatch(/\/app\/vendor\/[^"']*babel[^"']*\.js/i);
+    expect(htmlContent).toMatch(/\/app\/vendor\/[^"']*pdf[^"']*\.js/i);
 
     expect(htmlContent).toMatch(/type=["']file["']/i);
     expect(htmlContent).toMatch(/accept=["'][^"']*\.md[^"']*\.markdown[^"']*\.pdf[^"']*["']/i);
