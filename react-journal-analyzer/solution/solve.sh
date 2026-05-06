@@ -11,12 +11,12 @@ cat > /app/index.html << 'EOF'
     <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Scientific Journal Analyzer</title>
-    <script src="/app/vendor/react.js"></script>
-    <script src="/app/vendor/react-dom.js"></script>
-    <script src="/app/vendor/babel.js"></script>
-    <script src="/app/vendor/pdf.js"></script>
+    <script src="vendor/react.js"></script>
+    <script src="vendor/react-dom.js"></script>
+    <script src="vendor/babel.js"></script>
+    <script src="vendor/pdf.js"></script>
     <script>
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "/app/vendor/pdf.worker.js";
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdf.worker.js";
     </script>
     <style>
                 :root {
