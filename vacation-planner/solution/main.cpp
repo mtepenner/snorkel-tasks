@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
+#include <sstream>
 
 using namespace std;
 
-// Base class
 class Member {
 public:
     string name;
@@ -13,34 +13,33 @@ public:
     virtual string getTier() const = 0;
 };
 
-// Derived classes
-class DiamondMember : public Member {
+class Diamond : public Member {
 public:
-    DiamondMember(string n) : Member(n, 5) {}
+    Diamond(string n) : Member(n, 5) {}
     string getTier() const override { return "Diamond"; }
 };
 
-class PlatinumMember : public Member {
+class Platinum : public Member {
 public:
-    PlatinumMember(string n) : Member(n, 4) {}
+    Platinum(string n) : Member(n, 4) {}
     string getTier() const override { return "Platinum"; }
 };
 
-class GoldMember : public Member {
+class Gold : public Member {
 public:
-    GoldMember(string n) : Member(n, 3) {}
+    Gold(string n) : Member(n, 3) {}
     string getTier() const override { return "Gold"; }
 };
 
-class SilverMember : public Member {
+class Silver : public Member {
 public:
-    SilverMember(string n) : Member(n, 2) {}
+    Silver(string n) : Member(n, 2) {}
     string getTier() const override { return "Silver"; }
 };
 
-class BaseMember : public Member {
+class Base : public Member {
 public:
-    BaseMember(string n) : Member(n, 1) {}
+    Base(string n) : Member(n, 1) {}
     string getTier() const override { return "Base"; }
 };
 
@@ -57,7 +56,6 @@ public:
     
     void insert(Member* m) {
         Node* newNode = new Node(m);
-        // Insert in descending order of priority
         if (!head || head->member->priority < m->priority) {
             newNode->next = head;
             head = newNode;
@@ -71,27 +69,49 @@ public:
         }
     }
     
-    void print() {
+    void print() const {
         Node* current = head;
         while(current) {
-            cout << current->member->name << " (" << current->member->getTier() << ")" << endl;
+            cout << current->member->getTier() << " " << current->member->name << endl;
             current = current->next;
         }
     }
 };
 
 int main() {
-    // Array of linear linked lists
-    LinkedList vacationWeeks[2];
+    LinkedList vacationWeeks[100];
     
-    vacationWeeks[0].insert(new GoldMember("Charlie"));
-    vacationWeeks[0].insert(new DiamondMember("Bob"));
-    vacationWeeks[0].insert(new BaseMember("Alice"));
-    vacationWeeks[0].insert(new SilverMember("Eve"));
-    vacationWeeks[0].insert(new PlatinumMember("Dave"));
-    
-    cout << "Week 1 Boarding List:" << endl;
-    vacationWeeks[0].print();
-    
+    string line;
+    while (getline(cin, line)) {
+        if (line.empty()) continue;
+        stringstream ss(line);
+        string cmd;
+        ss >> cmd;
+        
+        if (cmd == "ADD") {
+            int week;
+            string tier, name;
+            ss >> week >> tier >> name;
+            
+            Member* m = nullptr;
+            if (tier == "Diamond") m = new Diamond(name);
+            else if (tier == "Platinum") m = new Platinum(name);
+            else if (tier == "Gold") m = new Gold(name);
+            else if (tier == "Silver") m = new Silver(name);
+            else if (tier == "Base") m = new Base(name);
+            
+            if (m && week >= 0 && week < 100) {
+                vacationWeeks[week].insert(m);
+            }
+        }
+        else if (cmd == "PRINT") {
+            int week;
+            ss >> week;
+            cout << "Week " << week << " Boarding Order:" << endl;
+            if (week >= 0 && week < 100) {
+                vacationWeeks[week].print();
+            }
+        }
+    }
     return 0;
 }
