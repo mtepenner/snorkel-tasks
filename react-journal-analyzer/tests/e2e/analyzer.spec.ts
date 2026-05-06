@@ -2,21 +2,21 @@ import { test, expect, type Page } from "@playwright/test";
 
 const markdownPaper = `# Abstract
 
-Quantum entanglement lets quantum systems share information across experiments [1]. Quantum sensors rely on entanglement [2].
+Wait, this starts. Quantum entanglement lets quantum systems share information across experiments [1]. Short end.
 
 # Results
 
-Our quantum measurement pipeline tracks entanglement in repeated trials [3].
+A short note! Our quantum measurement pipeline tracks entanglement in repeated trials [3].
 
 # Conclusion
 
-Entanglement improves the final quantum estimate [4].
+Entanglement improves the final quantum estimate [4]. Done.
 `;
 
 const pdfExtractedText = `Introduction
-Quantum entanglement appears in the introduction [1].
+Hello world! Quantum entanglement appears in the introduction [1].
 Conclusion
-Entanglement stabilizes the quantum result [2].`;
+Entanglement stabilizes the quantum result [2]. Yes.`;
 
 async function expectUploadStatusMessage(page: Page) {
   const uploadInput = page.locator('input[type="file"]');
