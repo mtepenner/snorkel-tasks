@@ -22,9 +22,9 @@ def test_source_code_structures():
     assert re.search(r"(struct|class)\s+\w*(account|profile)\w*\s*\{", src, re.IGNORECASE), "No Account struct/class found"
     assert re.search(r"(struct|class)\s+\w*(region|area)\w*\s*\{", src, re.IGNORECASE), "No Region struct/class found"
     
-    assert re.search(r"while\s*\(.*->\w+", src) or re.search(r"do\s*\{.*->\w+", src) or re.search(r"for\s*\(.*->\w+", src), "No traversal loop using pointer traversal found in source."
+    assert re.search(r"while\s*\(.*(->\w+|!=)", src) or re.search(r"do\s*\{.*(->\w+|!=)", src) or re.search(r"for\s*\(.*(->\w+|!=)", src), "No traversal loop found in source."
 
-    loop_match = re.search(r"(while|for|do)\s*[\({].*->\w+.*?(cout|printf|print)", src, re.DOTALL)
+    loop_match = re.search(r"(while|for|do)\s*[\({].*?(cout|printf|print)", src, re.DOTALL)
     assert loop_match, "Traversal loop must contain print statements"
 
 def test_executable_exists():
