@@ -27,54 +27,54 @@ def run_commands(commands: str) -> list[str]:
     return [line for line in result.stdout.splitlines() if line.strip()]
 
 def test_add_and_lookup_artist():
-    """ADD_ARTIST inserts at correct bucket; LOOKUP returns full line."""
+    """ADD_ARTIST_inserts at correct bucket; LOOKUP returns full line."""
     lines = run_commands("ADD_ARTIST|T400|Ava Park|vip|Mike Mignola|Hellboy|175\nLOOKUP|T400\n")
-    assert any(l.startswith("ADDED T400 BUCKET") for l in lines)
-    assert any(l == "FOUND T400 | attendee=Ava Park | pass=vip | type=Artist | celebrity=Mike Mignola | fandom=Hellboy | commission_rate=175" for l in lines)
+    assert any(line.startswith("ADDED T400 BUCKET") for line in lines)
+    assert any(line == "FOUND T400 | attendee=Ava Park | pass=vip | type=Artist | celebrity=Mike Mignola | fandom=Hellboy | commission_rate=175" for line in lines)
 
 def test_add_and_lookup_voice_actor():
     lines = run_commands("ADD_VOICE|T500|Bob Smith|standard|Tara Strong|Twilight Sparkle|SAG-AFTRA\nLOOKUP|T500\n")
-    assert any(l.startswith("ADDED T500 BUCKET") for l in lines)
-    assert any(l == "FOUND T500 | attendee=Bob Smith | pass=standard | type=VoiceActor | celebrity=Tara Strong | signature_role=Twilight Sparkle | union_status=SAG-AFTRA" for l in lines)
+    assert any(line.startswith("ADDED T500 BUCKET") for line in lines)
+    assert any(line == "FOUND T500 | attendee=Bob Smith | pass=standard | type=VoiceActor | celebrity=Tara Strong | signature_role=Twilight Sparkle | union_status=SAG-AFTRA" for line in lines)
 
 def test_add_and_lookup_singer():
     lines = run_commands("ADD_SINGER|T600|Eve|vip|Taylor Swift|Pop|10\nLOOKUP|T600\n")
-    assert any(l.startswith("ADDED T600 BUCKET") for l in lines)
-    assert any(l == "FOUND T600 | attendee=Eve | pass=vip | type=Singer | celebrity=Taylor Swift | genre=Pop | chart_count=10" for l in lines)
+    assert any(line.startswith("ADDED T600 BUCKET") for line in lines)
+    assert any(line == "FOUND T600 | attendee=Eve | pass=vip | type=Singer | celebrity=Taylor Swift | genre=Pop | chart_count=10" for line in lines)
 
 def test_add_and_lookup_live_action_actor():
     lines = run_commands("ADD_LIVE|T700|Charlie|standard|Keanu Reeves|John Wick|87Eleven\nLOOKUP|T700\n")
-    assert any(l.startswith("ADDED T700 BUCKET") for l in lines)
-    assert any(l == "FOUND T700 | attendee=Charlie | pass=standard | type=LiveActionActor | celebrity=Keanu Reeves | franchise=John Wick | stunt_team=87Eleven" for l in lines)
+    assert any(line.startswith("ADDED T700 BUCKET") for line in lines)
+    assert any(line == "FOUND T700 | attendee=Charlie | pass=standard | type=LiveActionActor | celebrity=Keanu Reeves | franchise=John Wick | stunt_team=87Eleven" for line in lines)
 
 def test_remove():
     lines = run_commands("ADD_ARTIST|T400|Ava Park|vip|Mike Mignola|Hellboy|175\nREMOVE|T400\nLOOKUP|T400\n")
-    assert any(l.startswith("REMOVED T400 BUCKET") for l in lines)
-    assert any(l == "MISSING T400" for l in lines)
+    assert any(line.startswith("REMOVED T400 BUCKET") for line in lines)
+    assert any(line == "MISSING T400" for line in lines)
 
 def test_errors():
     lines = run_commands("ADD_ARTIST|T400|Ava Park|vip|Mike Mignola|Hellboy|175\nADD_ARTIST|T400|Ava Park|vip|Mike Mignola|Hellboy|175\nADD_ARTIST|T401|Bob|invalid|Mike|Hellboy|175\n")
-    assert any(l == "ERROR duplicate ticket T400" for l in lines)
-    assert any(l == "ERROR invalid pass_type invalid" for l in lines)
+    assert any(line == "ERROR duplicate ticket T400" for line in lines)
+    assert any(line == "ERROR invalid pass_type invalid" for line in lines)
 
 def test_bucket_report():
     lines = run_commands("ADD_ARTIST|T400|Ava Park|vip|Mike Mignola|Hellboy|175\nBUCKET_REPORT\n")
     found_bucket = False
-    for l in lines:
-        if re.match(r"^BUCKET \d+=[0-9]+", l):
+    for line in lines:
+        if re.match(r"^BUCKET \d+=[0-9]+", line):
             found_bucket = True
     assert found_bucket, "BUCKET_REPORT missing output"
 
 def test_category_report():
     lines = run_commands("ADD_ARTIST|T400|Ava Park|vip|Mike Mignola|Hellboy|175\nCATEGORY_REPORT\n")
-    assert any(l.startswith("TOTAL_TICKETS=") for l in lines)
-    assert any(l.startswith("VIP_TICKETS=") for l in lines)
-    assert any(l.startswith("ARTIST_COUNT=") for l in lines)
-    assert any(l.startswith("VOICE_ACTOR_COUNT=") for l in lines)
-    assert any(l.startswith("SINGER_COUNT=") for l in lines)
-    assert any(l.startswith("LIVE_ACTION_COUNT=") for l in lines)
-    assert any(l.startswith("OVERALL_FAVORITE=") for l in lines)
-    assert any(l.startswith("MISSING_CATEGORIES=") for l in lines)
+    assert any(line.startswith("TOTAL_TICKETS=") for line in lines)
+    assert any(line.startswith("VIP_TICKETS=") for line in lines)
+    assert any(line.startswith("ARTIST_COUNT=") for line in lines)
+    assert any(line.startswith("VOICE_ACTOR_COUNT=") for line in lines)
+    assert any(line.startswith("SINGER_COUNT=") for line in lines)
+    assert any(line.startswith("LIVE_ACTION_COUNT=") for line in lines)
+    assert any(line.startswith("OVERALL_FAVORITE=") for line in lines)
+    assert any(line.startswith("MISSING_CATEGORIES=") for line in lines)
 
 def test_source_code_structures():
     """Verify the source code uses appropriate data structures and object-oriented practices."""
