@@ -3,31 +3,38 @@ version = "2.0"
 
 # Task metadata (author, difficulty, categorization)
 [metadata]
-author_name = "anonymous"
-author_email = "anonymous"
-difficulty = "unknown"
+author_name = "mtepenner"
+author_email = "mtepenner@gmail.com"
+difficulty = "hard"
 category = "software-engineering"
+
 # Options for subcategories are: "long_context", "tool_specific", "api_integration", "db_interaction", "ui_building"
-subcategories = [ ]
+# We use both api_integration (Gin API) and tool_specific (ImageMagick)
+subcategories = [ "api_integration", "tool_specific" ]
+
 # The number of milestones in the task
-number_of_milestones = 2
+number_of_milestones = 3
+
 # Size of the codebase: minimal -> 0-20 files, small -> 20+ files, large -> 200+ files
 codebase_size = "minimal"
+
 # Coding languages used in the oracle solution or required by the agent
-languages = [ "bash" ]
+languages = [ "cpp", "go", "bash" ]
+
 # For tool_specific, api_integration, and db_interaction subcategories, please include specific tool, api framework, or database software
-tags = [ "file-operations",]
+tags = [ "c++", "gin-api", "imagemagick", "cli-automation", "game-dev" ]
+
 # Estimated time to complete (minutes)
 expert_time_estimate_min = 60
 junior_time_estimate_min = 120
 
 # Verifier: runs the test script to check task completion
 [verifier]
-timeout_sec = 450.0
+timeout_sec = 600.0
 
 # Agent: limits how long the agent can run when attempting the task
 [agent]
-timeout_sec = 900.0
+timeout_sec = 1800.0
 
 # Sandbox environment limits
 [environment]
