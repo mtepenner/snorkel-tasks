@@ -4,14 +4,19 @@
 SERVER_PID=$!
 sleep 2 
 
-# Run the specific milestone test using pytest
-python3 -m pytest tests/test_m${MILESTONE}.py > /dev/null 2>&1
+# Run the specific milestone test using pytest with the mandatory -rA flag
+python3 -m pytest -rA tests/test_m${MILESTONE}.py > /dev/null 2>&1
 RES=$?
 
-# Kill the server and output exactly 0 or 1
+# Kill the server
 kill $SERVER_PID
-if [ $RES -eq 0 ]; then
-    echo -n 1
+
+# Reset the exit code to the pytest result so the required block works
+(exit $RES)
+
+# The mandatory reward section exactly as the CI demands
+if [ $? -eq 0 ]; then
+    echo 1 > /logs/verifier/reward.txt
 else
-    echo -n 0
+    echo 0 > /logs/verifier/reward.txt
 fi
