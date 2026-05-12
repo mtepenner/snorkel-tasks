@@ -1,3 +1,7 @@
 #!/bin/bash
-# Oracle solution for milestone 1.
-echo "Hello, world!" > /app/hello.txt
+
+cp solution/client.cpp /app/workspace/src/client.cpp
+
+g++ /app/workspace/src/client.cpp -o /app/workspace/client -lcurl `Magick++-config --cxxflags --libs`
+
+echo -e "reveal 0 0\nquit" | /app/workspace/client
