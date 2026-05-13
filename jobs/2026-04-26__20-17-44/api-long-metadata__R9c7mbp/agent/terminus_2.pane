@@ -1,776 +1,0 @@
-[?2004hroot@4de46265a4e6:/app/workspace# asciinema rec --stdin /logs/agent/recording.cast
-[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
-[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
-[?2004hroot@4de46265a4e6:/app/workspace# clear
-[?2004l[H[J[3J[?2004hroot@4de46265a4e6:/app/workspace# ls -ლა
-[?2004lls: invalid option -- '�'
-Try 'ls --help' for more information.
-[?2004hroot@4de46265a4e6:/app/workspace# find /app/workspace -maxdepth 3 -type f -name 'api.py' -o -name 'requirements.txt' -o -name 'pyproject.toml' -o -name 'Dockerfile'
-[?2004l[?2004hroot@4de46265a4e6:/app/workspace# ls -la /app/workspace/src
-[?2004lls: cannot access '/app/workspace/src': No such file or directory
-[?2004hroot@4de46265a4e6:/app/workspace# sed -n '1,200p' /app/workspace/src/api.py
-[?2004lsed: can't read /app/workspace/src/api.py: No such file or directory
-[?2004hroot@4de46265a4e6:/app/workspace# mkdir -p /app/workspace/src/static
-[?2004l[?2004hroot@4de46265a4e6:/app/workspace# cat > /app/workspace/src/static/index.html <<'HTML'
-[?2004l[?2004h> <!doctype html>
-[?2004l[?2004h> <html lang="en">
-[?2004l[?2004h>   <head>
-[?2004l[?2004h>     <meta charset="utf-8" />
-[?2004l[?2004h>     <meta name="viewport" content="width=device-width, initial-scale=1" />
-[?2004l[?2004h>     <title>PDF Extractor Manual Check</title>
-[?2004l[?2004h>     <style>
-[?2004l[?2004h>       body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; margin: 24px; }
-[?2004l[?2004h>       .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-[?2004l[?2004h>       pre { background: #111; color: #eee; padding: 12px; border-radius: 8px; overflow: auto; max-height: 70vh; }
-[?2004l[?2004h>       button { padding: 8px 12px; }
-[?2004l[?2004h>       input[type=file] { padding: 6px; }
-[?2004l[?2004h>       .muted { color: #666; }
-[?2004l[?2004h>     </style>
-[?2004l[?2004h>   </head>
-[?2004l[?2004h>   <body>
-[?2004l[?2004h>     <h1>PDF Extractor Manual Check</h1>
-[?2004l[?2004h>     <div class="row">
-[?2004l[?2004h>       <input id="file" type="file" accept="application/pdf" />
-[?2004l[?2004h>       <button id="go">Upload & Extract</button>
-[?2004l[?2004h>       <span id="status" class="muted"></span>
-[?2004l[?2004h>     </div>
-[?2004l[?2004h> 
-[?2004l[?2004h>     <h3>Response JSON</h3>
-[?2004l[?2004h>     <pre id="out">(waiting)</pre>
-[?2004l[?2004h> 
-[?2004l[?2004h>     <script>
-[?2004l[?2004h>       const $file = document.getElementById('file');
-[?2004l[?2004h>       const $go = document.getElementById('go');
-[?2004l[?2004h>       const $out = document.getElementById('out');
-[?2004l[?2004h>       const $status = document.getElementById('status');
-[?2004l[?2004h> 
-[?2004l[?2004h>       function setStatus(msg) { $status.textContent = msg; }
-[?2004l[?2004h> 
-[?2004l[?2004h>       $go.addEventListener('click', async () => {
-[?2004l[?2004h>         if (!$file.files || !$file.files[0]) {
-[?2004l[?2004h>           alert('Pick a PDF first');
-[?2004l[?2004h>           return;
-[?2004l[?2004h>         }
-[?2004l[?2004h>         const f = $file.files[0];
-[?2004l[?2004h>         const form = new FormData();
-[?2004l[?2004h>         form.append('file', f, f.name);
-[?2004l[?2004h> 
-[?2004l[?2004h>         $out.textContent = '';
-[?2004l[?2004h>         setStatus('Uploading...');
-[?2004l[?2004h>         try {
-[?2004l[?2004h>           const res = await fetch('/extract', { method: 'POST', body: form });
-[?2004l[?2004h>           const text = await res.text();
-[?2004l[?2004h>           let obj;
-[?2004l[?2004h>           try { obj = JSON.parse(text); } catch (e) { obj = { raw: text }; }
-[?2004l[?2004h>           $out.textContent = JSON.stringify(obj, null, 2);
-[?2004l[?2004h>           setStatus(`Done (HTTP ${res.status})`);
-[?2004l[?2004h>         } catch (err) {
-[?2004l[?2004h>           $out.textContent = String(err);
-[?2004l[?2004h>           setStatus('Request failed');
-[?2004l[?2004h>         }
-[?2004l[?2004h>       });
-[?2004l[?2004h>     </script>
-[?2004l[?2004h>   </body>
-[?2004l[?2004h> </html>
-[?2004l[?2004h> HTML
-[?2004l[?2004hroot@4de46265a4e6:/app/workspace# cat > /app/workspace/src/api.py <<'PY'
-[?2004l[?2004h> from __future__ import annotations
-[?2004l[?2004h> 
-[?2004l[?2004h> import re
-[?2004l[?2004h> from collections import Counter
-[?2004l[?2004h> from typing import List
-[?2004l[?2004h> 
-[?2004l[?2004h> from fastapi import FastAPI, File, UploadFile
-[?2004l[?2004h> from fastapi.responses import JSONResponse
-[?2004l[?2004h> from fastapi.staticfiles import StaticFiles
-[?2004l[?2004h> 
-[?2004l[?2004h> from PyPDF2 import PdfReader
-[?2004l[?2004h> 
-[?2004l   full_text = "\n".join(parts)[?2004h> 
-[?2004l[?2004h> app = FastAPI()
-[?2004l[?2004h> 
-[?2004l[?2004h> # Serve the manual check page
-[?2004l-w[?2004h> app.mount(
-[?2004l[?2004h>     "/static",
-[?2004l  # We count wo[?2004h>     StaticFiles(directory="/app/workspace/src/static", html=False),
-[?2004l[?2004h>     name="static",
-[?2004l[?2004h> )
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l.[?2004h> _STOPWORDS = {
-[?2004l[?2004h>     "a","about","above","after","again","against","all","am","an","and","any","are","as","at",
-[?2004l[?2004h>     "be","because","been","before","being","below","between","both","but","by",
-[?2004l[?2004h>     "can","could",
-[?2004l[?2004h>     "did","do","does","doing","down","during",
-[?2004l[?2004h>     "each",
-[?2004lfor t in top[?2004h>     "few","for","from","further",
-[?2004l[?2004h>     "had","has","have","having","he","her","here","hers","herself","him","himself","his","how",
-[?2004l[?2004h>     "i","if","in","into","is","it","its","itself",
-[?2004l[?2004h>     "just",
-[?2004l[?2004h>     "me","more","most","my","myself",
-[?2004l[?2004h>     "no","nor","not","now",
-[?2004l[?2004h>     "of","off","on","once","only","or","other","our","ours","ourselves","out","over","own",
-[?2004l[?2004h>     "s","same","she","should","so","some","such",
-[?2004l[?2004h>     "t","than","that","the","their","theirs","them","themselves","then","there","these","they",
-[?2004l[?2004h>     "this","those","through","to","too",
-[?2004l[?2004h>     "under","until","up",
-[?2004l[?2004h>     "very",
-[?2004l[?2004h>     "was","we","were","what","when","where","which","while","who","whom","why","will","with",
-[?2004l[?2004h>     "you","your","yours","yourself","yourselves",
-[?2004l[?2004h>     # common PDF/boilerplate-ish
-[?2004l[?2004h>     "page","pages","copyright","www","http","https","com","org","net",
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _normalize_words(text: str) -> List[str]:
-[?2004l[?2004h>     # Keep words with letters/numbers and internal apostrophes/hyphens, drop punctuation.
-[?2004l[?2004h>     # Also exclude pure numbers and very short tokens.
-[?2004l[?2004h>     raw = re.findall(r"[A-Za-z][A-Za-z0-9'\-]{1,}", text)
-[?2004l[?2004h>     words: List[str] = []
-[?2004l[?2004h>     for w in raw:
-[?2004l[?2004h>         wl = w.lower().strip("-'\"")
-[?2004l[?2004h>         if len(wl) < 3:
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         if wl in _STOPWORDS:
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         if wl.isdigit():
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         # Drop tokens that are mostly numeric like "abc123"? keep if has >=2 letters.
-[?2004l[?2004h>         letters = sum(ch.isalpha() for ch in wl)
-[?2004l[?2004h>         if letters < 2:
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         words.append(wl)
-[?2004l[?2004h>     return words
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _extract_topics(text: str) -> List[str]:
-[?2004l[?2004h>     words = _normalize_words(text)
-[?2004l[?2004h>     if not words:
-[?2004l[?2004h>         return []
-[?2004l[?2004h> 
-[?2004l[?2004h>     counts = Counter(words)
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Prefer informative terms: longer words get a slight boost.
-[?2004l[?2004h>     scored = []
-[?2004l[?2004h>     for w, c in counts.items():
-[?2004l[?2004h>         score = c * (1.0 + min(len(w), 12) / 24.0)
-[?2004l[?2004h>         scored.append((score, w))
-[?2004l[?2004h> 
-[?2004l[?2004h>     scored.sort(reverse=True)
-[?2004l[?2004h> 
-[?2004l[?2004h>     topics: List[str] = []
-[?2004l[?2004h>     used = set()
-[?2004l[?2004h>     for _, w in scored:
-[?2004l[?2004h>         if w in used:
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         # avoid near-duplicates by prefix (simple heuristic)
-[?2004l[?2004h>         if any(w.startswith(t) or t.startswith(w) for t in used):
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         used.add(w)
-[?2004l[?2004h>         topics.append(w)
-[?2004l[?2004h>         if len(topics) >= 10:
-[?2004l[?2004h>             break
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Ensure at least 3 if possible
-[?2004l[?2004h>     return topics[: max(3, min(10, len(topics)))]
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _chunk_words(words: List[str], chunk_size: int = 1000) -> int:
-[?2004l[?2004h>     if not words:
-[?2004l[?2004h>         return 0
-[?2004l[?2004h>     return (len(words) + chunk_size - 1) // chunk_size
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> @app.post("/extract")
-[?2004l[?2004h> async def extract(file: UploadFile = File(...)):
-[?2004l[?2004h>     # Read the full upload into memory; PyPDF2 expects file-like bytes.
-[?2004l[?2004h>     data = await file.read()
-[?2004l[?2004h> 
-[?2004l[?2004h>     try:
-[?2004l[?2004h>         reader = PdfReader(io_bytes := __import__("io").BytesIO(data))
-[?2004l[?2004h>     except Exception as e:
-[?2004l[?2004h>         return JSONResponse(status_code=400, content={"detail": f"Invalid PDF: {e}"})
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Metadata
-[?2004l[?2004h>     author = "Unknown Author"
-[?2004l[?2004h>     title = "Untitled"
-[?2004l[?2004h>     try:
-[?2004l[?2004h>         md = reader.metadata
-[?2004l[?2004h>         if md is not None:
-[?2004l[?2004h>             a = getattr(md, "author", None) or (md.get("/Author") if hasattr(md, "get") else None)
-[?2004l[?2004h>             t = getattr(md, "title", None) or (md.get("/Title") if hasattr(md, "get") else None)
-[?2004l[?2004h>             if isinstance(a, str) and a.strip():
-[?2004l[?2004h>                 author = a.strip()
-[?2004l[?2004h>             if isinstance(t, str) and t.strip():
-[?2004l[?2004h>                 title = t.strip()
-[?2004l[?2004h>     except Exception:
-[?2004l[?2004h>         pass
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Extract text from pages.
-[?2004l[?2004h>     parts: List[str] = []
-[?2004l[?2004h>     for p in reader.pages:
-[?2004l[?2004h>         try:
-[?2004l[?2004h>             txt = p.extract_text() or ""
-[?2004l[?2004h>         except Exception:
-[?2004l[?2004h>             txt = ""
-[?2004l[?2004h>         if txt:
-[?2004l[?2004h>             parts.append(txt)
-[?2004l[?2004h> 
-[?2004l[?2004h>     full_text = "\n".join(parts).strip()
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Compute words and chunks (1000-word cap)
-[?2004l[?2004h>     # We count words from extracted text; for chunking we use a conservative word regex.
-[?2004l[?2004h>     word_list = re.findall(r"\b\w+\b", full_text)
-[?2004l[?2004h>     total_words = len(word_list)
-[?2004l[?2004h>     total_chunks = _chunk_words(word_list, 1000)
-[?2004l[?2004h> 
-[?2004l[?2004h>     topics = _extract_topics(full_text)
-[?2004l[?2004h>     # Guarantee 3..10 non-empty strings when possible; if no text, return empty list.
-[?2004l[?2004h>     topics = [t for t in topics if isinstance(t, str) and t.strip()]
-[?2004l[?2004h>     if full_text and len(topics) < 3:
-[?2004l[?2004h>         # pad with next best candidates if heuristic filtered too much
-[?2004l[?2004h>         topics = topics[:]
-[?2004l[?2004h> 
-[?2004l[?2004h>     return {
-[?2004l[?2004h>         "author": author,
-[?2004l[?2004h>         "title": title,
-[?2004l[?2004h>         "topics": topics[:10],
-[?2004l[?2004h>         "total_chunks": int(total_chunks),
-[?2004l[?2004h>         "filename": file.filename or "",
-[?2004l[?2004h>         "total_words": int(total_words),
-[?2004l[?2004h>     }
-[?2004l[?2004h> PY
-[?2004l[?2004hroot@4de46265a4e6:/app/workspace# python3 -c "import importlib.util; spec=importlib.util.spec_from_file_location('api','/app/workspace/src/api.py'); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m); print('app:', hasattr(m,'app'))"
-[?2004lapp: True
-[?2004hroot@4de46265a4e6:/app/workspace# python3 -c "from PyPDF2 import PdfReader; print('PyPDF2 ok')"
-[?2004lPyPDF2 ok
-[?2004hroot@4de46265a4e6:/app/workspace# ls -la
-[?2004ltotal 16
-drwxr-xr-x 1 root root 4096 Apr 27 03:18 .
-drwxr-xr-x 1 root root 4096 Apr 26 21:55 ..
-drwxr-xr-x 4 root root 4096 Apr 27 03:18 src
-[?2004hroot@4de46265a4e6:/app/workspace# ls -la /app/workspace/src /app/workspace/src/static
-[?2004l/app/workspace/src:
-total 24
-drwxr-xr-x 4 root root 4096 Apr 27 03:18 .
-drwxr-xr-x 1 root root 4096 Apr 27 03:18 ..
-drwxr-xr-x 2 root root 4096 Apr 27 03:18 __pycache__
--rw-r--r-- 1 root root 5198 Apr 27 03:18 api.py
-drwxr-xr-x 2 root root 4096 Apr 27 03:18 static
-
-/app/workspace/src/static:
-total 12
-drwxr-xr-x 2 root root 4096 Apr 27 03:18 .
-drwxr-xr-x 4 root root 4096 Apr 27 03:18 ..
--rw-r--r-- 1 root root 2082 Apr 27 03:18 index.html
-[?2004hroot@4de46265a4e6:/app/workspace# python3 -m py_compile /app/workspace/src/api.py
-[?2004l[?2004hroot@4de46265a4e6:/app/workspace# nl -ba /app/workspace/src/api.py | sed -n '1,220p'
-[?2004l     1	from __future__ import annotations
-     2	
-     3	import re
-     4	from collections import Counter
-     5	from typing import List
-     6	
-     7	from fastapi import FastAPI, File, UploadFile
-     8	from fastapi.responses import JSONResponse
-     9	from fastapi.staticfiles import StaticFiles
-    10	
-    11	from PyPDF2 import PdfReader
-    12	
-    13	
-    14	app = FastAPI()
-    15	
-    16	# Serve the manual check page
-    17	app.mount(
-    18	    "/static",
-    19	    StaticFiles(directory="/app/workspace/src/static", html=False),
-    20	    name="static",
-    21	)
-    22	
-    23	
-    24	_STOPWORDS = {
-    25	    "a","about","above","after","again","against","all","am","an","and","any","are","as","at",
-    26	    "be","because","been","before","being","below","between","both","but","by",
-    27	    "can","could",
-    28	    "did","do","does","doing","down","during",
-    29	    "each",
-    30	    "few","for","from","further",
-    31	    "had","has","have","having","he","her","here","hers","herself","him","himself","his","how",
-    32	    "i","if","in","into","is","it","its","itself",
-    33	    "just",
-    34	    "me","more","most","my","myself",
-    35	    "no","nor","not","now",
-    36	    "of","off","on","once","only","or","other","our","ours","ourselves","out","over","own",
-    37	    "s","same","she","should","so","some","such",
-    38	    "t","than","that","the","their","theirs","them","themselves","then","there","these","they",
-    39	    "this","those","through","to","too",
-    40	    "under","until","up",
-    41	    "very",
-    42	    "was","we","were","what","when","where","which","while","who","whom","why","will","with",
-    43	    "you","your","yours","yourself","yourselves",
-    44	    # common PDF/boilerplate-ish
-    45	    "page","pages","copyright","www","http","https","com","org","net",
-    46	}
-    47	
-    48	
-    49	def _normalize_words(text: str) -> List[str]:
-    50	    # Keep words with letters/numbers and internal apostrophes/hyphens, drop punctuation.
-    51	    # Also exclude pure numbers and very short tokens.
-    52	    raw = re.findall(r"[A-Za-z][A-Za-z0-9'\-]{1,}", text)
-    53	    words: List[str] = []
-    54	    for w in raw:
-    55	        wl = w.lower().strip("-'\"")
-    56	        if len(wl) < 3:
-    57	            continue
-    58	        if wl in _STOPWORDS:
-    59	            continue
-    60	        if wl.isdigit():
-    61	            continue
-    62	        # Drop tokens that are mostly numeric like "abc123"? keep if has >=2 letters.
-    63	        letters = sum(ch.isalpha() for ch in wl)
-    64	        if letters < 2:
-    65	            continue
-    66	        words.append(wl)
-    67	    return words
-    68	
-    69	
-    70	def _extract_topics(text: str) -> List[str]:
-    71	    words = _normalize_words(text)
-    72	    if not words:
-    73	        return []
-    74	
-    75	    counts = Counter(words)
-    76	
-    77	    # Prefer informative terms: longer words get a slight boost.
-    78	    scored = []
-    79	    for w, c in counts.items():
-    80	        score = c * (1.0 + min(len(w), 12) / 24.0)
-    81	        scored.append((score, w))
-    82	
-    83	    scored.sort(reverse=True)
-    84	
-    85	    topics: List[str] = []
-    86	    used = set()
-    87	    for _, w in scored:
-    88	        if w in used:
-    89	            continue
-    90	        # avoid near-duplicates by prefix (simple heuristic)
-    91	        if any(w.startswith(t) or t.startswith(w) for t in used):
-    92	            continue
-    93	        used.add(w)
-    94	        topics.append(w)
-    95	        if len(topics) >= 10:
-    96	            break
-    97	
-    98	    # Ensure at least 3 if possible
-    99	    return topics[: max(3, min(10, len(topics)))]
-   100	
-   101	
-   102	def _chunk_words(words: List[str], chunk_size: int = 1000) -> int:
-   103	    if not words:
-   104	        return 0
-   105	    return (len(words) + chunk_size - 1) // chunk_size
-   106	
-   107	
-   108	@app.post("/extract")
-   109	async def extract(file: UploadFile = File(...)):
-   110	    # Read the full upload into memory; PyPDF2 expects file-like bytes.
-   111	    data = await file.read()
-   112	
-   113	    try:
-   114	        reader = PdfReader(io_bytes := __import__("io").BytesIO(data))
-   115	    except Exception as e:
-   116	        return JSONResponse(status_code=400, content={"detail": f"Invalid PDF: {e}"})
-   117	
-   118	    # Metadata
-   119	    author = "Unknown Author"
-   120	    title = "Untitled"
-   121	    try:
-   122	        md = reader.metadata
-   123	        if md is not None:
-   124	            a = getattr(md, "author", None) or (md.get("/Author") if hasattr(md, "get") else None)
-   125	            t = getattr(md, "title", None) or (md.get("/Title") if hasattr(md, "get") else None)
-   126	            if isinstance(a, str) and a.strip():
-   127	                author = a.strip()
-   128	            if isinstance(t, str) and t.strip():
-   129	                title = t.strip()
-   130	    except Exception:
-   131	        pass
-   132	
-   133	    # Extract text from pages.
-   134	    parts: List[str] = []
-   135	    for p in reader.pages:
-   136	        try:
-   137	            txt = p.extract_text() or ""
-   138	        except Exception:
-   139	            txt = ""
-   140	        if txt:
-   141	            parts.append(txt)
-   142	
-   143	    full_text = "\n".join(parts).strip()
-   144	
-   145	    # Compute words and chunks (1000-word cap)
-   146	    # We count words from extracted text; for chunking we use a conservative word regex.
-   147	    word_list = re.findall(r"\b\w+\b", full_text)
-   148	    total_words = len(word_list)
-   149	    total_chunks = _chunk_words(word_list, 1000)
-   150	
-   151	    topics = _extract_topics(full_text)
-   152	    # Guarantee 3..10 non-empty strings when possible; if no text, return empty list.
-   153	    topics = [t for t in topics if isinstance(t, str) and t.strip()]
-   154	    if full_text and len(topics) < 3:
-   155	        # pad with next best candidates if heuristic filtered too much
-   156	        topics = topics[:]
-   157	
-   158	    return {
-   159	        "author": author,
-   160	        "title": title,
-   161	        "topics": topics[:10],
-   162	        "total_chunks": int(total_chunks),
-   163	        "filename": file.filename or "",
-   164	        "total_words": int(total_words),
-   165	    }
-[?2004hroot@4de46265a4e6:/app/workspace# cat > /app/workspace/src/api.py <<'PY'
-[?2004l[?2004h> from __future__ import annotations
-[?2004l[?2004h> 
-[?2004l[?2004h> import io
-[?2004l[?2004h> import re
-[?2004l[?2004h> from collections import Counter
-[?2004l[?2004h> from typing import List
-[?2004l[?2004h> 
-[?2004l[?2004h> from fastapi import FastAPI, File, UploadFile
-[?2004l[?2004h> from fastapi.responses import JSONResponse
-[?2004l[?2004h> from fastapi.staticfiles import StaticFiles
-[?2004l[?2004h> from PyPDF2 import PdfReader
-[?2004l[?2004h> 
-[?2004l [?2004h> 
-[?2004l[?2004h> app = FastAPI()
-[?2004l[?2004h> 
-[?2004l [?2004h> # Mount manual check page directory
-[?2004l[?2004h> app.mount(
-[?2004l[?2004h>     "/static",
-[?2004l[?2004h>     StaticFiles(directory="/app/workspace/src/static", html=False),
-[?2004l[?2004h>     name="static",
-[?2004l[?2004h> )
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004ll[?2004h> _STOPWORDS = {
-[?2004le.filename or "[?2004h>     "a","about","above","after","again","against","all","am","an","and","any","are","as","at",
-[?2004l[?2004h>     "be","because","been","before","being","below","between","both","but","by",
-[?2004l[?2004h>     "can","could",
-[?2004l[?2004h>     "did","do","does","doing","down","during",
-[?2004l[?2004h>     "each",
-[?2004l[?2004h>     "few","for","from","further",
-[?2004l[?2004h>     "had","has","have","having","he","her","here","hers","herself","him","himself","his","how",
-[?2004l[?2004h>     "i","if","in","into","is","it","its","itself",
-[?2004l[?2004h>     "just",
-[?2004l[?2004h>     "me","more","most","my","myself",
-[?2004l[?2004h>     "no","nor","not","now",
-[?2004l[?2004h>     "of","off","on","once","only","or","other","our","ours","ourselves","out","over","own",
-[?2004l[?2004h>     "s","same","she","should","so","some","such",
-[?2004l[?2004h>     "t","than","that","the","their","theirs","them","themselves","then","there","these","they",
-[?2004l[?2004h>     "this","those","through","to","too",
-[?2004l[?2004h>     "under","until","up",
-[?2004l[?2004h>     "very",
-[?2004l[?2004h>     "was","we","were","what","when","where","which","while","who","whom","why","will","with",
-[?2004l[?2004h>     "you","your","yours","yourself","yourselves",
-[?2004l[?2004h>     # common PDF/boilerplate-ish
-[?2004l[?2004h>     "page","pages","copyright","www","http","https","com","org","net",
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _normalize_words(text: str) -> List[str]:
-[?2004l[?2004h>     raw = re.findall(r"[A-Za-z][A-Za-z0-9'\-]{1,}", text)
-[?2004l[?2004h>     words: List[str] = []
-[?2004l[?2004h>     for w in raw:
-[?2004l[?2004h>         wl = w.lower().strip("-'\"")
-[?2004l[?2004h>         if len(wl) < 3:
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         if wl in _STOPWORDS:
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         if wl.isdigit():
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         letters = sum(ch.isalpha() for ch in wl)
-[?2004l[?2004h>         if letters < 2:
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         words.append(wl)
-[?2004l[?2004h>     return words
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _extract_topics(text: str) -> List[str]:
-[?2004l[?2004h>     words = _normalize_words(text)
-[?2004l[?2004h>     if not words:
-[?2004l[?2004h>         return []
-[?2004l[?2004h> 
-[?2004l[?2004h>     counts = Counter(words)
-[?2004l[?2004h> 
-[?2004l[?2004h>     scored = []
-[?2004l[?2004h>     for w, c in counts.items():
-[?2004l[?2004h>         score = c * (1.0 + min(len(w), 12) / 24.0)
-[?2004l[?2004h>         scored.append((score, w))
-[?2004l[?2004h> 
-[?2004l[?2004h>     scored.sort(reverse=True)
-[?2004l[?2004h> 
-[?2004l[?2004h>     topics: List[str] = []
-[?2004l[?2004h>     used: set[str] = set()
-[?2004l[?2004h>     for _, w in scored:
-[?2004l[?2004h>         if w in used:
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         if any(w.startswith(t) or t.startswith(w) for t in used):
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         used.add(w)
-[?2004l[?2004h>         topics.append(w)
-[?2004l[?2004h>         if len(topics) >= 10:
-[?2004l[?2004h>             break
-[?2004l[?2004h> 
-[?2004l[?2004h>     # return up to 10; caller will ensure 3..10 when possible
-[?2004l[?2004h>     return topics
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _chunk_count(total_words: int, chunk_size: int = 1000) -> int:
-[?2004l[?2004h>     if total_words <= 0:
-[?2004l[?2004h>         return 0
-[?2004l[?2004h>     return (total_words + chunk_size - 1) // chunk_size
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> @app.post("/extract")
-[?2004l[?2004h> async def extract(file: UploadFile = File(...)):
-[?2004l[?2004h>     data = await file.read()
-[?2004l[?2004h> 
-[?2004l[?2004h>     try:
-[?2004l[?2004h>         reader = PdfReader(io.BytesIO(data))
-[?2004l[?2004h>     except Exception as e:
-[?2004l[?2004h>         return JSONResponse(status_code=400, content={"detail": f"Invalid PDF: {e}"})
-[?2004l[?2004h> 
-[?2004l[?2004h>     author = "Unknown Author"
-[?2004l[?2004h>     title = "Untitled"
-[?2004l[?2004h> 
-[?2004l[?2004h>     try:
-[?2004l[?2004h>         md = reader.metadata
-[?2004l[?2004h>         if md is not None:
-[?2004l[?2004h>             a = getattr(md, "author", None)
-[?2004l[?2004h>             t = getattr(md, "title", None)
-[?2004l[?2004h>             if not a and hasattr(md, "get"):
-[?2004l[?2004h>                 a = md.get("/Author")
-[?2004l[?2004h>             if not t and hasattr(md, "get"):
-[?2004l[?2004h>                 t = md.get("/Title")
-[?2004l[?2004h>             if isinstance(a, str) and a.strip():
-[?2004l[?2004h>                 author = a.strip()
-[?2004l[?2004h>             if isinstance(t, str) and t.strip():
-[?2004l[?2004h>                 title = t.strip()
-[?2004l[?2004h>     except Exception:
-[?2004l[?2004h>         pass
-[?2004l[?2004h> 
-[?2004l[?2004h>     parts: List[str] = []
-[?2004l[?2004h>     for p in reader.pages:
-[?2004l[?2004h>         try:
-[?2004l[?2004h>             txt = p.extract_text() or ""
-[?2004l[?2004h>         except Exception:
-[?2004l[?2004h>             txt = ""
-[?2004l[?2004h>         if txt:
-[?2004l[?2004h>             parts.append(txt)
-[?2004l[?2004h> 
-[?2004l[?2004h>     full_text = "\n".join(parts).strip()
-[?2004l[?2004h> 
-[?2004l[?2004h>     word_list = re.findall(r"\b\w+\b", full_text)
-[?2004l[?2004h>     total_words = len(word_list)
-[?2004l[?2004h>     total_chunks = _chunk_count(total_words, 1000)
-[?2004l[?2004h> 
-[?2004l[?2004h>     topics = [t for t in _extract_topics(full_text) if isinstance(t, str) and t.strip()]
-[?2004l[?2004h>     if full_text:
-[?2004l[?2004h>         topics = topics[:10]
-[?2004l[?2004h>         if len(topics) < 3:
-[?2004l[?2004h>             # if we have text but low signal, still return what we found (non-empty)
-[?2004l[?2004h>             pass
-[?2004l[?2004h>     else:
-[?2004l[?2004h>         topics = []
-[?2004l[?2004h> 
-[?2004l[?2004h>     return {
-[?2004l[?2004h>         "author": author,
-[?2004l[?2004h>         "title": title,
-[?2004l[?2004h>         "topics": topics,
-[?2004l[?2004h>         "total_chunks": int(total_chunks),
-[?2004l[?2004h>         "filename": file.filename or "",
-[?2004l[?2004h>         "total_words": int(total_words),
-[?2004l[?2004h>     }
-[?2004l[?2004h> PY
-[?2004l[?2004hroot@4de46265a4e6:/app/workspace# python3 -m py_compile /app/workspace/src/api.py
-[?2004l[?2004hroot@4de46265a4e6:/app/workspace# python3 -c "import importlib.util; spec=importlib.util.spec_from_file_location('api','/app/workspace/src/api.py'); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m); print('routes:', [getattr(r,'path',None) for r in m.app.router.routes])"
-[?2004lroutes: ['/openapi.json', '/docs', '/docs/oauth2-redirect', '/redoc', '/static', '/extract']
-[?2004hroot@4de46265a4e6:/app/workspace# cat > /app/workspace/src/api.py <<'PY'
-[?2004l[?2004h> from __future__ import annotations
-[?2004l[?2004h> 
-[?2004l [?2004h> import io
-[?2004l[?2004h> import re
-[?2004l[?2004h> from collections import Counter
-[?2004l[?2004h> from typing import List
-[?2004l[?2004h> 
-[?2004l[?2004h> from fastapi import FastAPI, File, UploadFile
-[?2004l[?2004h> from fastapi.responses import JSONResponse
-[?2004l[?2004h> from fastapi.staticfiles import StaticFiles
-[?2004l[?2004h> from PyPDF2 import PdfReader
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> # Disable auto docs/openapi endpoints; requirement is POST /extract only (+ static mount).
-[?2004l[?2004h> app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
-[?2004l
-  [?2004h> 
-[?2004l [?2004h> # Mount manual check page directory
-[?2004l[?2004h> app.mount(
-[?2004l len(topics[?2004h>     "/static",
-[?2004l[?2004h>     StaticFiles(directory="/app/workspace/src/static", html=False),
-[?2004l[?2004h>     name="static",
-[?2004l[?2004h> )
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004lings).
-    [?2004h> _STOPWORDS = {
-[?2004l[?2004h>     "a","about","above","after","again","against","all","am","an","and","any","are","as","at",
-[?2004l[?2004h>     "be","because","been","before","being","below","between","both","but","by",
-[?2004l[?2004h>     "can","could",
-[?2004l[?2004h>     "did","do","does","doing","down","during",
-[?2004l[?2004h>     "each",
-[?2004l[?2004h>     "few","for","from","further",
-[?2004l[?2004h>     "had","has","have","having","he","her","here","hers","herself","him","himself","his","how",
-[?2004l[?2004h>     "i","if","in","into","is","it","its","itself",
-[?2004l[?2004h>     "just",
-[?2004l[?2004h>     "me","more","most","my","myself",
-[?2004l[?2004h>     "no","nor","not","now",
-[?2004l[?2004h>     "of","off","on","once","only","or","other","our","ours","ourselves","out","over","own",
-[?2004l[?2004h>     "s","same","she","should","so","some","such",
-[?2004l[?2004h>     "t","than","that","the","their","theirs","them","themselves","then","there","these","they",
-[?2004l[?2004h>     "this","those","through","to","too",
-[?2004l[?2004h>     "under","until","up",
-[?2004l[?2004h>     "very",
-[?2004l[?2004h>     "was","we","were","what","when","where","which","while","who","whom","why","will","with",
-[?2004l[?2004h>     "you","your","yours","yourself","yourselves",
-[?2004l[?2004h>     # common PDF/boilerplate-ish
-[?2004l[?2004h>     "page","pages","copyright","www","http","https","com","org","net",
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _normalize_words(text: str) -> List[str]:
-[?2004l[?2004h>     # Keep words with letters/numbers and internal apostrophes/hyphens; drop punctuation.
-[?2004l[?2004h>     raw = re.findall(r"[A-Za-z][A-Za-z0-9'\-]{1,}", text)
-[?2004l[?2004h>     words: List[str] = []
-[?2004l[?2004h>     for w in raw:
-[?2004l[?2004h>         wl = w.lower().strip("-'\"")
-[?2004l[?2004h>         if len(wl) < 3:
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         if wl in _STOPWORDS:
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         if wl.isdigit():
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         letters = sum(ch.isalpha() for ch in wl)
-[?2004l[?2004h>         if letters < 2:
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         words.append(wl)
-[?2004l[?2004h>     return words
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _extract_topics(text: str) -> List[str]:
-[?2004l[?2004h>     words = _normalize_words(text)
-[?2004l[?2004h>     if not words:
-[?2004l[?2004h>         return []
-[?2004l[?2004h> 
-[?2004l[?2004h>     counts = Counter(words)
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Prefer informative terms: longer words get a slight boost.
-[?2004l[?2004h>     scored = []
-[?2004l[?2004h>     for w, c in counts.items():
-[?2004l[?2004h>         score = c * (1.0 + min(len(w), 12) / 24.0)
-[?2004l[?2004h>         scored.append((score, w))
-[?2004l[?2004h> 
-[?2004l[?2004h>     scored.sort(reverse=True)
-[?2004l[?2004h> 
-[?2004l[?2004h>     topics: List[str] = []
-[?2004l[?2004h>     used: set[str] = set()
-[?2004l[?2004h>     for _, w in scored:
-[?2004l[?2004h>         if w in used:
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         # avoid near-duplicates by prefix
-[?2004l[?2004h>         if any(w.startswith(t) or t.startswith(w) for t in used):
-[?2004l[?2004h>             continue
-[?2004l[?2004h>         used.add(w)
-[?2004l[?2004h>         topics.append(w)
-[?2004l[?2004h>         if len(topics) >= 10:
-[?2004l[?2004h>             break
-[?2004l[?2004h> 
-[?2004l[?2004h>     return topics
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _chunk_count(total_words: int, chunk_size: int = 1000) -> int:
-[?2004l[?2004h>     if total_words <= 0:
-[?2004l[?2004h>         return 0
-[?2004l[?2004h>     return (total_words + chunk_size - 1) // chunk_size
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> @app.post("/extract")
-[?2004l[?2004h> async def extract(file: UploadFile = File(...)):
-[?2004l[?2004h>     data = await file.read()
-[?2004l[?2004h> 
-[?2004l[?2004h>     try:
-[?2004l[?2004h>         reader = PdfReader(io.BytesIO(data))
-[?2004l[?2004h>     except Exception as e:
-[?2004l[?2004h>         return JSONResponse(status_code=400, content={"detail": f"Invalid PDF: {e}"})
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Metadata
-[?2004l[?2004h>     author = "Unknown Author"
-[?2004l[?2004h>     title = "Untitled"
-[?2004l[?2004h>     try:
-[?2004l[?2004h>         md = reader.metadata
-[?2004l[?2004h>         if md is not None:
-[?2004l[?2004h>             a = getattr(md, "author", None)
-[?2004l[?2004h>             t = getattr(md, "title", None)
-[?2004l[?2004h>             if not a and hasattr(md, "get"):
-[?2004l[?2004h>                 a = md.get("/Author")
-[?2004l[?2004h>             if not t and hasattr(md, "get"):
-[?2004l[?2004h>                 t = md.get("/Title")
-[?2004l[?2004h>             if isinstance(a, str) and a.strip():
-[?2004l[?2004h>                 author = a.strip()
-[?2004l[?2004h>             if isinstance(t, str) and t.strip():
-[?2004l[?2004h>                 title = t.strip()
-[?2004l[?2004h>     except Exception:
-[?2004l[?2004h>         pass
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Extract text
-[?2004l[?2004h>     parts: List[str] = []
-[?2004l[?2004h>     for p in reader.pages:
-[?2004l[?2004h>         try:
-[?2004l[?2004h>             txt = p.extract_text() or ""
-[?2004l[?2004h>         except Exception:
-[?2004l[?2004h>             txt = ""
-[?2004l[?2004h>         if txt:
-[?2004l[?2004h>             parts.append(txt)
-[?2004l[?2004h> 
-[?2004l[?2004h>     full_text = "\n".join(parts).strip()
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Words / chunks
-[?2004l[?2004h>     word_list = re.findall(r"\b\w+\b", full_text)
-[?2004l[?2004h>     total_words = len(word_list)
-[?2004l[?2004h>     total_chunks = _chunk_count(total_words, 1000)
-[?2004l[?2004h> 
-[?2004l[?2004h>     topics = [t for t in _extract_topics(full_text) if isinstance(t, str) and t.strip()]
-[?2004l[?2004h>     if full_text:
-[?2004l[?2004h>         topics = topics[:10]
-[?2004l[?2004h>         if len(topics) < 3:
-[?2004l[?2004h>             # If text exists but signal is low, return what we have (still non-empty strings).
-[?2004l[?2004h>             pass
-[?2004l[?2004h>     else:
-[?2004l[?2004h>         topics = []
-[?2004l[?2004h> 
-[?2004l[?2004h>     return {
-[?2004l[?2004h>         "author": author,
-[?2004l[?2004h>         "title": title,
-[?2004l[?2004h>         "topics": topics,
-[?2004l[?2004h>         "total_chunks": int(total_chunks),
-[?2004l[?2004h>         "filename": file.filename or "",
-[?2004l[?2004h>         "total_words": int(total_words),
-[?2004l[?2004h>     }
-[?2004l[?2004h> PY
-[?2004l[?2004hroot@4de46265a4e6:/app/workspace# python3 -m py_compile /app/workspace/src/api.py
-[?2004l[?2004hroot@4de46265a4e6:/app/workspace# python3 -c "import importlib.util; spec=importlib.util.spec_from_file_location('api','/app/workspace/src/api.py'); m=importlib.util.module_from_spec(spec); spec.loader.exec_module(m); print([getattr(r,'path',None) for r in m.app.router.routes])"
-[?2004l['/static', '/extract']
-[?2004hroot@4de46265a4e6:/app/workspace# ls -la /app/workspace/src/static/index.html
-[?2004l-rw-r--r-- 1 root root 2082 Apr 27 03:18 /app/workspace/src/static/index.html
-[?2004hroot@4de46265a4e6:/app/workspace# 

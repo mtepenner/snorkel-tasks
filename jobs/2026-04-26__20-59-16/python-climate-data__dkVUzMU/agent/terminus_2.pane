@@ -1,249 +1,0 @@
-[?2004hroot@de88dad28b6a:/app/workspace# asciinema rec --stdin /logs/agent/recording.cast
-[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
-[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
-[?2004hroot@de88dad28b6a:/app/workspace# clear
-[?2004l[H[J[3J[?2004hroot@de88dad28b6a:/app/workspace# pwd
-[?2004l/app/workspace
-[?2004hroot@de88dad28b6a:/app/workspace# ls -R
-[?2004l.:
-data  output  src
-
-./data:
-climate.csv  metadata.json
-
-./output:
-
-./src:
-[?2004hroot@de88dad28b6a:/app/workspace# sed -n '1,200p' src/analyzer.py
-[?2004lsed: can't read src/analyzer.py: No such file or directory
-[?2004hroot@de88dad28b6a:/app/workspace# ls -ლა data
-[?2004lls: invalid option -- '�'
-Try 'ls --help' for more information.
-[?2004hroot@de88dad28b6a:/app/workspace# python3 - <<'PY'
-[?2004l[?2004h> import pandas as pd, json
-[?2004l[?2004h> print('--- climate.csv head ---')
-[?2004l[?2004h> df=pd.read_csv('data/climate.csv')
-[?2004l[?2004h> print(df.head())
-[?2004l[?2004h> print('columns:', list(df.columns))
-[?2004l[?2004h> print('min_year:', df['year'].min() if 'year' in df.columns else 'NO year col')
-[?2004l[?2004h> print('max_year:', df['year'].max() if 'year' in df.columns else 'NO year col')
-[?2004l[?2004h> print('rows:', len(df))
-[?2004l[?2004h> print('--- metadata.json ---')
-[?2004l[?2004h> with open('data/metadata.json','r') as f:
-[?2004l[?2004h>     meta=json.load(f)
-[?2004l[?2004h> print(type(meta))
-[?2004l[?2004h> if isinstance(meta, dict):
-[?2004l[?2004h>     print('keys:', list(meta.keys())[:50])
-[?2004l[?2004h> print('sample:', str(meta)[:500])
-[?2004l[?2004h> PY
-[?2004l--- climate.csv head ---
-   region_id  year  temperature
-0          1  2020         14.5
-1          1  2021         15.0
-2          2  2020         22.1
-3          2  2021         22.5
-columns: ['region_id', 'year', 'temperature']
-min_year: 2020
-max_year: 2021
-rows: 4
---- metadata.json ---
-<class 'dict'>
-keys: ['1', '2']
-sample: {'1': 'North America', '2': 'Europe'}
-[?2004hroot@de88dad28b6a:/app/workspace# python3 src/analyzer.py
-[?2004lpython3: can't open file '/app/workspace/src/analyzer.py': [Errno 2] No such file or directory
-[?2004hroot@de88dad28b6a:/app/workspace# find data output -maxdepth 2 -type f -print -exec ls -l {} \;
-[?2004ldata/metadata.json
--rw-r--r-- 1 root root 38 Apr 27 03:58 data/metadata.json
-data/climate.csv
--rw-r--r-- 1 root root 75 Apr 27 03:58 data/climate.csv
-[?2004hroot@de88dad28b6a:/app/workspace# for f in data/cleaned.json data/trends.json output/climate_graph.gv; do echo "\n===== $f ====="; [ -f "$f" ] && sed -n '1,200p' "$f" || echo "MISSING"; done
-[?2004l\n===== data/cleaned.json =====
-MISSING
-\n===== data/trends.json =====
-MISSING
-\n===== output/climate_graph.gv =====
-MISSING
-[?2004hroot@de88dad28b6a:/app/workspace# ls -la src
-[?2004ltotal 8
-drwxr-xr-x 2 root root 4096 Apr 27 03:58 .
-drwxr-xr-x 1 root root 4096 Apr 27 03:58 ..
-[?2004hroot@de88dad28b6a:/app/workspace# mkdir -p src output
-[?2004l[?2004hroot@de88dad28b6a:/app/workspace# cat > src/analyzer.py <<'PY'
-[?2004l[?2004h> #!/usr/bin/env python3
-[?2004l[?2004h> 
-[?2004l[?2004h> import csv
-[?2004l[?2004h> import json
-[?2004l[?2004h> import os
-[?2004l[?2004h> import subprocess
-[?2004l[?2004h> from collections import defaultdict
-[?2004l[?2004h> 
-[?2004l[?2004h> BASE_DIR = "/app/workspace"
-[?2004l[?2004h> DATA_DIR = os.path.join(BASE_DIR, "data")
-[?2004l[?2004h> OUT_DIR = os.path.join(BASE_DIR, "output")
-[?2004l[?2004h> 
-[?2004l[?2004h> CLIMATE_CSV = os.path.join(DATA_DIR, "climate.csv")
-[?2004l[?2004h> METADATA_JSON = os.path.join(DATA_DIR, "metadata.json")
-[?2004l[?2004h> 
-[?2004l[?2004h> CLEANED_JSON = os.path.join(DATA_DIR, "cleaned.json")
-[?2004l[?2004h> TRENDS_JSON = os.path.join(DATA_DIR, "trends.json")
-[?2004l[?2004h> 
-[?2004l[?2004h> GRAPH_GV = os.path.join(OUT_DIR, "climate_graph.gv")
-[?2004l[?2004h> GRAPH_PNG = os.path.join(OUT_DIR, "climate_graph.png")
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _load_metadata(path: str) -> dict:
-[?2004l[?2004h>     with open(path, "r", encoding="utf-8") as f:
-[?2004l[?2004h>         meta = json.load(f)
-[?2004l[?2004h>     if not isinstance(meta, dict):
-[?2004l[?2004h>         raise TypeError("metadata.json must be a JSON object mapping region_id to region name")
-[?2004l[?2004h>     # Ensure keys are strings for robust lookup.
-[?2004l[?2004h>     return {str(k): str(v) for k, v in meta.items()}
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _read_and_clean(climate_csv: str, region_map: dict) -> list:
-[?2004l[?2004h>     cleaned = []
-[?2004l[?2004h>     with open(climate_csv, "r", encoding="utf-8", newline="") as f:
-[?2004l[?2004h>         reader = csv.DictReader(f)
-[?2004l[?2004h>         required_cols = {"region_id", "year", "temperature"}
-[?2004l[?2004h>         if reader.fieldnames is None or not required_cols.issubset(set(reader.fieldnames)):
-[?2004l[?2004h>             raise ValueError(f"climate.csv must contain columns {sorted(required_cols)}")
-[?2004l[?2004h> 
-[?2004l[?2004h>         for row in reader:
-[?2004l[?2004h>             year = int(row["year"])
-[?2004l[?2004h>             if year < 2021:
-[?2004l[?2004h>                 continue  # absolutely no pre-2021 leakage
-[?2004l[?2004h> 
-[?2004l[?2004h>             region_id = str(row["region_id"])
-[?2004l[?2004h>             region_name = region_map.get(region_id)
-[?2004l[?2004h>             if region_name is None:
-[?2004l[?2004h>                 # Unknown region_id; skip rather than hardcoding/guessing.
-[?2004l[?2004h>                 continue
-[?2004l[?2004h> 
-[?2004l[?2004h>             temp = float(row["temperature"])
-[?2004l[?2004h>             cleaned.append({
-[?2004l[?2004h>                 "region": str(region_name),
-[?2004l[?2004h>                 "temperature": float(temp),
-[?2004l[?2004h>                 "year": int(year),
-[?2004l[?2004h>             })
-[?2004l[?2004h>     return cleaned
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _compute_trends(cleaned_rows: list) -> dict:
-[?2004l[?2004h>     sums = defaultdict(float)
-[?2004l[?2004h>     counts = defaultdict(int)
-[?2004l[?2004h>     for r in cleaned_rows:
-[?2004l[?2004h>         region = r["region"]
-[?2004l[?2004h>         sums[region] += float(r["temperature"])
-[?2004l[?2004h>         counts[region] += 1
-[?2004l[?2004h> 
-[?2004l[?2004h>     trends = {}
-[?2004l[?2004h>     for region, total in sums.items():
-[?2004l[?2004h>         trends[region] = float(total / counts[region])
-[?2004l[?2004h>     return trends
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _write_json(path: str, obj) -> None:
-[?2004l[?2004h>     with open(path, "w", encoding="utf-8") as f:
-[?2004l[?2004h>         json.dump(obj, f, ensure_ascii=False, indent=2)
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def _write_graph(gv_path: str, png_path: str, trends: dict) -> None:
-[?2004l[?2004h>     os.makedirs(os.path.dirname(gv_path), exist_ok=True)
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Deterministic ordering for stable output.
-[?2004l[?2004h>     regions = sorted(trends.keys())
-[?2004l[?2004h> 
-[?2004l[?2004h>     lines = []
-[?2004l[?2004h>     lines.append("digraph climate {")
-[?2004l[?2004h>     lines.append("  rankdir=LR;")
-[?2004l[?2004h> 
-[?2004l[?2004h>     for region in regions:
-[?2004l[?2004h>         mean_temp = float(trends[region])
-[?2004l[?2004h>         mean_text = str(mean_temp)
-[?2004l[?2004h>         # Quote numeric node id so decimals survive verbatim in DOT.
-[?2004l[?2004h>         temp_node_id = json.dumps(mean_text)
-[?2004l[?2004h>         region_node_id = json.dumps(region)
-[?2004l[?2004h> 
-[?2004l[?2004h>         lines.append(f"  {region_node_id} -> {temp_node_id};")
-[?2004l[?2004h> 
-[?2004l[?2004h>     lines.append("}")
-[?2004l[?2004h> 
-[?2004l[?2004h>     with open(gv_path, "w", encoding="utf-8") as f:
-[?2004l[?2004h>         f.write("\n".join(lines) + "\n")
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Render PNG (only required extra file besides .gv)
-[?2004l[?2004h>     try:
-[?2004l[?2004h>         subprocess.run(["dot", "-Tpng", gv_path, "-o", png_path], check=True)
-[?2004l[?2004h>     except FileNotFoundError as e:
-[?2004l[?2004h>         raise RuntimeError("Graphviz 'dot' is required to generate climate_graph.png") from e
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> def main() -> None:
-[?2004l[?2004h>     region_map = _load_metadata(METADATA_JSON)
-[?2004l[?2004h>     cleaned = _read_and_clean(CLIMATE_CSV, region_map)
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Phase 1
-[?2004l[?2004h>     _write_json(CLEANED_JSON, cleaned)
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Phase 2
-[?2004l[?2004h>     trends = _compute_trends(cleaned)
-[?2004l[?2004h>     _write_json(TRENDS_JSON, trends)
-[?2004l[?2004h> 
-[?2004l[?2004h>     # Phase 3
-[?2004l[?2004h>     _write_graph(GRAPH_GV, GRAPH_PNG, trends)
-[?2004l[?2004h> 
-[?2004l[?2004h> 
-[?2004l[?2004h> if __name__ == "__main__":
-[?2004l[?2004h>     main()
-[?2004l[?2004h> PY
-[?2004l[?2004hroot@de88dad28b6a:/app/workspace# python3 -m py_compile src/analyzer.py
-[?2004l[?2004hroot@de88dad28b6a:/app/workspace# python3 src/analyzer.py
-[?2004l[?2004hroot@de88dad28b6a:/app/workspace# find data output -maxdepth 1 -type f -print -exec ls -l {} \;
-[?2004ldata/cleaned.json
--rw-r--r-- 1 root root 159 Apr 27 04:00 data/cleaned.json
-data/trends.json
--rw-r--r-- 1 root root 45 Apr 27 04:00 data/trends.json
-data/metadata.json
--rw-r--r-- 1 root root 38 Apr 27 03:58 data/metadata.json
-data/climate.csv
--rw-r--r-- 1 root root 75 Apr 27 03:58 data/climate.csv
-output/climate_graph.png
--rw-r--r-- 1 root root 15844 Apr 27 04:00 output/climate_graph.png
-output/climate_graph.gv
--rw-r--r-- 1 root root 85 Apr 27 04:00 output/climate_graph.gv
-[?2004hroot@de88dad28b6a:/app/workspace# echo '--- cleaned.json ---'; cat data/cleaned.json; echo '\n--- trends.json ---'; cat data/trends.json; echo '\n--- climate_graph.gv ---'; cat output/climate_graph.gv
-[?2004l--- cleaned.json ---
-[
-  {
-    "region": "North America",
-    "temperature": 15.0,
-    "year": 2021
-  },
-  {
-    "region": "Europe",
-    "temperature": 22.5,
-    "year": 2021
-  }
-]\n--- trends.json ---
-{
-  "North America": 15.0,
-  "Europe": 22.5
-}\n--- climate_graph.gv ---
-digraph climate {
-  rankdir=LR;
-  "Europe" -> "22.5";
-  "North America" -> "15.0";
-}
-[?2004hroot@de88dad28b6a:/app/workspace# python3 - <<'PY'
-[?2004l[?2004h> import json
-[?2004l[?2004h> with open('data/cleaned.json') as f:
-[?2004l[?2004h>     cleaned=json.load(f)
-[?2004l[?2004h> assert all(r['year']>=2021 for r in cleaned)
-[?2004l[?2004h> with open('data/trends.json') as f:
-[?2004l[?2004h>     trends=json.load(f)
-[?2004l[?2004h> assert isinstance(trends, dict) and all(isinstance(v, float) for v in trends.values())
-[?2004l[?2004h> print('OK: no pre-2021 rows; trends are floats; regions:', sorted(trends.keys()))
-[?2004l[?2004h> PY
-[?2004lOK: no pre-2021 rows; trends are floats; regions: ['Europe', 'North America']
-[?2004hroot@de88dad28b6a:/app/workspace# 

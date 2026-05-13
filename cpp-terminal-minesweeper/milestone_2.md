@@ -1,2 +1,3 @@
-2\) for the second milestone, I need built out the terminal engine... it needs manual keyboard input obviously but it will also, importantly, need deterministic scripted play or consequentially the automated ci tests will fail completely.
+Milestone 2 is the terminal engine pass. Binary should be /app/workspace/client. Read commands from stdin line by line, not ncurses-only interactive input.
 
+Required commands are reveal X Y and quit. It must handle scripted input like reveal 0 0 then quit, and print enough stdout so deterministic runs can be checked.

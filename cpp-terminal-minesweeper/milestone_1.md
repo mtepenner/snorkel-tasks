@@ -1,4 +1,3 @@
-1\) for the first major issue, the board state needs to be grabbed, so please ensure that the api gets hooked up.
+Milestone 1 is just API hookup. Build the client at /app/workspace/src/client.cpp and call GET http://localhost:8080/board to fetch board state.
 
-
-
+Use the response fields status, mines, and board_state. Do not edit backend files.
