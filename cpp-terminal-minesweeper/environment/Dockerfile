@@ -10,9 +10,13 @@ RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     imagemagick \
     libmagick++-dev \
+    pkg-config \
     python3 \
     python3-pip \
     && rm -rf /var/lib/apt/lists/*
+
+ # Add ImageMagick tools to PATH
+ENV PATH="/usr/lib/x86_64-linux-gnu/ImageMagick-6.9.11/bin-q16:${PATH}"
 
 # Setup directories
 WORKDIR /app
